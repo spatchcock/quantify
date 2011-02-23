@@ -4,64 +4,113 @@ module Quantify
   module Unit
 
     # The Unit module contains functionality for defining and handling
-    # representations of physical units. 
+    # representations of physical units.
+    #
+    # All units are defined using the Unit::SI and Unit::NonSI classes, both of
+    # which inherit from Unit::Base.
+    #
+    # New units can be defined to represent whatever is required. However a
+    # system of known units is stored in the Unit module instance variable
+    # @units, accessible using Unit.units. These known units can be configured
+    # to represent which ever units are required. The Unit module will handle
+    # any combinations of units and prefixes according to the known units and
+    # prefixes specified in config.rb. New units can be defined (with or without
+    # prefixes) at any time and either used in place or loaded into the known
+    # system.
 
     attr_accessor :units
 
+    # Instance variable containing system of known units
     @units = []
 
+    # Load a new unit into they system of known units
     def self.load(unit)
       @units << unit if unit.is_a? Unit::Base
     end
 
+    # Returns an array containing objects representing all known units
     def self.units
       @units
     end
 
+    # Returns an array containing objects representing all known SI units
     def self.si_units
       @units.select { |unit| unit.is_si? }
     end
 
+    # Returns an array containing objects representing all known non-SI units
     def self.non_si_units
       @units.select { |unit| !unit.is_si? }
     end
 
+    # Returns an array containing the names of all known units
     def self.names
       @units.map { |unit| unit.name }
     end
 
+    # Returns an array containing the names of all known SI units
     def self.si_names
       si_units.map { |unit| unit.name }
     end
 
+    # Returns an array containing the names of all known non-SI units
     def self.non_si_names
       non_si_units.map { |unit| unit.name }
     end
 
+    # Returns an array containing the symbols of all known units
     def self.symbols
       @units.map { |unit| unit.symbol }
     end
 
+    # Returns an array containing the symbols of all known SI units
     def self.si_symbols
       si_units.map { |unit| unit.symbol }
     end
 
+    # Returns an array containing the symbols of all known non-SI units
     def self.non_si_symbols
       non_si_units.map { |unit| unit.symbol }
     end
 
+    # Returns an array containing the JScience labels of all known units
     def self.jscience_labels
       @units.map { |unit| unit.jscience_label }
     end
 
+    # Returns an array containing the JScience labels of all known SI units
     def self.si_jscience_labels
       si_units.map { |unit| unit.jscience_label }
     end
 
+    # Returns an array containing the JScience labels of all known non-SI units
     def self.non_si_jscience_labels
       non_si_units.map { |unit| unit.jscience_label }
     end
 
+    # Retrieve an object representing the specified unit.
+    #
+    # Argument can be the unit name, symbol or JScience label and provided as
+    # a string or a symbol, e.g.
+    #
+    #  Unit.for :metre
+    #
+    #  Unit.for 'kilogram'
+    #
+    # This can be shortened to, for example, Unit.metre by virtue of the
+    # #method_missing method (see below)
+    #
+    # This method will recognise valid combinations of known units and prefixes,
+    # irrespective of whether the prefixed unit has been initialized into the
+    # system of known units in it's own right. For example,
+    #
+    #  Unit.centimetre ... or, alternatively ... Unit.cm
+    #
+    # will return a Unit::SI object with attributes representing a centimetre
+    # based on the initialized Unit for :metre and Prefix :centi. Note: this
+    # method is designed to only allow SI units to use SI prefixes, and NonSI
+    # units to use only NonSI prefixes
+    #
     def self.for(name_symbol_or_label)
       if name_symbol_or_label.is_a? String or
          name_symbol_or_label.is_a? Symbol
@@ -86,6 +135,12 @@ module Quantify
       end
     end
 
+    # Provides syntactic sugar for accessing units. Specify:
+    #
+    #  Unit.degree_celsius
+    #
+    # rather than Unit.for :degree_celsius
+    #
     def self.method_missing(method, *args, &block)
       if unit = self.for(method)
         return unit
