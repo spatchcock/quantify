@@ -2,9 +2,11 @@ include Quantify
 
 # Configure known dimensions, prefixes and units.
 # Order must be maintained for initialization of all objects to be successful:
-#  dimensions,
-#  prefixes,
-#  units.
+#
+#  * dimensions,
+#  * prefixes,
+#  * units.
+#
 
 Dimensions.configure do
 
@@ -27,21 +29,41 @@ Dimensions.configure do
   load :physical_quantity => :acceleration, :length => 1, :time => -2
   load :physical_quantity => :area, :length => 2
   load :physical_quantity => :action, :mass => 1, :length => 2, :time => -1
+  load :physical_quantity => :angular_monentum, :length => 2, :mass => 1, :time => -1
+  load :physical_quantity => :conductivity, :length => -3, :mass => -1, :time => 3, :electric_current => 2
   load :physical_quantity => :density, :mass => 1, :length => -3
   load :physical_quantity => :electric_charge, :electric_current => 1, :time => 1
+  load :physical_quantity => :electric_charge_density, :electric_current => 1, :time => 1, :length => -3
   load :physical_quantity => :electric_conductance, :electric_current => 2, :time => 3, :mass => -1, :length => -2
-  load :physical_quantity => :energy, :mass => 1, :length => 2, :time => -2
+  load :physical_quantity => :electric_displacement, :length => -2, :time => 1, :electric_current => 1
+  load :physical_quantity => :electric_field_strength, :length => 1, :mass => 1, :time => -3, :electric_current => -1
+  load :physical_quantity => :electric_polarisability, :mass => -1, :time => 4, :electric_current => 2
+  load :physical_quantity => :electric_polarisation, :length => -2, :time => 1, :electric_current => 1
   load :physical_quantity => :electric_potential_difference, :mass => 1, :length => 2, :electric_current => -1, :time => -3
   load :physical_quantity => :electric_resistance, :mass => 1, :length => 2, :electric_current => -2, :time => -3
   load :physical_quantity => :electrical_capacitance, :electric_current => 2, :time => 4, :mass => -1, :length => -2
+  load :physical_quantity => :energy, :mass => 1, :length => 2, :time => -2
+  load :physical_quantity => :energy_density, :length => -1, :mass => 1, :time => -2
+  load :physical_quantity => :entropy, :length => 2, :mass => 1, :time => -2, :temperature => -1
   load :physical_quantity => :force, :length => 1, :mass => 1, :time => -2
   load :physical_quantity => :frequency, :time => -1
+  load :physical_quantity => :heat_capacity, :length => 2, :mass => 1, :time => -2, :temperature => -1
   load :physical_quantity => :illuminance, :luminous_intensity => 1, :length => -2
+  load :physical_quantity => :impedance, :length => 2, :mass => 1, :time => -3, :electric_current => -2
   load :physical_quantity => :inductance, :mass => 1, :length => 2, :time => -2, :electric_current => -2
+  load :physical_quantity => :irradiance, :mass => 1, :time => -3
   load :physical_quantity => :luminous_flux, :luminous_intensity => 1
+  load :physical_quantity => :magnetic_field_strength, :length => -1, :electric_current => 1
   load :physical_quantity => :magnetic_flux, :mass => 1, :length => 2, :time => -2, :electric_current => -1
   load :physical_quantity => :magnetic_flux_density, :mass => 1, :electric_current => -1, :time => -2
+  load :physical_quantity => :magnetic_dipole_moment, :length => 2, :electric_current => 1
+  load :physical_quantity => :magnetic_vector_potential, :mass => 1, :length => 1, :time => -2, :electric_current => -1
+  load :physical_quantity => :magnetisation, :length => -1, :electric_current => 1
+  load :physical_quantity => :moment_of_inertia, :length => 2, :mass => 1
+  load :physical_quantity => :momentum, :length => 1, :mass => 1, :time => -1
   load :physical_quantity => :number_density, :item => 1, :length => -3
+  load :physical_quantity => :permeability, :mass => 1, :length => 1, :time => -2, :electric_current => -2
+  load :physical_quantity => :permittivity, :mass => -1, :length => -3, :time => 4, :electric_current => 2
   load :physical_quantity => :plane_angle
   load :physical_quantity => :power, :mass => 1, :length => 2, :time => -3
   load :physical_quantity => :pressure, :mass => 1, :length => -1, :time => -2
@@ -49,7 +71,10 @@ Dimensions.configure do
   load :physical_quantity => :radiation_dose_equivalent, :length => 2, :time => -2
   load :physical_quantity => :radioactivity, :time => -1
   load :physical_quantity => :solid_angle
+  load :physical_quantity => :surface_tension, :mass => 1, :time => -2
   load :physical_quantity => :velocity, :length => 1, :time => -1
+  load :physical_quantity => :dynamic_viscosity, :length => -1, :mass => 1, :time => -1
+  load :physical_quantity => :kinematic_viscosity, :length => 2, :time => -1
   load :physical_quantity => :volume, :length => 3
 
 end
@@ -164,20 +189,20 @@ Unit::NonSI.configure do
   load :name => :acre, :physical_quantity => :area, :factor => 4046.8564224
   # load :name => :abampere, :physical_quantity => :electric_current, :factor => 10.0, :symbol => 'abA'
   # load :name => :abcoloumb, :physical_quantity => :electric_charge, :factor => 10.0, :symbol => 'abC'
-  # load :name => :abfarad, :physical_quantity => :electrical_capacitance, :factor => 10e9
-  # load :name => :abhenry, :physical_quantity => :inductance, :factor => 10e-9
-  # load :name => :abhmo, :physical_quantity => :electric_conductance, :factor => 10e9
-  # load :name => :abohm, :physical_quantity => :electric_resistance, :factor => 10e-9
+  # load :name => :abfarad, :physical_quantity => :electrical_capacitance, :factor => 1e9
+  # load :name => :abhenry, :physical_quantity => :inductance, :factor => 1e-9
+  # load :name => :abhmo, :physical_quantity => :electric_conductance, :factor => 1e9
+  # load :name => :abohm, :physical_quantity => :electric_resistance, :factor => 1e-9
   # load :name => :abvolt, :physical_quantity => :electric_potential_difference, :factor => 10e-9, :symbol => 'abV'
   # load :name => :ampere_hour, :physical_quantity => :electric_charge, :factor => 3.6e3, :symbol => 'Ah'
-  load :name => :angstrom, :physical_quantity => :length, :factor => 10e-10, :symbol => 'Å'
+  load :name => :angstrom, :physical_quantity => :length, :factor => 100e-12, :symbol => 'Å'
   load :name => :arcminute, :physical_quantity => :plane_angle, :factor => Math::PI/10800, :symbol => '′'
   load :name => :arcsecond, :physical_quantity => :plane_angle, :factor => Math::PI/648000, :symbol => '″'
   load :name => :are, :physical_quantity => :area, :factor => 100.0, :symbol => 'a'
   load :name => :astronomical_unit, :physical_quantity => :length, :factor => 149.5979e9, :symbol => 'AU'
   load :name => :atmosphere, :physical_quantity => :pressure, :factor => 101.325e3, :symbol => 'atm'
-  load :name => :bar, :physical_quantity => :pressure, :factor => 100000.0, :symbol => 'bar'
-  load :name => :barn, :physical_quantity => :area, :factor => 10e-28, :symbol => 'b'
+  load :name => :bar, :physical_quantity => :pressure, :factor => 100e3, :symbol => 'bar'
+  load :name => :barn, :physical_quantity => :area, :factor => 100e-30, :symbol => 'b'
   load :name => :baromil, :physical_quantity => :length, :factor => 750.1e-6
   load :name => :barrel_petroleum, :physical_quantity => :volume, :factor => 158.9873e-3, :symbol => 'bbl'
   # load :name => :barrel_uk, :physical_quantity => :volume, :factor => 163.6592e-3, :symbol => 'bl (Imp)'
@@ -198,7 +223,7 @@ Unit::NonSI.configure do
   load :name => :chain, :physical_quantity => :length, :factor => 20.1168, :symbol => 'ch'
   load :name => :cup_us, :physical_quantity => :volume, :factor => 236.5882e-6, :symbol => 'c (US)'
   load :name => :curie, :physical_quantity => :radioactivity, :factor => 37.0e9, :symbol => 'Ci'
-  load :name => :day, :physical_quantity => :time, :factor => 86400.0, :symbol => 'd'
+  load :name => :day, :physical_quantity => :time, :factor => 86.4e3, :symbol => 'd'
   load :name => :degree, :physical_quantity => :plane_angle, :factor => Math::PI/180.0, :symbol => '°'
   load :name => :degree_celsius, :physical_quantity => :temperature, :scaling => 273.15, :symbol => '°C'
   load :name => :degree_farenheit, :physical_quantity => :temperature, :factor => 5.0/9.0, :scaling => 459.67, :symbol => '°F'
@@ -206,12 +231,12 @@ Unit::NonSI.configure do
   load :name => :dram, :physical_quantity => :length, :factor => 1.771845e-3, :symbol => 'dr av'
   load :name => :dyne, :physical_quantity => :force, :factor => 10e-6, :symbol => 'dyn'
   load :name => :dyne_centimetre, :physical_quantity => :energy, :factor => 100e-9, :symbol => 'dyn cm'
-  load :name => :electron_volt, :physical_quantity => :energy, :factor => 1.60218e-19, :symbol => 'eV'
+  load :name => :electron_volt, :physical_quantity => :energy, :factor => 160.218e-21, :symbol => 'eV'
   load :name => :erg, :physical_quantity => :energy, :factor => 100.0e-9, :symbol => 'erg'
   load :name => :ell, :physical_quantity => :length, :factor => 1.143, :symbol => 'ell'
   load :name => :faraday, :physical_quantity => :electric_charge, :factor => 96.4853e3, :symbol => 'F'
   load :name => :fathom, :physical_quantity => :length, :factor => 1.828804, :symbol => 'fm'
-  load :name => :fermi, :physical_quantity => :length, :factor => 10e-15, :symbol => 'fm'
+  load :name => :fermi, :physical_quantity => :length, :factor => 1e-15, :symbol => 'fm'
   load :name => :fluid_ounce_uk, :physical_quantity => :volume, :factor => 28.41308e-6, :symbol => 'fl oz (Imp)'
   load :name => :fluid_ounce_us, :physical_quantity => :volume, :factor => 29.57353e-6, :symbol => 'US fl oz'
   load :name => :foot_us_survey, :physical_quantity => :length, :factor => 304.8e-3, :symbol => 'ft (US)'
@@ -229,13 +254,13 @@ Unit::NonSI.configure do
   load :name => :grain, :physical_quantity => :mass, :factor => 64.79891e-6, :symbol => 'gr'
   load :name => :hand, :physical_quantity => :length, :factor => 101.6e-3
   load :name => :hartree, :physical_quantity => :energy, :factor => 4.359748e-18, :symbol => 'Eh'
-  load :name => :hectare, :physical_quantity => :area, :factor => 10000.0, :symbol => 'ha'
+  load :name => :hectare, :physical_quantity => :area, :factor => 10e3, :symbol => 'ha'
   load :name => :hogshead_us, :physical_quantity => :volume, :factor => 238.6697e-3, :symbol => 'hhd (US)'
   load :name => :horsepower_boiler, :physical_quantity => :power, :factor => 9.80950e3, :symbol => 'bhp'
   # load :name => :horsepower_electric, :physical_quantity => :power, :factor => 746.0, :symbol => 'hp'
   load :name => :horsepower_metric, :physical_quantity => :power, :factor => 735.4988, :symbol => 'hp'
   # load :name => :horsepower_uk, :physical_quantity => :power, :factor => 745.6999, :symbol => 'hp'
-  load :name => :hour, :physical_quantity => :time, :factor => 3600.0, :symbol => 'h'
+  load :name => :hour, :physical_quantity => :time, :factor => 3.6e3, :symbol => 'h'
   load :name => :hundredweight_long, :physical_quantity => :mass, :factor => 50.802345, :symbol => 'cwt (Imp)'
   load :name => :hundredweight_short, :physical_quantity => :mass, :factor => 45.359237, :symbol => 'cwt (US)'
   load :name => :inch, :physical_quantity => :length, :factor => 25.4e-3, :symbol => 'in'
@@ -248,7 +273,7 @@ Unit::NonSI.configure do
   load :name => :light_year, :physical_quantity => :length, :factor => 9.46073e15, :symbol => 'ly'
   load :name => :line, :physical_quantity => :length, :factor => 2.116667e-3, :symbol => 'ln'
   load :name => :link, :physical_quantity => :length, :factor => 201.168e-3, :symbol => 'lnk'
-  load :name => :litre, :physical_quantity => :volume, :factor => 0.001, :symbol => 'L'
+  load :name => :litre, :physical_quantity => :volume, :factor => 1e-3, :symbol => 'L'
   load :name => :maxwell, :physical_quantity => :magnetic_flux, :factor => 10e-9, :symbol => 'Mx'
   load :name => :minute, :physical_quantity => :time, :factor => 60.0, :symbol => 'min'
   load :name => :pound, :physical_quantity => :mass, :factor => 0.45359237, :symbol => 'lb'
