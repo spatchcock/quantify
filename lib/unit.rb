@@ -93,9 +93,9 @@ module Quantify
     # Argument can be the unit name, symbol or JScience label and provided as
     # a string or a symbol, e.g.
     #
-    #  Unit.for :metre
+    #   Unit.for :metre
     #
-    #  Unit.for 'kilogram'
+    #   Unit.for 'kilogram'
     #
     # This can be shortened to, for example, Unit.metre by virtue of the
     # #method_missing method (see below)
@@ -104,7 +104,7 @@ module Quantify
     # irrespective of whether the prefixed unit has been initialized into the
     # system of known units in it's own right. For example,
     #
-    #  Unit.centimetre ... or, alternatively ... Unit.cm
+    #   Unit.centimetre ... or, alternatively ... Unit.cm
     #
     # will return a Unit::SI object with attributes representing a centimetre
     # based on the initialized Unit for :metre and Prefix :centi. Note: this
