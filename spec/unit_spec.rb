@@ -229,5 +229,33 @@ describe Unit do
     unit.alternatives(:name)[0].is_a?(Symbol).should == true
     unit.alternatives(:name)[0].should == :gram
   end
+
+  it "should multiply units" do
+    kilometre = Unit.km
+    hour = Unit.h
+    new = kilometre / hour
+    new.measures.should == :velocity
+  end
+
+  it "should divide units" do
+    kilowatt = Unit.kW
+    hour = Unit.h
+    new = kilowatt * hour
+    new.measures.should == :energy
+  end
+
+  it "should multiply units" do
+    length_1 = Unit.m
+    length_2 = Unit.m
+    new = length_1 * length_2
+    new.measures.should == :area
+  end
+
+  it "should divide units" do
+    energy = Unit.J
+    length = Unit.m
+    new = energy / length
+    new.measures.should == :force
+  end
 end
 

@@ -183,25 +183,28 @@ module Quantify
 
       # NEED TO IMPLEMENT Unit::Compound CLASS
       def multiply(other)
-        # new_dimensions = self.dimensions * other.dimensions
-        # new_name = "#{self.name.to_s}_#{other.name.to_s}".to_sym
-        # new_factor = self.factor * other.factor
-        
-        # Add compound unit functionality
+        base_units = []
+        base_units << {:unit => self } << { :unit => other }
+
+        Unit::Compound.new base_units
       end
 
       # NEED TO IMPLEMENT Unit::Compound CLASS
       def divide(other)
-        # new_dimensions = self.dimensions / other.dimensions
-        # new_name = "#{self.name.to_s}_per_#{other.name.to_s}".to_sym
-        # new_factor = self.factor / other.factor
-        
-        # Add compound unit functionality
+        base_units = []
+        base_units << {:unit => self } << { :unit => other, :index => -1 }
+
+        Unit::Compound.new base_units
       end
 
       # NEED TO IMPLEMENT Unit::Compound CLASS
       def pow
 
+      end
+
+      def reciprocalize
+        self.dimensions.reciprocalize!
+        return self
       end
 
       alias :times :multiply
