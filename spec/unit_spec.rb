@@ -1,5 +1,4 @@
 require 'quantify'
-require 'unit'
 include Quantify
 
 describe Unit do

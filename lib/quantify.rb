@@ -5,17 +5,17 @@
 #
 
 require 'pp'
-require 'core_extensions'
-require 'exception'
-require 'dimensions'
-require 'prefix'
-require 'unit'
-require 'base_unit'
-require 'si_unit'
-require 'non_si_unit'
-require 'compound_unit'
-require 'config'
-require 'quantity'
+require 'quantify/core_extensions'
+require 'quantify/exception'
+require 'quantify/dimensions'
+require 'quantify/prefix'
+require 'quantify/unit'
+require 'quantify/base_unit'
+require 'quantify/si_unit'
+require 'quantify/non_si_unit'
+require 'quantify/compound_unit'
+require 'quantify/config'
+require 'quantify/quantity'
 
 module Quantify
  
