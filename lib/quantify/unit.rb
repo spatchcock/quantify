@@ -170,37 +170,22 @@ module Quantify
     end
 
 
-    # # # OLD. Needs reworking # # #
+    # Parse complex strings into compound unit.
     #
-    # parse complex strings into compound unit
+    # NOT COMPREHENSIVELY TESTED
     #
-    # def self.parse(string)
-    #   escaped_unit_symbols_string = Quantify.unit_symbols.map { |symbol| Regexp.escape(symbol)+'\b' }.join("|")
-    #   escaped_unit_names_string = Quantify.unit_names.map { |name| Regexp.escape(name) }.join("|")
-    #   @units = string.split(" ").map do |substring|
-    #     substring.scan(/(#{Quantify.prefix_names.join("|")})?(#{escaped_unit_names_string})\^?([\d\.-]*)?/i)
-    #     unless $2.nil?
-    #       prefix, name, index = $1, $2, ( $3.to_i == 0 ? 1 : $3.to_i )
-    #     else
-    #       substring.scan(/(#{Quantify.prefix_symbols.join("|")})?(#{escaped_unit_symbols_string}\z)\^?([\d\.-]*)?/)
-    #       prefix, name, index = $1, $2, ( $3.to_i == 0 ? 1 : $3.to_i )
-    #     end
-    #     Standard.new(name,index,prefix)
-    #   end
-    #   if @units.size == 1
-    #     return @units[0]
-    #   else
-    #     return Compound.new(@units)
-    #   end
-    # end
+    def self.parse(string)
+      units = string.split(" ").map do |substring|
+        substring.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
+        { :unit => $1.to_s, :index => ( $2.nil? or $2.empty? ? nil : $2.to_i ) }
+      end
 
-    def self.new_unit_or_known_unit(unit)
-      if known_unit = Unit.for(unit.name) and
-          !known_unit.is_compound_unit?
-        return known_unit
+      if units.size == 1 and units[0][:index].nil?
+        return Unit.for units[0][:unit]
       else
-        return unit
+        return Unit::Compound.new(units)
       end
     end
+
   end
 end

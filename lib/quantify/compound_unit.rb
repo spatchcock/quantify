@@ -74,6 +74,7 @@ module Quantify
         unless denominator_units.empty?
           unit_name << "per "
           denominator_units.inject(unit_name) do |name,base|
+            base[:index] *= -1
             base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
             base_unit_name = base[:unit].name.to_s + base_unit_index
             name << "#{base_unit_name} "
@@ -106,6 +107,17 @@ module Quantify
       
       def convert_base_unit(from,to)
         # change all specified units to new unot of same dimensions
+      end
+
+      # Determine if a unit instance
+      def new_unit_or_known_unit
+        if known_unit = Unit.for(self.name) and
+            known_unit.is_same_as? self and
+            !known_unit.is_compound_unit?
+          return known_unit
+        else
+          return self
+        end
       end
 
     end

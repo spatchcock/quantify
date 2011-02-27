@@ -138,12 +138,18 @@ module Quantify
       #
       #  Unit.metre.is_same_as? Unit.metre   #=> true
       #
+      # The base_units attr of Compound units are not compared. This is because
+      # we want to recognise cases where units derived from operations and defined
+      # as compound units are the same as known, named units. For example,
+      # if we divide a square foot (compound) by a foot (non si), we want to
+      # recognise the result to be a known non si unit (foot).
+      #
       def is_same_as?(other)
-        at_least_one_difference = self.instance_variables.inject(false) do |status, var|
-          next if var == "@base_units"
-          status ||= ( self.instance_variable_get(var) != other.instance_variable_get(var) )
-        end
-        return false if at_least_one_difference
+        return false unless self.name == other.name
+        return false unless self.symbol == other.symbol
+        return false unless self.dimensions == other.dimensions
+        return false unless self.factor == other.factor
+        return false unless self.scaling == other.scaling
         return true
       end
 
@@ -207,7 +213,7 @@ module Quantify
         else
           options << { :unit => other }
         end
-        Unit.new_unit_or_known_unit Unit::Compound.new options
+        Unit::Compound.new(options).new_unit_or_known_unit
       end
 
       # Draft code
@@ -227,7 +233,7 @@ module Quantify
         else
           options << { :unit => other, :index => -1 }
         end
-        Unit.new_unit_or_known_unit Unit::Compound.new options
+        Unit::Compound.new(options).new_unit_or_known_unit
       end
 
       # NEED TO IMPLEMENT Unit::Compound CLASS
@@ -272,6 +278,7 @@ module Quantify
           raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
         end
       end
+
     end
   end
 end
