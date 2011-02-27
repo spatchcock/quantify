@@ -181,20 +181,43 @@ module Quantify
         end
       end
 
-      # NEED TO IMPLEMENT Unit::Compound CLASS
+      # Draft code
       def multiply(other)
-        base_units = []
-        base_units << {:unit => self } << { :unit => other }
+        options = []
+        if self.instance_of? Unit::Compound
+          self.base_units.each { |unit| options << unit }
+        else
+          options << { :unit => self }
+        end
 
-        Unit::Compound.new base_units
+        if other.instance_of? Unit::Compound
+          other.base_units.each { |unit| options << unit }
+        else
+          options << { :unit => other }
+        end
+
+        Unit::Compound.new options
       end
 
-      # NEED TO IMPLEMENT Unit::Compound CLASS
+      # Draft code
       def divide(other)
-        base_units = []
-        base_units << {:unit => self } << { :unit => other, :index => -1 }
+        options = []
+        if self.instance_of? Unit::Compound
+          self.base_units.each { |unit| options << unit }
+        else
+          options << { :unit => self }
+        end
 
-        Unit::Compound.new base_units
+        if other.instance_of? Unit::Compound
+          other.base_units.each do |unit|
+            unit[:index] *= -1
+            options << unit
+          end
+        else
+          options << { :unit => other, :index => -1 }
+        end
+
+        Unit::Compound.new options
       end
 
       # NEED TO IMPLEMENT Unit::Compound CLASS

@@ -249,6 +249,26 @@ module Quantify
       return false
     end
 
+    # Method for identifying quantities which are 'specific' quantities, i.e
+    # quantities which represent a quantity of something *per unit mass*
+    #
+    # This is intended to be used eventually as part of a richer system for
+    # recognising and naming unknown quantities
+    #
+    def is_specific_quantity?
+      denominator_quantities == [@mass]
+    end
+
+    # Method for identifying quantities which are 'molar' quantities, i.e
+    # quantities which represent a quantity of something *per mole*
+    #
+    # This is intended to be used eventually as part of a richer system for
+    # recognising and naming unknown quantities
+    #
+    def is_molar_quantity?
+      denominator_quantities == [@amount_of_substance]
+    end
+
 
     # Multiplies self by another Dimensions object, returning self with an
     # updated configuration of dimensions. Since this is likely to have resulted
@@ -351,6 +371,14 @@ module Quantify
       quantities = self.instance_variables
       quantities.delete("@physical_quantity")
       return quantities
+    end
+
+    def numerator_quantities
+      base_quantities.select { |quantity| self.instance_variable_get(quantity) > 0 }
+    end
+
+    def denominator_quantities
+      base_quantities.select { |quantity| self.instance_variable_get(quantity) < 0 }
     end
 
     # Returns a hash representation of the base dimensions of self. This is used
