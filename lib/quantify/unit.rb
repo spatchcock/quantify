@@ -40,7 +40,12 @@ module Quantify
 
     # Returns an array containing objects representing all known non-SI units
     def self.non_si_units
-      @units.select { |unit| !unit.is_si? }
+      @units.select { |unit| unit.is_non_si? }
+    end
+
+    # Returns an array containing objects representing all known compound units
+    def self.compound_units
+      @units.select { |unit| unit.is_compound_unit? }
     end
 
     # Returns an array containing the names of all known units
@@ -58,6 +63,11 @@ module Quantify
       non_si_units.map { |unit| unit.name }
     end
 
+    # Returns an array containing the names of all known compound units
+    def self.compound_unit_names
+      compound_units.map { |unit| unit.name }
+    end
+
     # Returns an array containing the symbols of all known units
     def self.symbols
       @units.map { |unit| unit.symbol }
@@ -73,6 +83,11 @@ module Quantify
       non_si_units.map { |unit| unit.symbol }
     end
 
+    # Returns an array containing the symbols of all known compound units
+    def self.compound_unit_symbols
+      compound_units.map { |unit| unit.symbol }
+    end
+
     # Returns an array containing the JScience labels of all known units
     def self.jscience_labels
       @units.map { |unit| unit.jscience_label }
@@ -86,6 +101,11 @@ module Quantify
     # Returns an array containing the JScience labels of all known non-SI units
     def self.non_si_jscience_labels
       non_si_units.map { |unit| unit.jscience_label }
+    end
+
+    # Returns an array containing the JScience labels of all known compound units
+    def self.compound_unit_jscience_labels
+      compound_units.map { |unit| unit.jscience_label }
     end
 
     # Retrieve an object representing the specified unit.
@@ -174,5 +194,13 @@ module Quantify
     #   end
     # end
 
+    def self.new_unit_or_known_unit(unit)
+      if known_unit = Unit.for(unit.name) and
+          !known_unit.is_compound_unit?
+        return known_unit
+      else
+        return unit
+      end
+    end
   end
 end

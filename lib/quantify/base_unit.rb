@@ -112,9 +112,20 @@ module Quantify
         @dimensions.describe
       end
 
-      # Determine is a unit object represents an SI unit
+      # Determine is a unit object represents an SI named unit
       def is_si?
         self.is_a? SI
+      end
+
+      # Determine is a unit object represents an NonSI named unit
+      def is_non_si?
+        self.is_a? NonSI
+      end
+
+      # Determine is a unit object represents an compound unit consisting of SI
+      # or non-SI named units
+      def is_compound_unit?
+        self.is_a? Compound
       end
 
       # Determine if self is the same unit as another. All instance attributes are
@@ -129,6 +140,7 @@ module Quantify
       #
       def is_same_as?(other)
         at_least_one_difference = self.instance_variables.inject(false) do |status, var|
+          next if var == "@base_units"
           status ||= ( self.instance_variable_get(var) != other.instance_variable_get(var) )
         end
         return false if at_least_one_difference
@@ -195,8 +207,7 @@ module Quantify
         else
           options << { :unit => other }
         end
-
-        Unit::Compound.new options
+        Unit.new_unit_or_known_unit Unit::Compound.new options
       end
 
       # Draft code
@@ -216,8 +227,7 @@ module Quantify
         else
           options << { :unit => other, :index => -1 }
         end
-
-        Unit::Compound.new options
+        Unit.new_unit_or_known_unit Unit::Compound.new options
       end
 
       # NEED TO IMPLEMENT Unit::Compound CLASS

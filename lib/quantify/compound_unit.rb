@@ -60,8 +60,7 @@ module Quantify
 
       def derive_dimensions
         @base_units.inject(Dimensions.dimensionless) do |dimension,base|
-          base[:unit].dimensions.pow! base[:index]
-          dimension * base[:unit].dimensions
+          dimension * (base[:unit].dimensions.pow base[:index])
         end
       end
 
