@@ -16,7 +16,11 @@ module Quantify
         else
           prefix = Prefix.for(name_or_symbol)
         end
-        
+
+        if self.name.to_s =~ /\A(#{Prefix.si_names.join("|")})/ or
+            self.symbol =~ /\A(#{Prefix.si_symbols.join("|")})/
+          raise InvalidArgumentError, "Cannot add prefix where one already exists: #{name_or_symbol}"
+        end
         # need to deal with attempts to apply prefix
         # to a unit which already uses a prefix
         

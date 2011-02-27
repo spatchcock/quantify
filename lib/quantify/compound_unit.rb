@@ -3,6 +3,23 @@ module Quantify
   module Unit
     class Compound < Base
 
+      # Compound units are units made up of two or more units and powers thereof.
+      #
+      # The relationships between these units represent multiplication or division.
+      # E.g. a 'kilowatt hour' is the unit derived from multiplying a kilowatt and
+      # an hour. The 'kilogram per cubic metre' similarly represents the kilogram
+      # divided by the cubic metre (which itself represents metre x metre x metre).
+      #
+      # There are many SI units and NonSI units which are technically compound
+      # units - being derived from several base units. For example, the watt
+      # represents the joule (itself compound) divided by the second. In this
+      # case though, the use of a special name for the unit - the 'watt' rather
+      # than the 'kilogram square metre per cubic second' - allows it to be
+      # treated as a standard SI unit.
+      #
+      # The Compound class provides support for arbitrarily defined compound units
+      # which don't have well-established names.
+
       attr_reader :base_units
 
       # Initialize a compound unit by providing an array of hashes containing the
@@ -11,7 +28,9 @@ module Quantify
       #   e.g. units = [ {:unit => :kilometre },
       #                  { :unit => :hour, :index => -1 }]
       #
-      # Where no index is provided, this is assumed to be 1
+      # Where no index is provided, this is assumed to be 1.
+      #
+      # Base units are held within the @base_units instance variable.
       #
       def initialize(units=[])
         @base_units = []
@@ -58,24 +77,29 @@ module Quantify
         @base_units = new_base_units
       end
 
+      # Derive a representation of the physical dimensions of the compound unit
+      # by multilying together the dimensions of each of the base units.
+      #
       def derive_dimensions
         @base_units.inject(Dimensions.dimensionless) do |dimension,base|
           dimension * (base[:unit].dimensions.pow base[:index])
         end
       end
 
+      # Derive a name for the unit based on the names of the base units
       def derive_name
         unit_name = ""
-        numerator_units.inject(unit_name) do |name,base|
-          base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
-          base_unit_name = base[:unit].name.to_s + base_unit_index
-          name << "#{base_unit_name} "
+        unless numerator_units.empty?
+          numerator_units.inject(unit_name) do |name,base|
+            base_unit_index = ( base[:index] == 1 ? "" : "^#{base[:index]}" )
+            base_unit_name = base[:unit].name.to_s + base_unit_index
+            name << "#{base_unit_name} "
+          end
         end
         unless denominator_units.empty?
           unit_name << "per "
           denominator_units.inject(unit_name) do |name,base|
-            base[:index] *= -1
-            base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
+            base_unit_index = ( base[:index] == -1 ? "" : "^#{base[:index]}" )
             base_unit_name = base[:unit].name.to_s + base_unit_index
             name << "#{base_unit_name} "
           end
@@ -83,6 +107,7 @@ module Quantify
         return unit_name.strip.gsub(" ", "_").to_sym
       end
 
+      # Derive a symbol for the unit based on the symbols of the base units
       def derive_symbol
         @base_units.inject('') do |symbol,base|
           base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
@@ -91,16 +116,21 @@ module Quantify
         end.strip.gsub(" ", "_").to_sym
       end
 
+      # Derive the multiplicative factor for the unit based on those of the base
+      # units
+      #
       def derive_factor
         @base_units.inject(1) do |factor,base|
           factor * ( base[:unit].factor ** base[:index] )
         end
       end
 
+      # Returns an array containing only the base units which have positive indices
       def numerator_units
         @base_units.select { |unit| unit[:index] > 0 }
       end
 
+      # Returns an array containing only the base units which have negative indices
       def denominator_units
         @base_units.select { |unit| unit[:index] < 0 }
       end
@@ -109,7 +139,16 @@ module Quantify
         # change all specified units to new unot of same dimensions
       end
 
-      # Determine if a unit instance
+      # Determine if a unit instance is the same as a known unit.
+      #
+      # This can be used to determine if the compound unit which was derived from
+      # some operation simply represents a known, established unit, which can then
+      # be returned instead of representing the unit as an instance of the Compound
+      # class.
+      #
+      # This has the advantage of enabling the use of SI and NonSI specific methods
+      # and prefixes.
+      #
       def new_unit_or_known_unit
         if known_unit = Unit.for(self.name) and
             known_unit.is_same_as? self and

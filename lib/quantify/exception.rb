@@ -1,6 +1,4 @@
-#! usr/bin/ruby
-
-module RScience
+module Quantify
 
   class QuantityParseError < Exception
   end

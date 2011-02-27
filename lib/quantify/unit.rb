@@ -33,6 +33,84 @@ module Quantify
       @units
     end
 
+    # Retrieve an object representing the specified unit.
+    #
+    # Argument can be the unit name, symbol or JScience label and provided as
+    # a string or a symbol, e.g.
+    #
+    #   Unit.for :metre
+    #
+    #   Unit.for 'kilogram'
+    #
+    # This can be shortened to, for example, Unit.metre by virtue of the
+    # #method_missing method (see below)
+    #
+    # This method will recognise valid combinations of known units and prefixes,
+    # irrespective of whether the prefixed unit has been initialized into the
+    # system of known units in it's own right. For example,
+    #
+    #   Unit.centimetre ... or, alternatively ... Unit.cm
+    #
+    # will return a Unit::SI object with attributes representing a centimetre
+    # based on the initialized Unit for :metre and Prefix :centi. Note: this
+    # method is designed to only allow SI units to use SI prefixes, and NonSI
+    # units to use only NonSI prefixes
+    #
+    def self.for(name_symbol_or_label)
+      if name_symbol_or_label.is_a? String or
+         name_symbol_or_label.is_a? Symbol
+        if unit = @units.find do |unit|
+            unit.name == name_symbol_or_label.standardize or
+            unit.symbol == name_symbol_or_label.to_sym or
+            unit.jscience_label == name_symbol_or_label.to_sym
+          end
+          return unit.deep_clone
+        elsif name_symbol_or_label.to_s =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
+          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
+          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
+          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/ or
+          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_jscience_labels.join("|")})\z/ or
+          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_jscience_labels.join("|")})\z/
+          return Unit.for($2).with_prefix($1).deep_clone
+        else
+          return nil
+        end
+      else
+        raise InvalidArgumentError, "Argument must be a Symbol or String"
+      end
+    end
+
+    # Parse complex strings into compound unit.
+    #
+    # NOT COMPREHENSIVELY TESTED
+    #
+    def self.parse(string)
+      units = string.split(" ").map do |substring|
+        substring.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
+        { :unit => $1.to_s, :index => ( $2.nil? or $2.empty? ? nil : $2.to_i ) }
+      end
+
+      if units.size == 1 and units[0][:index].nil?
+        return Unit.for units[0][:unit]
+      else
+        return Unit::Compound.new(units)
+      end
+    end
+
+    # Provides syntactic sugar for accessing units. Specify:
+    #
+    #  Unit.degree_celsius
+    #
+    # rather than Unit.for :degree_celsius
+    #
+    def self.method_missing(method, *args, &block)
+      if unit = self.for(method)
+        return unit
+      else
+        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
+      end
+    end
+
     # Returns an array containing objects representing all known SI units
     def self.si_units
       @units.select { |unit| unit.is_si? }
@@ -106,85 +184,6 @@ module Quantify
     # Returns an array containing the JScience labels of all known compound units
     def self.compound_unit_jscience_labels
       compound_units.map { |unit| unit.jscience_label }
-    end
-
-    # Retrieve an object representing the specified unit.
-    #
-    # Argument can be the unit name, symbol or JScience label and provided as
-    # a string or a symbol, e.g.
-    #
-    #   Unit.for :metre
-    #
-    #   Unit.for 'kilogram'
-    #
-    # This can be shortened to, for example, Unit.metre by virtue of the
-    # #method_missing method (see below)
-    #
-    # This method will recognise valid combinations of known units and prefixes,
-    # irrespective of whether the prefixed unit has been initialized into the
-    # system of known units in it's own right. For example,
-    #
-    #   Unit.centimetre ... or, alternatively ... Unit.cm
-    #
-    # will return a Unit::SI object with attributes representing a centimetre
-    # based on the initialized Unit for :metre and Prefix :centi. Note: this
-    # method is designed to only allow SI units to use SI prefixes, and NonSI
-    # units to use only NonSI prefixes
-    #
-    def self.for(name_symbol_or_label)
-      if name_symbol_or_label.is_a? String or
-         name_symbol_or_label.is_a? Symbol
-        if unit = @units.find do |unit|
-            unit.name == name_symbol_or_label.standardize or
-            unit.symbol == name_symbol_or_label.to_sym or
-            unit.jscience_label == name_symbol_or_label.to_sym
-          end
-          return unit.deep_clone
-        elsif name_symbol_or_label.to_s =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_jscience_labels.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_jscience_labels.join("|")})\z/
-          return Unit.for($2).with_prefix($1).deep_clone
-        else
-          return nil
-        end
-      else
-        raise InvalidArgumentError, "Argument must be a Symbol or String"
-      end
-    end
-
-    # Provides syntactic sugar for accessing units. Specify:
-    #
-    #  Unit.degree_celsius
-    #
-    # rather than Unit.for :degree_celsius
-    #
-    def self.method_missing(method, *args, &block)
-      if unit = self.for(method)
-        return unit
-      else
-        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
-      end
-    end
-
-
-    # Parse complex strings into compound unit.
-    #
-    # NOT COMPREHENSIVELY TESTED
-    #
-    def self.parse(string)
-      units = string.split(" ").map do |substring|
-        substring.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
-        { :unit => $1.to_s, :index => ( $2.nil? or $2.empty? ? nil : $2.to_i ) }
-      end
-
-      if units.size == 1 and units[0][:index].nil?
-        return Unit.for units[0][:unit]
-      else
-        return Unit::Compound.new(units)
-      end
     end
 
   end

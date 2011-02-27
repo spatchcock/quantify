@@ -199,7 +199,12 @@ module Quantify
         end
       end
 
-      # Draft code
+      # Multiply two units together. This results in the generation of a compound
+      # unit.
+      #
+      # In the event that the new unit represents a known unit, the non-compound
+      # representation is returned (i.e. of the SI or NonSI class).
+      #
       def multiply(other)
         options = []
         if self.instance_of? Unit::Compound
@@ -216,7 +221,12 @@ module Quantify
         Unit::Compound.new(options).new_unit_or_known_unit
       end
 
-      # Draft code
+      # Divide one unit by another. This results in the generation of a compound
+      # unit.
+      #
+      # In the event that the new unit represents a known unit, the non-compound
+      # representation is returned (i.e. of the SI or NonSI class).
+      #
       def divide(other)
         options = []
         if self.instance_of? Unit::Compound
@@ -236,14 +246,27 @@ module Quantify
         Unit::Compound.new(options).new_unit_or_known_unit
       end
 
-      # NEED TO IMPLEMENT Unit::Compound CLASS
-      def pow
-
-      end
-
-      def reciprocalize
-        self.dimensions.reciprocalize!
-        return self
+      # Raise a unit to a power. This results in the generation of a compound
+      # unit, e.g. m^3.
+      # 
+      # In the event that the new unit represents a known unit, the non-compound
+      # representation is returned (i.e. of the SI or NonSI class).
+      #
+      def pow(power)
+        return nil if power == 0
+        original_unit = self.deep_clone
+        if power > 0
+          new_unit = self.deep_clone
+          (power - 1).times do
+            new_unit *= original_unit
+          end
+        elsif power < 0
+          new_unit = Compound.new( [{ :unit => self, :index => -1 }] )
+          ((power.abs) - 1).times do
+            new_unit /= original_unit
+          end
+        end
+        return new_unit
       end
 
       alias :times :multiply

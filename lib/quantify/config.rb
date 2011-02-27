@@ -141,7 +141,6 @@ Unit::SI.configure do
   load :name => :henry, :physical_quantity => :inductance, :symbol => 'H'
   load :name => :joule, :physical_quantity => :energy, :symbol => 'J'
   load :name => :kelvin, :physical_quantity => :temperature, :symbol => 'K'
-  load :name => :kilogram, :physical_quantity => :mass, :symbol => 'kg'
   load :name => :lumen, :physical_quantity => :luminous_flux, :symbol => 'lm'
   load :name => :lux, :physical_quantity => :illuminance, :symbol => 'lx'
   load :name => :metre, :physical_quantity => :length, :symbol => 'm'
@@ -168,15 +167,24 @@ Unit::SI.configure do
   #
   # All mass unit factors are nevertheless specified relative to the SI unit
   # (kilogram), in consistency with all other unit types
+  #
+  # Kilogram could be defined explcitly here, but given the multiple prefix
+  # initialization below (which includes kilogram), the individual assignment for
+  # kilogram is commented out here (trying to assign a prefix to a unit which
+  # already contains a prefix throws an error)
+  #
+  # load :name => :kilogram, :physical_quantity => :mass, :symbol => 'kg'
   load :name => :gram, :physical_quantity => :mass, :factor => 1e-3, :symbol => 'g'  
 
   # add required prefixes individually
-  Unit.kilometre.load
+  # Unit.kilometre.load
 
-  # add required prefixes on a multiple basis
-  [:kilo,:mega,:giga,:tera].each do |prefix|
-    Unit.hertz.with_prefix(prefix).load
-  end
+  # Or ... add required prefixes on a multiple basis
+  [:kilo,:mega,:giga,:tera].map do |prefix|
+    Unit.si_units.map do |unit|
+      unit.with_prefix(prefix)
+    end
+  end.flatten.each {|unit| unit.load }
 
 end
 
@@ -194,7 +202,6 @@ Unit::NonSI.configure do
   # load :name => :abhmo, :physical_quantity => :electric_conductance, :factor => 1e9
   # load :name => :abohm, :physical_quantity => :electric_resistance, :factor => 1e-9
   # load :name => :abvolt, :physical_quantity => :electric_potential_difference, :factor => 10e-9, :symbol => 'abV'
-  # load :name => :ampere_hour, :physical_quantity => :electric_charge, :factor => 3.6e3, :symbol => 'Ah'
   load :name => :angstrom, :physical_quantity => :length, :factor => 100e-12, :symbol => 'Å'
   load :name => :arcminute, :physical_quantity => :plane_angle, :factor => Math::PI/10800, :symbol => '′'
   load :name => :arcsecond, :physical_quantity => :plane_angle, :factor => Math::PI/648000, :symbol => '″'
@@ -267,7 +274,6 @@ Unit::NonSI.configure do
   load :name => :inch_of_mercury, :physical_quantity => :pressure, :factor => 3.386389e3, :symbol => 'inHg'
   load :name => :inch_of_water, :physical_quantity => :pressure, :factor => 249.0740, :symbol => 'inH2O'
   load :name => :kilogram_force, :physical_quantity => :force, :factor => 9.80665, :symbol => 'kgf'
-  load :name => :watt_hour, :physical_quantity => :energy, :factor => 3.6e3, :symbol => 'Wh'
   load :name => :nautical_league, :physical_quantity => :length, :factor => 5.556e3, :symbol => 'nl'
   load :name => :statute_league, :physical_quantity => :length, :factor => 4.828032e3, :symbol => 'lea'
   load :name => :light_year, :physical_quantity => :length, :factor => 9.46073e15, :symbol => 'ly'
@@ -280,5 +286,18 @@ Unit::NonSI.configure do
   load :name => :tonne, :physical_quantity => :mass, :factor => 1000.0, :symbol => 't'
   load :name => :unified_atomic_mass, :physical_quantity => :mass, :factor => 1.66054e-27, :symbol => 'u'
   load :name => :yard, :physical_quantity => :length, :factor => 0.9144, :symbol => 'yd'
+
+end
+
+Unit::Compound.configure do
+
+  # Define compound units on the base of the product or quotient of two or more
+  # known units.
+
+  # kilowatt hour
+  (Unit.kW * Unit.h).load
+
+  # electricity emissions factor
+  #(Unit.kg / Unit.kW_h).load
 
 end
