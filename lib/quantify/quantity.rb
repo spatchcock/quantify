@@ -82,7 +82,7 @@ module Quantify
 
     # Returns a string representation of the quantity, using the unit symbol
     def to_s
-      "#{self.value} #{self.unit.symbol}"
+      "#{self.value} #{self.unit.symbol.to_s.gsub("_", " ")}"
     end
 
     # Converts self into a quantity using the unit provided as an argument. The
@@ -158,16 +158,14 @@ module Quantify
 
     # Multiply a quantity by a scalar value, i.e. a value of the Numeric class
     #
-    # Multiplying two Quantity objects will be possible when the Unit::Compound
-    # class is implemented
-    #
     def multiply(other)
       if other.kind_of? Numeric
         @value *= other
         return self
       elsif other.kind_of? Quantity
-        # REQUIRES Unit::Compound to be implemented
-        raise Quantify::InvalidArgumentError "Multiplying quantities by quantities not implemented yet"
+        new_unit = self.unit * other.unit
+        new_value = self.value * other.value
+        return Quantity.new new_value, new_unit
       else
         raise Quantify::InvalidArgumentError "Cannot multiply a Quantity by a non-Quantity or non-Numeric object"
       end
@@ -175,16 +173,14 @@ module Quantify
 
     # Divide a quantity by a scalar value, i.e. a value of the Numeric class
     #
-    # Divinding two Quantity objects will be possible when the Unit::Compound
-    # class is implemented
-    #
     def divide(other)
       if other.kind_of? Numeric
         @value /= other
         return self
       elsif other.kind_of? Quantity
-        # REQUIRES Unit::Compound to be implemented
-        raise Quantify::InvalidArgumentError "Multiplying quantities by quantities not implemented yet"
+        new_unit = self.unit / other.unit
+        new_value = self.value / other.value
+        return Quantity.new new_value, new_unit
       else
         raise Quantify::InvalidArgumentError "Cannot multiply a Quantity by a non-Quantity or non-Numeric object"
       end
@@ -202,6 +198,14 @@ module Quantify
         @value = (@value * factor).round / factor
       end
       return self
+    end
+
+    def coerce(object)
+      if object.kind_of? Numeric
+        return Quantity.new(object, Unit.unity), self
+      else
+        raise InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
+      end
     end
 
     def method_missing(method, *args, &block)

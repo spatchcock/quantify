@@ -237,13 +237,12 @@ module Quantify
 
         if other.instance_of? Unit::Compound
           other.base_units.each do |unit|
-            unit[:index] *= -1
-            options << unit
+            options << { :unit => unit[:unit], :index => unit[:index] * -1 }
           end
         else
           options << { :unit => other, :index => -1 }
         end
-        Unit::Compound.new(options).new_unit_or_known_unit
+        Unit::Compound.new(options)#.new_unit_or_known_unit
       end
 
       # Raise a unit to a power. This results in the generation of a compound
@@ -274,6 +273,14 @@ module Quantify
       alias :/ :divide
       alias :** :pow
 
+      def coerce(object)
+        if object.kind_of? Numeric and object == 1
+          return Unit.unity, self
+        else
+          raise InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
+        end
+      end
+      
       # Clone self and explicitly and additionally clone the Dimensions object
       # located at @dimensions. This enables full or 'deep' copies of the already
       # initialized units to be retrieve and manipulated without corrupting the

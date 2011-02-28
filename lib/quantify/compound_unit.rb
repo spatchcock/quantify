@@ -36,7 +36,7 @@ module Quantify
         @base_units = []
         units.each do |unit|
           if unit[:unit].is_a? Quantify::Unit::Base
-            base_unit = unit[:unit]
+            base_unit = unit[:unit].deep_clone
           else
             base_unit = Unit.for(unit[:unit])
           end
@@ -64,6 +64,7 @@ module Quantify
         new_base_units = []
         while @base_units.size > 0 do
           base = @base_units.shift
+          next if base[:unit].dimensions.is_dimensionless?
           # find any similar units, remove then from array so that they do not get
           # used in the following iterations. Sum the indices of all similar units
           base[:index] = @base_units.select do |hash|

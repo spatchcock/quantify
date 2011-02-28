@@ -131,8 +131,10 @@ describe Quantity do
     lambda{20.metre * '3'}.should raise_error
   end
 
-  it "should raise error if multiplying by another quantity - NOT IMPLEMENTED" do
-    lambda{20.metre * 1.metre}.should raise_error
+  it "should two quantities" do
+    quantity = (20.metre * 1.metre)
+    quantity.value.should == 20
+    quantity.unit.measures.should == :area
   end
 
   it "should successfully divide a quantity by a scalar" do

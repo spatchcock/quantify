@@ -289,15 +289,31 @@ Unit::NonSI.configure do
 
 end
 
+Unit::Base.configure do
+
+  # Define a unit representing the quantity 1.
+  # This can be used to define reciprocal units using division, i.e.
+  #
+  #   kg^-1   is equivalent to   1/kg   or   <unity>/<kg>
+  #
+  load :name => :unity, :physical_quantity => :dimensionless, :symbol => '1', :factor => 1
+
+end
+
 Unit::Compound.configure do
 
   # Define compound units on the base of the product or quotient of two or more
   # known units.
+  #
+  # These don't actually need to be generated within this container, but it's tidy
 
   # kilowatt hour
   (Unit.kW * Unit.h).load
 
   # electricity emissions factor
   (Unit.kg / Unit.kW_h).load
+
+  # reciprocal/inverse units, e.g. inverse length
+  (1/Unit.centimetre).load
 
 end

@@ -256,5 +256,12 @@ describe Unit do
     new = energy / length
     new.measures.should == :force
   end
+
+  it "should create compound" do
+    unit = (Unit.kg / Unit.kW_h)
+    unit.name.should == :kilogram_per_kilowatt_hour
+    unit.measures.should_not == :energy
+  end
+
 end
 
