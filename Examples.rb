@@ -7,7 +7,7 @@ kg = Unit.kg                                                 #=> #<Quantify::Uni
 kg_per_kWh = b/a                                             #=> #<Quantify::Unit::Compound:0xb746f093 ... >
 
 emission_factor = Quantity.new(0.54, kg_per_kWh)             #=> #<Quantify::Quantity:0xb75cd570 ... >
-emission_factor.to_s                                         #=> "0.54 kg_kW_h"
+emission_factor.to_s                                         #=> "0.54 kg kW^-1 h^-1"
 
 consumption = Quantity.new(9885.5, kWh)                      #=> #<Quantify::Quantity:0xb7j4k3570 ... >
 consumption.to_s                                             #=> "9885.5 kW_h"
