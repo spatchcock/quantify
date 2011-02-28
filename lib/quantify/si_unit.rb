@@ -21,8 +21,6 @@ module Quantify
             self.symbol =~ /\A(#{Prefix.si_symbols.join("|")})/
           raise InvalidArgumentError, "Cannot add prefix where one already exists: #{name_or_symbol}"
         end
-        # need to deal with attempts to apply prefix
-        # to a unit which already uses a prefix
         
         unless prefix.nil?
           unless prefix.is_a? Quantify::Prefix::SI

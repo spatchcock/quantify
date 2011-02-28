@@ -28,8 +28,10 @@ module Quantify
           prefix = Prefix.for(name_or_symbol)
         end
 
-        # need to deal with attempts to apply prefix
-        # to a unit which already uses a prefix
+        if self.name.to_s =~ /\A(#{Prefix.non_si_names.join("|")})/ or
+            self.symbol =~ /\A(#{Prefix.non_si_symbols.join("|")})/
+          raise InvalidArgumentError, "Cannot add prefix where one already exists: #{name_or_symbol}"
+        end
         
         unless prefix.nil?
           unless prefix.is_a? Quantify::Prefix::NonSI

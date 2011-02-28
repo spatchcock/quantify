@@ -256,7 +256,7 @@ module Quantify
     # recognising and naming unknown quantities
     #
     def is_specific_quantity?
-      denominator_quantities == [@mass]
+      denominator_quantities == ["@mass"]
     end
 
     # Method for identifying quantities which are 'molar' quantities, i.e
@@ -266,7 +266,7 @@ module Quantify
     # recognising and naming unknown quantities
     #
     def is_molar_quantity?
-      denominator_quantities == [@amount_of_substance]
+      denominator_quantities == ["@amount_of_substance"]
     end
 
 
