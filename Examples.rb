@@ -23,10 +23,10 @@ unit.symbol                                                  #=> :kg
 unit.dimensions                                              #=> #<Quantify::Dimensions:0xb75c4254 .. >
 unit.measures                                                #=> :length
 unit.alternatives                                            #=> [:metre, :megametre, :gigametre, :terametre, :angstrom,
-                                                                  :astronomical_unit, :baromil, :chain, :dram, :ell, :fathom,
-                                                                  :fermi, :foot_us_survey, :foot, :furlong, :hand, :inch,
-                                                                  :nautical_league, :statute_league, :light_year, :line,
-                                                                  :link, :yard]
+                                                             #    :astronomical_unit, :baromil, :chain, :dram, :ell, :fathom,
+                                                             #    :fermi, :foot_us_survey, :foot, :furlong, :hand, :inch,
+                                                             #    :nautical_league, :statute_league, :light_year, :line,
+                                                             #    :link, :yard]
 other_unit = Unit.tonne
 unit * other_unit                                            #=> #<Quantify::Unit::Compound:0xb746f093 ... >
 
