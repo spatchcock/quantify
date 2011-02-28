@@ -298,6 +298,6 @@ Unit::Compound.configure do
   (Unit.kW * Unit.h).load
 
   # electricity emissions factor
-  #(Unit.kg / Unit.kW_h).load
+  (Unit.kg / Unit.kW_h).load
 
 end
