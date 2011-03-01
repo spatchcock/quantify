@@ -19,7 +19,7 @@ other_unit.alternatives :symbol                              #=> [ :s, :ks, :Ms,
 another_unit = unit / other_unit                             #=> #<Quantify::Unit::Compound:0xb74af323 ... >
 another_unit.name                                            #=> :kilometer_per_hour
 another_unit.symbol                                          #=> :km_h^-1
-another_unit.measures                                        #=> :veolcity
+another_unit.measures                                        #=> :velocity
 
 last_unit = Unit.m
 last.unit.measures                                           #=> :length
@@ -54,7 +54,14 @@ converted_quantity.to_s                                      #=> "2239.962137310
 
 ----
 
-# Example application
+# One line conversion of a quantity to a new unit
+# 5000 litres into US petroleum barrels
+
+5000.L.to_bbl.value                                          #=> 31.4490528488754
+
+----
+
+# Complex example
 
 # Define energy units
 kW = Unit.kW                                                 #=> #<Quantify::Unit::SI:0xb7586620 ... >
