@@ -2,7 +2,7 @@
 class String
 
   def standardize!
-    self.downcase.gsub(" ","_").to_sym
+    self.gsub("_"," ")
   end
 
   def standardize

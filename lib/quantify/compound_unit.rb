@@ -93,7 +93,7 @@ module Quantify
         unless numerator_units.empty?
           numerator_units.inject(unit_name) do |name,base|
             base_unit_index = ( base[:index] == 1 ? "" : "^#{base[:index]}" )
-            base_unit_name = base[:unit].name.to_s + base_unit_index
+            base_unit_name = base[:unit].name + base_unit_index
             name << "#{base_unit_name} "
           end
         end
@@ -101,11 +101,11 @@ module Quantify
           unit_name << "per "
           denominator_units.inject(unit_name) do |name,base|
             base_unit_index = ( base[:index] == -1 ? "" : "^#{base[:index]}" )
-            base_unit_name = base[:unit].name.to_s + base_unit_index
+            base_unit_name = base[:unit].name + base_unit_index
             name << "#{base_unit_name} "
           end
         end
-        return unit_name.strip.gsub(" ", "_").to_sym
+        return unit_name.strip
       end
 
       # Derive a symbol for the unit based on the symbols of the base units
@@ -114,7 +114,7 @@ module Quantify
           base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
           base_unit_symbol = base[:unit].symbol.to_s + base_unit_index
           symbol << "#{base_unit_symbol} "
-        end.strip.gsub(" ", "_").to_sym
+        end.strip
       end
 
       # Derive the multiplicative factor for the unit based on those of the base
@@ -140,6 +140,20 @@ module Quantify
         # change all specified units to new unot of same dimensions
       end
 
+      # Determine is a unit object represents an SI named unit.
+      #
+      # Iterate through all base units looking for a single instance of a non-SI
+      # unit. Coumpound units are only SI if they are entirely composed of SI
+      # units
+      #
+      def is_si?
+        # if this expression is false - i.e. no instance of an SI check returning
+        # false occurs - return true... The unit is an SI unit.
+        !@base_units.inject(false) do |status,unit|
+          status ||= !unit[:unit].is_si?
+        end
+      end
+
       # Determine if a unit instance is the same as a known unit.
       #
       # This can be used to determine if the compound unit which was derived from
@@ -151,13 +165,10 @@ module Quantify
       # and prefixes.
       #
       def new_unit_or_known_unit
-        if known_unit = Unit.for(self.name) and
-            known_unit.is_same_as? self and
-            !known_unit.is_compound_unit?
-          return known_unit
-        else
-          return self
+        return self unless known_unit = Unit.units.find do |unit|
+          unit == self and !unit.is_compound_unit?
         end
+        return known_unit
       end
 
     end

@@ -11,15 +11,14 @@ module Quantify
       # alse be of the analogous Prefix class (i.e. SI).
       #
       def with_prefix(name_or_symbol)
+        if self.name =~ /\A(#{Prefix.si_names.join("|")})/
+          raise InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
+        end
+
         if name_or_symbol.is_a? Prefix
           prefix = name_or_symbol
         else
           prefix = Prefix.for(name_or_symbol)
-        end
-
-        if self.name.to_s =~ /\A(#{Prefix.si_names.join("|")})/ or
-            self.symbol =~ /\A(#{Prefix.si_symbols.join("|")})/
-          raise InvalidArgumentError, "Cannot add prefix where one already exists: #{name_or_symbol}"
         end
         
         unless prefix.nil?
@@ -27,7 +26,7 @@ module Quantify
             raise InvalidArgumentError, "Invalid prefix for Unit::SI class: #{name_or_symbol}"
           end
           new_unit_options = {}
-          new_unit_options[:name] = "#{prefix.name}#{self.name}".standardize
+          new_unit_options[:name] = "#{prefix.name}#{self.name.downcase}".capitalize
           new_unit_options[:symbol] = "#{prefix.symbol}#{self.symbol}"
           new_unit_options[:factor] = prefix.factor * self.factor
           new_unit_options[:physical_quantity] = self.dimensions

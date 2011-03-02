@@ -24,34 +24,34 @@ module Quantify
     end
 
     def self.names
-      @prefixes.map { |prefix| prefix.name.to_s  }
+      @prefixes.map { |prefix| prefix.name  }
     end
 
     def self.si_names
-      si_prefixes.map { |prefix| prefix.name.to_s }
+      si_prefixes.map { |prefix| prefix.name }
     end
 
     def self.non_si_names
-      non_si_prefixes.map { |prefix| prefix.name.to_s }
+      non_si_prefixes.map { |prefix| prefix.name }
     end
 
     def self.symbols
-      @prefixes.map { |prefix| prefix.symbol.to_s }
+      @prefixes.map { |prefix| prefix.symbol }
     end
 
     def self.si_symbols
-      si_prefixes.map { |prefix| prefix.symbol.to_s }
+      si_prefixes.map { |prefix| prefix.symbol }
     end
 
     def self.non_si_symbols
-      non_si_prefixes.map { |prefix| prefix.symbol.to_s }
+      non_si_prefixes.map { |prefix| prefix.symbol }
     end
 
     def self.for(name_or_symbol)
       if name_or_symbol.is_a? String or name_or_symbol.is_a? Symbol
         if prefix = @prefixes.find do |prefix|
-           prefix.name == name_or_symbol.standardize or
-           prefix.symbol == name_or_symbol.to_sym
+           prefix.name == name_or_symbol.to_s.gsub("_"," ").downcase or
+           prefix.symbol == name_or_symbol.to_s.gsub("_"," ")
           end
           return prefix.clone
         else
@@ -85,22 +85,15 @@ module Quantify
       attr_reader :name, :symbol, :factor
 
       def initialize(options)
-        @symbol = options[:symbol].to_sym
+        @symbol = options[:symbol].to_s.gsub("_"," ")
         @factor = options[:factor].to_f
-        @name = options[:name].standardize
+        @name = options[:name].to_s.gsub("_"," ").downcase
       end
 
       def is_si?
         self.is_a? SI
       end
 
-      def method_missing(method, *args, &block)
-        if unit = Unit.for("#{method}")
-          unit.with_prefix self
-        else
-          raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
-        end
-      end
     end
 
     class SI < Base; end

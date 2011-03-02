@@ -60,17 +60,17 @@ module Quantify
       if name_symbol_or_label.is_a? String or
          name_symbol_or_label.is_a? Symbol
         if unit = @units.find do |unit|
-            unit.name == name_symbol_or_label.standardize or
-            unit.symbol == name_symbol_or_label.to_sym or
-            unit.jscience_label == name_symbol_or_label.to_sym
+            unit.name == name_symbol_or_label.to_s.gsub("_"," ").downcase or
+            unit.symbol == name_symbol_or_label.to_s.gsub("_"," ") or
+            unit.label == name_symbol_or_label.to_s
           end
           return unit.deep_clone
-        elsif name_symbol_or_label.to_s =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_jscience_labels.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_jscience_labels.join("|")})\z/
+        elsif name_symbol_or_label.to_s.gsub("_"," ").downcase =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
+          name_symbol_or_label.to_s.gsub("_"," ").downcase =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
+          name_symbol_or_label.to_s.gsub("_"," ") =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
+          name_symbol_or_label.to_s.gsub("_"," ") =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/ or
+          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_labels.join("|")})\z/ or
+          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_labels.join("|")})\z/
           return Unit.for($2).with_prefix($1).deep_clone
         else
           return nil
@@ -167,23 +167,23 @@ module Quantify
     end
 
     # Returns an array containing the JScience labels of all known units
-    def self.jscience_labels
-      @units.map { |unit| unit.jscience_label }
+    def self.labels
+      @units.map { |unit| unit.label }
     end
 
     # Returns an array containing the JScience labels of all known SI units
-    def self.si_jscience_labels
-      si_units.map { |unit| unit.jscience_label }
+    def self.si_labels
+      si_units.map { |unit| unit.label }
     end
 
     # Returns an array containing the JScience labels of all known non-SI units
-    def self.non_si_jscience_labels
-      non_si_units.map { |unit| unit.jscience_label }
+    def self.non_si_labels
+      non_si_units.map { |unit| unit.label }
     end
 
     # Returns an array containing the JScience labels of all known compound units
-    def self.compound_unit_jscience_labels
-      compound_units.map { |unit| unit.jscience_label }
+    def self.compound_unit_labels
+      compound_units.map { |unit| unit.label }
     end
 
   end

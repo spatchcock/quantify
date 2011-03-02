@@ -23,7 +23,6 @@ describe Dimensions do
     list = Dimensions.physical_quantities
     list.should include "acceleration"
     list.should include "force"
-    list.should_not include :force
     list.should_not include "effort"
   end
 
@@ -44,7 +43,7 @@ describe Dimensions do
   end
 
   it "should return correct dimension object with string 'energy'" do
-    dimensions = Dimensions.for('energy')
+    dimensions = Dimensions.for('ENERGY')
     dimensions.class.should == Dimensions
     dimensions.length.should == 2
     dimensions.mass.should == 1
@@ -96,13 +95,13 @@ describe Dimensions do
 
   it "should identify the physical quantity and set ivar if known" do
     dimensions = Dimensions.new :mass => 1
-    dimensions.describe.should == :mass
-    dimensions.physical_quantity.should == :mass
+    dimensions.describe.should == 'mass'
+    dimensions.physical_quantity.should == 'mass'
   end
 
   it "should identify the physical quantity if known" do
     dimensions = Dimensions.new :mass => 1, :length => 2, :time => -2
-    dimensions.describe.should == :energy
+    dimensions.describe.should == 'energy'
     dimensions.is_known?.should == true
   end
 
@@ -118,7 +117,7 @@ describe Dimensions do
     dimensions_3 = dimensions_1 * dimensions_2
     dimensions_3.class.should == Dimensions
     dimensions_3.length.should == 2
-    dimensions_3.physical_quantity.should == :area
+    dimensions_3.physical_quantity.should == 'area'
   end
 
   it "should return the correct dimensions representation on dividing" do
@@ -127,7 +126,7 @@ describe Dimensions do
     dimensions_3 = dimensions_1 / dimensions_2
     dimensions_3.class.should == Dimensions
     dimensions_3.length.should == 1
-    dimensions_3.physical_quantity.should == :length
+    dimensions_3.physical_quantity.should == 'length'
   end
 
   it "should return the correct dimensions representation on raising to power" do
@@ -135,7 +134,7 @@ describe Dimensions do
     dimensions_2 = dimensions_1 ** 2
     dimensions_2.class.should == Dimensions
     dimensions_2.length.should == 2
-    dimensions_2.physical_quantity.should == :area
+    dimensions_2.physical_quantity.should == 'area'
   end
 
   it "should return the correct dimensions representation on reciprocalize" do
@@ -143,11 +142,11 @@ describe Dimensions do
     dimensions_2 = dimensions_1.reciprocalize
     dimensions_2.class.should == Dimensions
     dimensions_2.time.should == -1
-    dimensions_2.physical_quantity.should == :frequency
+    dimensions_2.physical_quantity.should == 'frequency'
   end
 
   it "should retrieve the correct dimension with dynamic method" do
-    Dimensions.acceleration.physical_quantity.should == :acceleration
+    Dimensions.acceleration.physical_quantity.should == 'acceleration'
   end
 
   it "should recognise length as a base quantity" do

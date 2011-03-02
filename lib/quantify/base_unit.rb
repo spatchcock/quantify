@@ -31,7 +31,7 @@ module Quantify
         class_eval &block
       end
 
-      attr_reader :name, :symbol, :jscience_label
+      attr_reader :name, :symbol, :label
       attr_reader :dimensions, :factor
 
       # Create a new Unit::Base instance.
@@ -57,7 +57,7 @@ module Quantify
       #                    :scaling           => A scaling factor, used on by NonSI
       #                                          temperature units (see Unit::NonSI)
       #
-      #                    :jscience_label    => The label used by JScience for the
+      #                    :label    => The label used by JScience for the
       #                                          unit
       #
       # The physical quantity option is used to locate the corresponding dimensional
@@ -68,7 +68,7 @@ module Quantify
         unless options.keys.include?(:name) && options.keys.include?(:physical_quantity)
           raise InvalidArgumentError, "Unit definition must include a :name and :physical quantity"
         end
-        @name = options[:name].standardize
+        @name = options[:name].to_s.gsub("_"," ").downcase
         if options[:physical_quantity].is_a? Dimensions
           @dimensions = options[:physical_quantity]
         elsif options[:physical_quantity].is_a? String or options[:physical_quantity].is_a? Symbol
@@ -77,8 +77,8 @@ module Quantify
           raise InvalidArgumentError, "Unknown physical_quantity specified"
         end
         @factor = options[:factor].nil? ? 1.0 : options[:factor].to_f
-        @symbol = options[:symbol].nil? ? nil : options[:symbol].to_sym
-        @jscience_label = options[:jscience_label].nil? ? nil : options[:jscience_label].to_sym
+        @symbol = options[:symbol].nil? ? nil : options[:symbol].to_s.gsub("_"," ")
+        @label = options[:label].nil? ? nil : options[:jscience_label].to_s
       end
 
       # Load an initialized Unit into the system of known units
@@ -128,9 +128,9 @@ module Quantify
         self.is_a? Compound
       end
 
-      # Determine if self is the same unit as another. All instance attributes are
-      # compared and a true result is only return if all are the same, i.e. same name,
-      # symbol, factor and dimensional configuration, e.g.
+      # Determine if self is the same unit as another. Similarity is based on
+      # representing the same physical quantity (i.e. dimensions) and the same
+      # factor and scaling values.
       #
       #  Unit.metre.is_same_as? Unit.foot    #=> false
       #
@@ -138,24 +138,21 @@ module Quantify
       #
       #  Unit.metre.is_same_as? Unit.metre   #=> true
       #
-      # The base_units attr of Compound units are not compared. This is because
-      # we want to recognise cases where units derived from operations and defined
-      # as compound units are the same as known, named units. For example,
-      # if we divide a square foot (compound) by a foot (non si), we want to
-      # recognise the result to be a known non si unit (foot).
+      # The base_units attr of Compound units are not compared. Neither are the
+      # names or symbols. This is because we want to recognise cases where units
+      # derived from operations and defined as compound units (therefore having
+      # compounded names and symbols) are the same as known, named units. For
+      # example, if we build a unit for energy using only SI units, we want to
+      # recognise this as a joule, rather than a kg m^2 s^-2, e.g.
+      #
+      #   (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).is_same_as? Unit.joule
+      #
+      #                                      #=> true
       #
       def is_same_as?(other)
-        return false unless self.name == other.name
-        return false unless self.symbol == other.symbol
         return false unless self.dimensions == other.dimensions
         return false unless self.factor == other.factor
         return false unless self.scaling == other.scaling
-        return true
-      end
-
-      # Determine if self is not the same unit as another - inverse of #is_same_as?
-      def is_not_same_as?(other)
-        return false if is_same_as? other
         return true
       end
 
@@ -242,7 +239,7 @@ module Quantify
         else
           options << { :unit => other, :index => -1 }
         end
-        Unit::Compound.new(options)#.new_unit_or_known_unit
+        Unit::Compound.new(options).new_unit_or_known_unit
       end
 
       # Raise a unit to a power. This results in the generation of a compound

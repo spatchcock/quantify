@@ -72,13 +72,13 @@ module Quantify
     # Returns an array containing the names/descriptions of all known (loaded)
     # physical quantities, e.g.:
     #
-    #  Dimensions.physical_quantities     #=>    [ 'acceleration',
-    #                                              'area',
-    #                                              'electric_current',
+    #  Dimensions.physical_quantities     #=>    [ 'Acceleration',
+    #                                              'Area',
+    #                                              'Electric Current',
     #                                               ... ]
     #
     def self.physical_quantities
-      @@dimensions.map { |quantity| quantity.physical_quantity.to_s }
+      @@dimensions.map { |quantity| quantity.physical_quantity }
     end
 
     # Retrieve a known quantity - returns a Dimensions instance, which is a
@@ -98,7 +98,7 @@ module Quantify
     def self.for(name)
       if name.is_a? String or name.is_a? Symbol
         if quantity = @@dimensions.find do |quantity|
-            quantity.physical_quantity == name.standardize
+            quantity.physical_quantity == name.to_s.gsub("_"," ").downcase
           end
           return quantity.clone
         else
@@ -170,7 +170,7 @@ module Quantify
     #
     def initialize(options={})
       if options.has_key?(:physical_quantity)
-        @physical_quantity = options.delete(:physical_quantity).standardize
+        @physical_quantity = options.delete(:physical_quantity).to_s.gsub("_"," ").downcase
       end
       enumerate_base_quantities(options)
       describe
@@ -405,12 +405,13 @@ module Quantify
     #
     def enumerate_base_quantities(options)
       options.each_pair do |base_quantity,index|
+        base_quantity = base_quantity.to_s.downcase.to_sym
         unless index.is_a? Integer and
-            BASE_QUANTITIES.include? base_quantity.standardize!
+            BASE_QUANTITIES.include? base_quantity
           raise InvalidDimensionError,
             "An invalid base quantity was specified (#{base_quantity})"
         end
-        variable = "@#{base_quantity.to_s.downcase}"
+        variable = "@#{base_quantity}"
         if self.instance_variable_defined? variable
           new_index = self.instance_variable_get(variable) + index
           if new_index == 0
@@ -426,7 +427,7 @@ module Quantify
 
     # Make object represent a dimensionless quantity.
     def make_dimensionless
-      self.physical_quantity = :dimensionless
+      self.physical_quantity = 'Dimensionless'
       base_quantities.each do |var|
         remove_instance_variable(var)
       end
