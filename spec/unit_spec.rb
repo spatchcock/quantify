@@ -269,5 +269,92 @@ describe Unit do
     unit.name.should == 'joule'
   end
 
+  it "should recognise a compound unit" do
+    (Unit.m*Unit.t).is_compound_unit?.should == true
+    Unit.m.is_compound_unit?.should == false
+  end
+
+  it "should raise unit to power" do
+    (Unit.m**3).measures.should == 'volume'
+  end
+
+  it "coerce method should handle reciprocal syntax" do
+    (1/Unit.s).name.should == 'bequerel'
+  end
+
+  it "should throw error when trying to add prefix to prefixed-unit" do
+    lambda{Unit.kilometre.with_prefix :giga}.should raise_error
+  end
+
+  it "should add prefix with explcit method" do
+    Unit.metre.with_prefix(:c).name.should == 'centimetre'
+  end
+
+  it "should return pluralised unit name" do
+    Unit.m.pluralized_name.should == 'metres'
+    Unit.ft.pluralized_name.should == 'feet'
+    Unit.lux.pluralized_name.should == 'lux'
+    Unit.kg.pluralized_name.should == 'kilograms'
+    Unit.nautical_league.pluralized_name.should == 'nautical leagues'
+    Unit.centimetre_of_water.pluralized_name.should == 'centimetres of water'
+    (Unit.t*Unit.km).pluralized_name.should == 'tonne kilometres'
+    (Unit.t*Unit.km/Unit.year).pluralized_name.should == 'tonne kilometres per year'
+    (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).pluralized_name.should == 'joules'
+  end
+
+  it "should create unit with dynamic method and pluralized name" do
+    Unit.feet.symbol.should == 'ft'
+    Unit.gigagrams.name.should == 'gigagram'
+    (Unit.kilograms/(Unit.tonne*Unit.km)).pluralized_name.should == 'kilograms per tonne kilometre'
+    (Unit.kilograms/(Unit.megagrams*Unit.km)).pluralized_name.should == 'kilograms per megagram kilometre'
+  end
+  
+  it "should recognise compound units based entirely on SI units" do
+    unit = Unit.kg*Unit.m
+    unit.is_si?.should == true
+  end
+  
+  it "should recognise compound units based entirely on SI units" do
+    unit = Unit.lb*Unit.m*Unit.m/Unit.s/Unit.s
+    unit.is_si?.should == false
+  end
+
+  it "should recognise compound units based entirely on SI units" do
+    unit = Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s
+    unit.is_si?.should == true
+  end
+
+  it "should recognise compound units based entirely on SI units" do
+    unit = (Unit.kilograms/(Unit.megagram*Unit.km))
+    unit.is_si?.should == true
+  end
+
+  it "should recognise compound units based entirely on SI units" do
+    unit = (Unit.kilograms/(Unit.tonne*Unit.km))
+    unit.is_si?.should == false
+  end
+
+  it "megagram and tonne should be similar" do
+    tonne = Unit.t
+    tonne.symbol.should == 't'
+    tonne.factor.should == 1000.0
+    megagram = Unit.Mg
+    megagram.symbol.should == 'Mg'
+    megagram.factor.should == 1000.0
+    megagram.should == tonne
+  end
+
+  it "squared unit should be called that" do
+    (Unit.m**2).name.should == "metre squared"
+  end
+
+  it "cubed unit should be called that" do
+    (Unit.s**3).name.should == "second cubed"
+  end
+
+  it "raised unit should be called that" do
+    (Unit.kg**4).name.should == "kilogram to the 4th power"
+  end
+
 end
 

@@ -88,13 +88,27 @@ module Quantify
       end
 
       # Derive a name for the unit based on the names of the base units
-      def derive_name
+      #
+      # Both singluar and plural names can be derived. In the case of pluralized
+      # names, the last unit in the numerator is pluralized.
+      #
+      # Singular names are assumed by default, in which case no argument is
+      # required.
+      #
+      def derive_name(inflection=:singular)
         unit_name = ""
         unless numerator_units.empty?
-          numerator_units.inject(unit_name) do |name,base|
-            base_unit_index = ( base[:index] == 1 ? "" : "^#{base[:index]}" )
-            base_unit_name = base[:unit].name + base_unit_index
-            name << "#{base_unit_name} "
+          names_and_indices = numerator_units.map do |base|
+            [ base[:unit].name, base[:index] ]
+          end
+
+          if inflection == :plural
+            last_unit = names_and_indices.pop
+            names_and_indices.push [ last_unit[0].pluralize, last_unit[1] ]
+          end
+
+          names_and_indices.inject(unit_name) do |name,base|
+            name << "#{base[0].to_power base[1]} "
           end
         end
         unless denominator_units.empty?
@@ -140,6 +154,10 @@ module Quantify
         # change all specified units to new unot of same dimensions
       end
 
+      def pluralized_name
+        derive_name :plural
+      end
+
       # Determine is a unit object represents an SI named unit.
       #
       # Iterate through all base units looking for a single instance of a non-SI
@@ -149,7 +167,7 @@ module Quantify
       def is_si?
         # if this expression is false - i.e. no instance of an SI check returning
         # false occurs - return true... The unit is an SI unit.
-        !@base_units.inject(false) do |status,unit|
+        not @base_units.inject(false) do |status,unit|
           status ||= !unit[:unit].is_si?
         end
       end
@@ -166,7 +184,7 @@ module Quantify
       #
       def new_unit_or_known_unit
         return self unless known_unit = Unit.units.find do |unit|
-          unit == self and !unit.is_compound_unit?
+          unit == self and not unit.is_compound_unit?
         end
         return known_unit
       end

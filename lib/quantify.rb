@@ -5,7 +5,10 @@
 #
 
 require 'pp'
+require 'rubygems'
+require 'active_support/inflector'
 require 'quantify/core_extensions'
+require 'quantify/inflections'
 require 'quantify/exception'
 require 'quantify/dimensions'
 require 'quantify/prefix'

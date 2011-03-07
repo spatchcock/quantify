@@ -37,7 +37,7 @@ module Quantify
             raise InvalidArgumentError, "Invalid prefix for Unit::NonSI class: #{name_or_symbol}"
           end
           new_unit_options = {}
-          new_unit_options[:name] = "#{prefix.name}_#{self.name}".capitalize
+          new_unit_options[:name] = "#{prefix.name}_#{self.name}"
           new_unit_options[:symbol] = "#{prefix.symbol}#{self.symbol}"
           new_unit_options[:factor] = prefix.factor * self.factor
           new_unit_options[:physical_quantity] = self.dimensions

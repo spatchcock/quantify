@@ -50,8 +50,8 @@ module Quantify
     def self.for(name_or_symbol)
       if name_or_symbol.is_a? String or name_or_symbol.is_a? Symbol
         if prefix = @prefixes.find do |prefix|
-           prefix.name == name_or_symbol.to_s.gsub("_"," ").downcase or
-           prefix.symbol == name_or_symbol.to_s.gsub("_"," ")
+           prefix.name == name_or_symbol.standardize.downcase or
+           prefix.symbol == name_or_symbol.standardize
           end
           return prefix.clone
         else
@@ -85,9 +85,9 @@ module Quantify
       attr_reader :name, :symbol, :factor
 
       def initialize(options)
-        @symbol = options[:symbol].to_s.gsub("_"," ")
+        @symbol = options[:symbol].standardize
         @factor = options[:factor].to_f
-        @name = options[:name].to_s.gsub("_"," ").downcase
+        @name = options[:name].standardize.downcase
       end
 
       def is_si?

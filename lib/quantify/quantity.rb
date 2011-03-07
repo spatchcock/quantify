@@ -81,8 +81,16 @@ module Quantify
     end
 
     # Returns a string representation of the quantity, using the unit symbol
-    def to_s
-      "#{self.value} #{self.unit.symbol.to_s.gsub("_", " ")}"
+    def to_s format=:symbol
+      if format == :name
+        if self.value <= 1 and self.value >= -1
+          "#{self.value} #{self.unit.name}"
+        else
+          "#{self.value} #{self.unit.pluralized_name}"
+        end
+      else
+        "#{self.value} #{self.unit.symbol}"
+      end
     end
 
     # Converts self into a quantity using the unit provided as an argument. The

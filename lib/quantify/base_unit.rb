@@ -68,7 +68,7 @@ module Quantify
         unless options.keys.include?(:name) && options.keys.include?(:physical_quantity)
           raise InvalidArgumentError, "Unit definition must include a :name and :physical quantity"
         end
-        @name = options[:name].to_s.gsub("_"," ").downcase
+        @name = options[:name].standardize.singularize.downcase
         if options[:physical_quantity].is_a? Dimensions
           @dimensions = options[:physical_quantity]
         elsif options[:physical_quantity].is_a? String or options[:physical_quantity].is_a? Symbol
@@ -77,8 +77,8 @@ module Quantify
           raise InvalidArgumentError, "Unknown physical_quantity specified"
         end
         @factor = options[:factor].nil? ? 1.0 : options[:factor].to_f
-        @symbol = options[:symbol].nil? ? nil : options[:symbol].to_s.gsub("_"," ")
-        @label = options[:label].nil? ? nil : options[:jscience_label].to_s
+        @symbol = options[:symbol].nil? ? nil : options[:symbol].standardize
+        @label = options[:label].nil? ? nil : options[:label].to_s
       end
 
       # Load an initialized Unit into the system of known units
@@ -110,6 +110,10 @@ module Quantify
       #
       def measures
         @dimensions.describe
+      end
+
+      def pluralized_name
+        self.name.pluralize
       end
 
       # Determine is a unit object represents an SI named unit

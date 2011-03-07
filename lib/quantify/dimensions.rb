@@ -98,7 +98,7 @@ module Quantify
     def self.for(name)
       if name.is_a? String or name.is_a? Symbol
         if quantity = @@dimensions.find do |quantity|
-            quantity.physical_quantity == name.to_s.gsub("_"," ").downcase
+            quantity.physical_quantity == name.standardize.downcase
           end
           return quantity.clone
         else
@@ -170,7 +170,7 @@ module Quantify
     #
     def initialize(options={})
       if options.has_key?(:physical_quantity)
-        @physical_quantity = options.delete(:physical_quantity).to_s.gsub("_"," ").downcase
+        @physical_quantity = options.delete(:physical_quantity).standardize.downcase
       end
       enumerate_base_quantities(options)
       describe

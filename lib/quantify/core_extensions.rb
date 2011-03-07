@@ -1,33 +1,31 @@
-
 class String
 
-  def standardize!
-    self.gsub("_"," ")
-  end
-
   def standardize
-    new_string = self.clone
-    new_string.standardize!
+    self.to_s.gsub("_"," ")
   end
 
-  def to_power(power)
-    return self if power == 1
-    self + "^#{power}"
+  def to_power index
+    name = self.clone
+    case index
+    when 1 then name
+    when 2 then name << " squared"
+    when 3 then name << " cubed"
+    else
+      ordinal = ActiveSupport::Inflector.ordinalize index
+      name << " to the #{ordinal} power"
+    end
   end
-  
+   
 end
 
 class Symbol
 
-  def standardize!
-    self.to_s.standardize!
-  end
-
   def standardize
     self.to_s.standardize
   end
-
+  
 end
+
 
 class Numeric
 

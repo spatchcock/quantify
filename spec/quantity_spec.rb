@@ -144,5 +144,23 @@ describe Quantity do
   it "should successfully divide a quantity by a scalar" do
     (2.kg / 0.5).round.to_s.should == "4 kg"
   end
+
+  it "should calculate speed from distance and time quantities" do
+    distance_in_km = 12.km
+    time_in_min = 16.5.min
+    distance_in_miles = distance_in_km.to_miles
+    time_in_hours = time_in_min.to_hours
+    speed = distance_in_miles / time_in_hours
+    speed.class.should == Quantity
+    speed.value.should be_close 27.1143792976291, 0.00000001
+    speed.to_s(:name).should == "27.1143792976291 miles per hour"
+    speed.to_s.should == "27.1143792976291 mi h^-1"
+  end
+
+  it "coerce metod should handle inverted syntax" do
+    quantity = 1/2.ft
+    quantity.to_s.should == "0.5 ft^-1"
+    quantity.to_s(:name).should == "0.5 ft^-1"
+  end
 end
 

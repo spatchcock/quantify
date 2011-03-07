@@ -60,20 +60,24 @@ module Quantify
       if name_symbol_or_label.is_a? String or
          name_symbol_or_label.is_a? Symbol
         if unit = @units.find do |unit|
-            unit.name == name_symbol_or_label.to_s.gsub("_"," ").downcase or
-            unit.symbol == name_symbol_or_label.to_s.gsub("_"," ") or
-            unit.label == name_symbol_or_label.to_s
+            unit.label == name_symbol_or_label or
+            unit.name == name_symbol_or_label.standardize.singularize.downcase or
+            unit.symbol == name_symbol_or_label.standardize
           end
+
           return unit.deep_clone
-        elsif name_symbol_or_label.to_s.gsub("_"," ").downcase =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
-          name_symbol_or_label.to_s.gsub("_"," ").downcase =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
-          name_symbol_or_label.to_s.gsub("_"," ") =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
-          name_symbol_or_label.to_s.gsub("_"," ") =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_labels.join("|")})\z/ or
-          name_symbol_or_label.to_s =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_labels.join("|")})\z/
+
+        elsif name_symbol_or_label =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_labels.join("|")})\z/ or
+          name_symbol_or_label =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_labels.join("|")})\z/ or
+          name_symbol_or_label.standardize.singularize.downcase =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
+          name_symbol_or_label.standardize.singularize.downcase =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
+          name_symbol_or_label.standardize =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
+          name_symbol_or_label.standardize =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/
+          
           return Unit.for($2).with_prefix($1).deep_clone
+
         else
-          return nil
+          raise InvalidArgumentError, "Unit not known: #{name_symbol_or_label}"
         end
       else
         raise InvalidArgumentError, "Argument must be a Symbol or String"
