@@ -130,34 +130,34 @@ Unit::SI.configure do
   # need to be declared here.
   #
   # SI units therefore require only their physical quantity to be specified.
-  load :name => 'ampere', :physical_quantity => 'electric_current', :symbol => 'A'
+  load :name => 'ampere', :physical_quantity => 'electric_current', :symbol => 'A', :acts_as_surrogate => true
   load :name => 'amagat', :physical_quantity => 'number_density', :symbol => 'η'
   load :name => 'bequerel', :physical_quantity => 'radioactivity', :symbol => 'Bq'
-  load :name => 'candela', :physical_quantity => 'luminous_intensity', :symbol => 'cd'
+  load :name => 'candela', :physical_quantity => 'luminous_intensity', :symbol => 'cd', :acts_as_surrogate => true
   load :name => 'coloumb', :physical_quantity => 'electric_charge', :symbol => 'C'
   # load :name => 'cubic_metre', :physical_quantity => 'volume', :symbol => 'm^3'
   load :name => 'farad', :physical_quantity => 'electrical_capacitance', :symbol => 'F'
   load :name => 'gray', :physical_quantity => 'radiation_absorbed_dose', :symbol => 'Gy'
-  load :name => 'hertz', :physical_quantity => 'frequency', :symbol => 'Hz'
+  load :name => 'hertz', :physical_quantity => 'frequency', :symbol => 'Hz', :acts_as_surrogate => true
   load :name => 'henry', :physical_quantity => 'inductance', :symbol => 'H'
-  load :name => 'joule', :physical_quantity => 'energy', :symbol => 'J'
-  load :name => 'kelvin', :physical_quantity => 'temperature', :symbol => 'K'
+  load :name => 'joule', :physical_quantity => 'energy', :symbol => 'J', :acts_as_surrogate => true
+  load :name => 'kelvin', :physical_quantity => 'temperature', :symbol => 'K', :acts_as_surrogate => true
   load :name => 'lumen', :physical_quantity => 'luminous_flux', :symbol => 'lm'
   load :name => 'lux', :physical_quantity => 'illuminance', :symbol => 'lx'
-  load :name => 'metre', :physical_quantity => 'length', :symbol => 'm'
-  load :name => 'mole', :physical_quantity => 'amount_of_substance', :symbol => 'mol'
-  load :name => 'newton', :physical_quantity => 'force', :symbol => 'N'
+  load :name => 'metre', :physical_quantity => 'length', :symbol => 'm', :acts_as_surrogate => true
+  load :name => 'mole', :physical_quantity => 'amount_of_substance', :symbol => 'mol', :acts_as_surrogate => true
+  load :name => 'newton', :physical_quantity => 'force', :symbol => 'N', :acts_as_surrogate => true
   load :name => 'ohm', :physical_quantity => 'electric_resistance', :symbol => 'Ω'
   load :name => 'pascal', :physical_quantity => 'pressure', :symbol => 'Pa'
   load :name => 'radian', :physical_quantity => 'plane_angle', :symbol => 'rad'
-  load :name => 'second', :physical_quantity => 'time', :symbol => 's'
+  load :name => 'second', :physical_quantity => 'time', :symbol => 's', :acts_as_surrogate => true
   load :name => 'siemens', :physical_quantity => 'electric_conductance', :symbol => 'S'
   load :name => 'sievert', :physical_quantity => 'radiation_dose_equivalent', :symbol => 'Sv'
   # load :name => 'square_metre', :physical_quantity => 'area', :symbol => 'm^2'
   load :name => 'steridian', :physical_quantity => 'solid_angle', :symbol => 'sr'
   load :name => 'tesla', :physical_quantity => 'magnetic_flux_density', :symbol => 'T'
   load :name => 'volt', :physical_quantity => 'electric_potential_difference', :symbol => 'V'
-  load :name => 'watt', :physical_quantity => 'power', :symbol => 'W'
+  load :name => 'watt', :physical_quantity => 'power', :symbol => 'W', :acts_as_surrogate => true
   load :name => 'weber', :physical_quantity => 'magnetic_flux', :symbol => 'Wb'
 
   # The kilogram is unusual in being the SI unit of mass yet containing the
@@ -175,7 +175,7 @@ Unit::SI.configure do
   # already contains a prefix throws an error)
   #
   # load :name => 'kilogram', :physical_quantity => :mass, :symbol => 'kg'
-  load :name => 'gram', :physical_quantity => 'mass', :factor => 1e-3, :symbol => 'g'
+  load :name => 'gram', :physical_quantity => 'mass', :factor => 1e-3, :symbol => 'g', :acts_as_surrogate => true
 
   # add required prefixes individually
   # Unit.kilometre.load

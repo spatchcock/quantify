@@ -219,7 +219,7 @@ module Quantify
         else
           options << { :unit => other }
         end
-        Unit::Compound.new(options).new_unit_or_known_unit
+        Unit::Compound.new(options)#.or_equivalent_known_unit
       end
 
       # Divide one unit by another. This results in the generation of a compound
@@ -243,7 +243,7 @@ module Quantify
         else
           options << { :unit => other, :index => -1 }
         end
-        Unit::Compound.new(options).new_unit_or_known_unit
+        Unit::Compound.new(options)#.or_equivalent_known_unit
       end
 
       # Raise a unit to a power. This results in the generation of a compound

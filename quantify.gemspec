@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.email = "andrew.berkeley.is@googlemail.com"
   s.summary = "Quantify supports handling of physical quantities, unit conversions"
   s.homepage = "https://github.com/spatchcock/quantify"
-  s.add_dependency('active_support')
+  s.add_dependency('activesupport')
   s.files = [ "README", "COPYING", "Examples.rb" ]
   s.files += [ "lib/quantify.rb", "lib/quantify/base_unit.rb", "lib/quantify/compound_unit.rb", "lib/quantify/config.rb",
 	             "lib/quantify/core_extensions.rb", "lib/quantify/dimensions.rb", "lib/quantify/exception.rb",

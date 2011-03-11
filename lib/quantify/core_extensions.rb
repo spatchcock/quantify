@@ -1,7 +1,7 @@
 class String
 
   def standardize
-    self.to_s.gsub("_"," ")
+    self.gsub("_"," ")
   end
 
   def to_power index

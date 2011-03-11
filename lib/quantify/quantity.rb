@@ -83,7 +83,7 @@ module Quantify
     # Returns a string representation of the quantity, using the unit symbol
     def to_s format=:symbol
       if format == :name
-        if self.value <= 1 and self.value >= -1
+        if self.value == 1 or self.value == -1
           "#{self.value} #{self.unit.name}"
         else
           "#{self.value} #{self.unit.pluralized_name}"
@@ -107,15 +107,19 @@ module Quantify
     #   200.cm.to_metre.to_s                   #=> "1 t"
     #
     # The unit value is converted to the corresponding value for the same quantity
-    # in terms of the new unit
+    # in terms of the new unit.
     #
     def to(new_unit)
       new_unit = Unit.for new_unit unless new_unit.is_a? Unit::Base
-      unless new_unit.is_alternative_for? self.unit
-        raise InvalidUnitError, "Units do not represent the same physical quantity"
-      end
-      new_value = (((self.value + self.unit.scaling) * self.unit.factor) / new_unit.factor) - new_unit.scaling
-      Quantity.new new_value, new_unit
+      if is_temperature_conversion?(new_unit)
+        conversion_with_scalings(new_unit)
+      elsif self.unit.is_alternative_for? new_unit
+        basic_unit_conversion(new_unit)
+      elsif self.unit.is_compound_unit?
+        compound_unit_conversion(new_unit)
+      else
+        nil # raise? or ...
+      end      
     end
 
     def to_si
@@ -194,18 +198,32 @@ module Quantify
       end
     end
 
+    alias :times :multiply
+    alias :* :multiply
+    alias :+ :add
+    alias :- :subtract
+    alias :/ :divide
+
     # Round the value attribute to the specified number of decimal places. If no
     # argument is given, the value is rounded to NO decimal places, i.e. to an
     # integer
     #
+    # Returns rounded value only, and leaves @value unadulterated
+    #
     def round(decimal_places = nil)
       if decimal_places == 0 or decimal_places.nil?
-        @value = value.to_i
+        @value.to_i
       else
         factor = 10.0 ** decimal_places
-        @value = (@value * factor).round / factor
+        (@value * factor).round / factor
       end
-      return self
+    end
+
+    # Rounds the instance value in place, to the specified number of decimal
+    # places
+    #
+    def round!(decimal_places = nil)
+      @value = round(decimal_places)
     end
 
     def coerce(object)
@@ -220,15 +238,38 @@ module Quantify
       if method.to_s =~ /(to_)(.*)/
         to($2)
       else
-        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
+        raise NoMethodError, "Undefined method '#{method}' for #{self}:#{self.class}"
       end
     end
 
-    alias :times :multiply
-    alias :* :multiply
-    alias :+ :add
-    alias :- :subtract
-    alias :/ :divide
+    protected
+
+    def is_temperature_conversion?(new_unit)
+      return true if self.represents == 'temperature' and
+        new_unit.measures == 'temperature' and
+        not self.unit.is_compound_unit? and
+        not new_unit.is_compound_unit?
+      return false
+    end
+
+    def basic_unit_conversion(new_unit)
+      self * (Unit.ratio new_unit, self.unit)
+    end
+
+    def conversion_with_scalings(new_unit)
+      new_value = (((self.value + self.unit.scaling) * self.unit.factor) / new_unit.factor) - new_unit.scaling
+      Quantity.new new_value, new_unit
+    end
+
+    def compound_unit_conversion(new_unit)
+      self.unit.base_units.select do |unit|
+        unit[:unit].is_alternative_for? new_unit
+      end.map do |unit|
+        Unit.ratio(new_unit**unit[:index],unit[:unit]**unit[:index])
+      end.inject(self) do |quantity,factor|
+        quantity * factor
+      end
+    end
 
   end
 end

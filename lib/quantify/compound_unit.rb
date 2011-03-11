@@ -114,17 +114,20 @@ module Quantify
         unless denominator_units.empty?
           unit_name << "per "
           denominator_units.inject(unit_name) do |name,base|
-            base_unit_index = ( base[:index] == -1 ? "" : "^#{base[:index]}" )
-            base_unit_name = base[:unit].name + base_unit_index
-            name << "#{base_unit_name} "
+            name << "#{base[:unit].name.to_power(base[:index]*-1)} "
           end
         end
         return unit_name.strip
       end
 
       # Derive a symbol for the unit based on the symbols of the base units
+      # Get the units in order first so that the denominator values (i.e. those
+      # with negative powers) follow the numerators
+      #
       def derive_symbol
-        @base_units.inject('') do |symbol,base|
+        @base_units.sort do |unit,next_unit|
+          next_unit[:index] <=> unit[:index]
+        end.inject('') do |symbol,base|
           base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
           base_unit_symbol = base[:unit].symbol.to_s + base_unit_index
           symbol << "#{base_unit_symbol} "
@@ -172,8 +175,6 @@ module Quantify
         end
       end
 
-      # Determine if a unit instance is the same as a known unit.
-      #
       # This can be used to determine if the compound unit which was derived from
       # some operation simply represents a known, established unit, which can then
       # be returned instead of representing the unit as an instance of the Compound
@@ -182,7 +183,7 @@ module Quantify
       # This has the advantage of enabling the use of SI and NonSI specific methods
       # and prefixes.
       #
-      def new_unit_or_known_unit
+      def or_equivalent_known_unit
         return self unless known_unit = Unit.units.find do |unit|
           unit == self and not unit.is_compound_unit?
         end

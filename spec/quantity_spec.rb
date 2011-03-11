@@ -157,10 +157,10 @@ describe Quantity do
     speed.to_s.should == "27.1143792976291 mi h^-1"
   end
 
-  it "coerce metod should handle inverted syntax" do
+  it "coerce method should handle inverted syntax" do
     quantity = 1/2.ft
     quantity.to_s.should == "0.5 ft^-1"
-    quantity.to_s(:name).should == "0.5 ft^-1"
+    quantity.to_s(:name).should == "0.5 per foot"
   end
 end
 

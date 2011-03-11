@@ -40,6 +40,11 @@ module Quantify
     # Class variable which holds in memory defined quantities
     @@dimensions = []
 
+    # Provides access the class array which holds all defined quantities
+    def self.dimensions
+      @@dimensions
+    end
+
     # This method allows specific, named quantities to initialized and
     # loaded into the @@dimensions array. Quantities are specified by their
     # consituent base dimensions, but also must include a name/description,
@@ -62,11 +67,6 @@ module Quantify
       else
         raise InvalidDimensionError, "Cannot load dimensions without physical quantity description"
       end
-    end
-
-    # Provides access the class array which holds all defined quantities
-    def self.dimensions
-      @@dimensions
     end
 
     # Returns an array containing the names/descriptions of all known (loaded)

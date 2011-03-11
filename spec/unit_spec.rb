@@ -356,5 +356,14 @@ describe Unit do
     (Unit.kg**4).name.should == "kilogram to the 4th power"
   end
 
+  it "should raise to power -1" do
+    (Unit.s**-1).dimensions.time.should == -1
+  end
+
+  it "should raise to power -2" do
+    unit = Unit.m**-2
+    unit.name.should == 'per metre squared'
+  end
+
 end
 

@@ -17,8 +17,10 @@ module Quantify
     # prefixes specified in config.rb. New units can be defined (with or without
     # prefixes) at any time and either used in place or loaded into the known
     # system.
-
-    attr_accessor :units
+    
+    class << self
+      attr_reader :units
+    end
 
     # Instance variable containing system of known units
     @units = []
@@ -26,11 +28,6 @@ module Quantify
     # Load a new unit into they system of known units
     def self.load(unit)
       @units << unit if unit.is_a? Unit::Base
-    end
-
-    # Returns an array containing objects representing all known units
-    def self.units
-      @units
     end
 
     # Retrieve an object representing the specified unit.
@@ -66,7 +63,6 @@ module Quantify
           end
 
           return unit.deep_clone
-
         elsif name_symbol_or_label =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_labels.join("|")})\z/ or
           name_symbol_or_label =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_labels.join("|")})\z/ or
           name_symbol_or_label.standardize.singularize.downcase =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
@@ -75,7 +71,6 @@ module Quantify
           name_symbol_or_label.standardize =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/
           
           return Unit.for($2).with_prefix($1).deep_clone
-
         else
           raise InvalidArgumentError, "Unit not known: #{name_symbol_or_label}"
         end
@@ -99,6 +94,28 @@ module Quantify
       else
         return Unit::Compound.new(units)
       end
+    end
+
+    # Returns a Quantify::Quantity instance which represents the ratio of two
+    # units. For example, the ratio of miles to kilometers is 1.609355, or there
+    # are 1.609355 km in 1 mile.
+    #
+    #   ratio = Unit.ratio :km, :mi         #=> <Quantify::Quantity:0xj9ab878a7>
+    #
+    #   ratio.to_s :name                    #=> "1.609344 kilometres per mile"
+    #
+    # In other words the quantity represents the definition of one unit in terms
+    # of the other.
+    #
+    def self.ratio(unit,other_unit)
+      unit = Unit.for unit unless unit.is_a? Unit::Base
+      other_unit = Unit.for other_unit unless other_unit.is_a? Unit::Base
+      unless unit.is_alternative_for? other_unit
+        raise InvalidUnitError, "Units do not represent the same physical quantity"
+      end
+      new_unit = (unit / other_unit)
+      value = 1/new_unit.factor
+      Quantity.new value, new_unit
     end
 
     # Provides syntactic sugar for accessing units. Specify:
