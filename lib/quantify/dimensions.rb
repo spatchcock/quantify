@@ -45,6 +45,12 @@ module Quantify
       @@dimensions
     end
 
+    def self.base_dimensions
+      @@dimensions.select do |dimensions|
+        BASE_QUANTITIES.map(&:standardize).include? dimensions.describe
+      end
+    end
+
     # This method allows specific, named quantities to initialized and
     # loaded into the @@dimensions array. Quantities are specified by their
     # consituent base dimensions, but also must include a name/description,
@@ -219,6 +225,23 @@ module Quantify
       @physical_quantity = (similar.nil? ? nil : similar.physical_quantity )
     end
 
+    def si_unit
+      return Unit.steridian if self.describe == 'solid angle'
+      return Unit.radian if self.describe == 'plane angle' 
+      return base_si_units.inject() do |compound,unit|
+        compound * unit
+      end.or_equivalent_known_unit
+    rescue
+      return nil
+    end
+
+    def base_si_units
+      self.to_hash.map do |dimension,index|
+        Unit.base_si_units.select do |unit|
+          unit.measures == dimension.standardize
+        end.first ** index
+      end
+    end
 
     # Compares the base quantities of two Dimensions objects and returns true if
     # they are the same. This indicates that the two objects represent the same

@@ -48,6 +48,9 @@ ActiveSupport::Inflector.inflections do |inflect|
   inflect.plural /(ton)/i, '\1s'
   inflect.singular /(ton)s?/i, '\1'
 
+  inflect.plural /(stone)/i, '\1s'
+  inflect.singular /(stone)s?/i, '\1'
+
   inflect.irregular 'footcandle', 'footcandles'
   inflect.irregular 'kilowatt hour', 'kilowatt hours'
 

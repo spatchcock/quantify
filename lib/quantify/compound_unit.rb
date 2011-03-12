@@ -121,6 +121,7 @@ module Quantify
       end
 
       # Derive a symbol for the unit based on the symbols of the base units
+      # 
       # Get the units in order first so that the denominator values (i.e. those
       # with negative powers) follow the numerators
       #
@@ -167,11 +168,11 @@ module Quantify
       # unit. Coumpound units are only SI if they are entirely composed of SI
       # units
       #
-      def is_si?
+      def is_si_unit?
         # if this expression is false - i.e. no instance of an SI check returning
         # false occurs - return true... The unit is an SI unit.
         not @base_units.inject(false) do |status,unit|
-          status ||= !unit[:unit].is_si?
+          status ||= !unit[:unit].is_si_unit?
         end
       end
 

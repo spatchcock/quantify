@@ -194,7 +194,7 @@ module Quantify
         new_value = self.value / other.value
         return Quantity.new new_value, new_unit
       else
-        raise Quantify::InvalidArgumentError "Cannot multiply a Quantity by a non-Quantity or non-Numeric object"
+        raise Quantify::InvalidArgumentError "Cannot divide a Quantity by a non-Quantity or non-Numeric object"
       end
     end
 
@@ -210,20 +210,19 @@ module Quantify
     #
     # Returns rounded value only, and leaves @value unadulterated
     #
-    def round(decimal_places = nil)
+    def round!(decimal_places=nil)
       if decimal_places == 0 or decimal_places.nil?
-        @value.to_i
+        @value = @value.to_i
       else
         factor = 10.0 ** decimal_places
-        (@value * factor).round / factor
+        @value = (@value * factor).round / factor
       end
+      self
     end
 
-    # Rounds the instance value in place, to the specified number of decimal
-    # places
-    #
-    def round!(decimal_places = nil)
-      @value = round(decimal_places)
+    def round(decimal_places=nil)
+      rounded_quantity = Quantity.new @value, @unit
+      rounded_quantity.round! decimal_places
     end
 
     def coerce(object)

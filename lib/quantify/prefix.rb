@@ -16,11 +16,11 @@ module Quantify
     end
 
     def self.si_prefixes
-      @prefixes.select { |prefix| prefix.is_si? }
+      @prefixes.select { |prefix| prefix.is_si_prefix? }
     end
 
     def self.non_si_prefixes
-      @prefixes.select { |prefix| !prefix.is_si? }
+      @prefixes.select { |prefix| prefix.is_non_si_prefix? }
     end
 
     def self.names
@@ -90,8 +90,12 @@ module Quantify
         @name = options[:name].standardize.downcase
       end
 
-      def is_si?
+      def is_si_prefix?
         self.is_a? SI
+      end
+
+      def is_non_si_prefix?
+        self.is_a? NonSI
       end
 
     end

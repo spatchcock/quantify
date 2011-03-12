@@ -116,13 +116,42 @@ module Quantify
         self.name.pluralize
       end
 
+      def valid_prefixes
+        return nil if self.is_compound_unit?
+        Prefix.prefixes.select do |prefix|
+          if self.is_si_unit?
+            prefix.is_si_prefix?
+          elsif self.is_non_si_unit?
+            prefix.is_non_si_prefix?
+          end
+        end
+      end
+
+      def is_base_unit?
+        Dimensions::BASE_QUANTITIES.map(&:standardize).include? self.measures
+      end
+
+      def is_derived_unit?
+        not is_base_unit?
+      end
+
+      def is_prefixed_unit?
+        return true if valid_prefixes and
+          self.name =~ /\A(#{valid_prefixes.map(&:name).join("|")})/
+        return false
+      end
+
+      def is_benchmark_unit?
+        self.factor == 1.0
+      end
+
       # Determine is a unit object represents an SI named unit
-      def is_si?
+      def is_si_unit?
         self.is_a? SI
       end
 
       # Determine is a unit object represents an NonSI named unit
-      def is_non_si?
+      def is_non_si_unit?
         self.is_a? NonSI
       end
 

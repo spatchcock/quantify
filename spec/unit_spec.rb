@@ -24,7 +24,6 @@ describe Unit do
   it "si symbols list should include" do
     list = Unit.si_symbols
     list.should include 'η'
-    list.should include 'g'
     list.should include 'kg'
     list.should include 'K'
   end
@@ -98,7 +97,6 @@ describe Unit do
     unit.load
     Unit.symbols.should include 'Gg'
     Unit.names.should include 'gigagram'
-    Unit.si_names.should include 'gigagram'
   end
 
   it "should create unit" do
@@ -151,32 +149,32 @@ describe Unit do
 
   it "should recognise joule as SI" do
     unit = Unit.J
-    unit.is_si?.should == true
+    unit.is_si_unit?.should == true
   end
 
   it "should recognise newton as SI" do
     unit = Unit.N
-    unit.is_si?.should == true
+    unit.is_si_unit?.should == true
   end
 
   it "should recognise kilometre as SI" do
     unit = Unit.kilometre
-    unit.is_si?.should == true
+    unit.is_si_unit?.should == true
   end
 
   it "should recognise foot as non SI" do
     unit = Unit.ft
-    unit.is_si?.should_not == true
+    unit.is_si_unit?.should_not == true
   end
 
   it "should recognise dram as non SI" do
     unit = Unit.dram
-    unit.is_si?.should_not == true
+    unit.is_si_unit?.should_not == true
   end
 
   it "should recognise BTU as non SI" do
     unit = Unit.british_thermal_unit
-    unit.is_si?.should_not == true
+    unit.is_si_unit?.should_not == true
   end
 
   it "should recognise similar units" do
@@ -311,27 +309,27 @@ describe Unit do
   
   it "should recognise compound units based entirely on SI units" do
     unit = Unit.kg*Unit.m
-    unit.is_si?.should == true
+    unit.is_si_unit?.should == true
   end
   
   it "should recognise compound units based entirely on SI units" do
     unit = Unit.lb*Unit.m*Unit.m/Unit.s/Unit.s
-    unit.is_si?.should == false
+    unit.is_si_unit?.should == false
   end
 
   it "should recognise compound units based entirely on SI units" do
     unit = Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s
-    unit.is_si?.should == true
+    unit.is_si_unit?.should == true
   end
 
   it "should recognise compound units based entirely on SI units" do
     unit = (Unit.kilograms/(Unit.megagram*Unit.km))
-    unit.is_si?.should == true
+    unit.is_si_unit?.should == true
   end
 
   it "should recognise compound units based entirely on SI units" do
     unit = (Unit.kilograms/(Unit.tonne*Unit.km))
-    unit.is_si?.should == false
+    unit.is_si_unit?.should == false
   end
 
   it "megagram and tonne should be similar" do

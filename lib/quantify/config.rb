@@ -8,17 +8,17 @@ include Quantify
 #  * units.
 #
 
-Dimensions.configure do
+Dimensions.configure do |config|
 
   # Load the standard, widely-recognised physical quantities.
   # Base quantities
   load :physical_quantity => 'mass', :mass => 1
   load :physical_quantity => 'length', :length => 1
   load :physical_quantity => 'time', :time => 1
-  load :physical_quantity => 'electric_current', :electric_current => 1
+  load :physical_quantity => 'electric current', :electric_current => 1
   load :physical_quantity => 'temperature', :temperature => 1
-  load :physical_quantity => 'luminous_intensity', :luminous_intensity => 1
-  load :physical_quantity => 'amount_of_substance', :amount_of_substance => 1
+  load :physical_quantity => 'luminous intensity', :luminous_intensity => 1
+  load :physical_quantity => 'amount of substance', :amount_of_substance => 1
   load :physical_quantity => 'information', :information => 1
   load :physical_quantity => 'currency', :currency => 1
   load :physical_quantity => 'item', :item => 1
@@ -29,54 +29,54 @@ Dimensions.configure do
   load :physical_quantity => 'acceleration', :length => 1, :time => -2
   load :physical_quantity => 'area', :length => 2
   load :physical_quantity => 'action', :mass => 1, :length => 2, :time => -1
-  load :physical_quantity => 'angular_monentum', :length => 2, :mass => 1, :time => -1
+  load :physical_quantity => 'angular monentum', :length => 2, :mass => 1, :time => -1
   load :physical_quantity => 'conductivity', :length => -3, :mass => -1, :time => 3, :electric_current => 2
   load :physical_quantity => 'density', :mass => 1, :length => -3
-  load :physical_quantity => 'electric_charge', :electric_current => 1, :time => 1
-  load :physical_quantity => 'electric_charge_density', :electric_current => 1, :time => 1, :length => -3
-  load :physical_quantity => 'electric_conductance', :electric_current => 2, :time => 3, :mass => -1, :length => -2
-  load :physical_quantity => 'electric_displacement', :length => -2, :time => 1, :electric_current => 1
-  load :physical_quantity => 'electric_field_strength', :length => 1, :mass => 1, :time => -3, :electric_current => -1
-  load :physical_quantity => 'electric_polarisability', :mass => -1, :time => 4, :electric_current => 2
-  load :physical_quantity => 'electric_polarisation', :length => -2, :time => 1, :electric_current => 1
-  load :physical_quantity => 'electric_potential_difference', :mass => 1, :length => 2, :electric_current => -1, :time => -3
-  load :physical_quantity => 'electric_resistance', :mass => 1, :length => 2, :electric_current => -2, :time => -3
-  load :physical_quantity => 'electrical_capacitance', :electric_current => 2, :time => 4, :mass => -1, :length => -2
+  load :physical_quantity => 'electric charge', :electric_current => 1, :time => 1
+  load :physical_quantity => 'electric charge_density', :electric_current => 1, :time => 1, :length => -3
+  load :physical_quantity => 'electric conductance', :electric_current => 2, :time => 3, :mass => -1, :length => -2
+  load :physical_quantity => 'electric displacement', :length => -2, :time => 1, :electric_current => 1
+  load :physical_quantity => 'electric field strength', :length => 1, :mass => 1, :time => -3, :electric_current => -1
+  load :physical_quantity => 'electric polarisability', :mass => -1, :time => 4, :electric_current => 2
+  load :physical_quantity => 'electric polarisation', :length => -2, :time => 1, :electric_current => 1
+  load :physical_quantity => 'electric potential difference', :mass => 1, :length => 2, :electric_current => -1, :time => -3
+  load :physical_quantity => 'electric resistance', :mass => 1, :length => 2, :electric_current => -2, :time => -3
+  load :physical_quantity => 'electrical capacitance', :electric_current => 2, :time => 4, :mass => -1, :length => -2
   load :physical_quantity => 'energy', :mass => 1, :length => 2, :time => -2
   load :physical_quantity => 'entropy', :length => 2, :mass => 1, :time => -2, :temperature => -1
   load :physical_quantity => 'force', :length => 1, :mass => 1, :time => -2
   load :physical_quantity => 'frequency', :time => -1
-  load :physical_quantity => 'heat_capacity', :length => 2, :mass => 1, :time => -2, :temperature => -1
+  load :physical_quantity => 'heat capacity', :length => 2, :mass => 1, :time => -2, :temperature => -1
   load :physical_quantity => 'illuminance', :luminous_intensity => 1, :length => -2
   load :physical_quantity => 'impedance', :length => 2, :mass => 1, :time => -3, :electric_current => -2
   load :physical_quantity => 'inductance', :mass => 1, :length => 2, :time => -2, :electric_current => -2
   load :physical_quantity => 'irradiance', :mass => 1, :time => -3
-  load :physical_quantity => 'luminous_flux', :luminous_intensity => 1
-  load :physical_quantity => 'magnetic_field_strength', :length => -1, :electric_current => 1
-  load :physical_quantity => 'magnetic_flux', :mass => 1, :length => 2, :time => -2, :electric_current => -1
-  load :physical_quantity => 'magnetic_flux_density', :mass => 1, :electric_current => -1, :time => -2
-  load :physical_quantity => 'magnetic_dipole_moment', :length => 2, :electric_current => 1
-  load :physical_quantity => 'magnetic_vector_potential', :mass => 1, :length => 1, :time => -2, :electric_current => -1
+  load :physical_quantity => 'luminous flux', :luminous_intensity => 1
+  load :physical_quantity => 'magnetic field strength', :length => -1, :electric_current => 1
+  load :physical_quantity => 'magnetic flux', :mass => 1, :length => 2, :time => -2, :electric_current => -1
+  load :physical_quantity => 'magnetic flux density', :mass => 1, :electric_current => -1, :time => -2
+  load :physical_quantity => 'magnetic dipole moment', :length => 2, :electric_current => 1
+  load :physical_quantity => 'magnetic vector potential', :mass => 1, :length => 1, :time => -2, :electric_current => -1
   load :physical_quantity => 'magnetisation', :length => -1, :electric_current => 1
-  load :physical_quantity => 'moment_of_inertia', :length => 2, :mass => 1
+  load :physical_quantity => 'moment of inertia', :length => 2, :mass => 1
   load :physical_quantity => 'momentum', :length => 1, :mass => 1, :time => -1
-  load :physical_quantity => 'number_density', :item => 1, :length => -3
+  load :physical_quantity => 'number density', :item => 1, :length => -3
   load :physical_quantity => 'permeability', :mass => 1, :length => 1, :time => -2, :electric_current => -2
   load :physical_quantity => 'permittivity', :mass => -1, :length => -3, :time => 4, :electric_current => 2
-  load :physical_quantity => 'plane_angle' # length / length = dimensionsless
+  load :physical_quantity => 'plane angle' # length / length = dimensionsless
   load :physical_quantity => 'power', :mass => 1, :length => 2, :time => -3
   load :physical_quantity => 'pressure', :mass => 1, :length => -1, :time => -2
-  load :physical_quantity => 'radiation_absorbed_dose', :length => 2, :time => -2
-  load :physical_quantity => 'radiation_dose_equivalent', :length => 2, :time => -2
+  load :physical_quantity => 'radiation absorbed dose', :length => 2, :time => -2
+  load :physical_quantity => 'radiation dose equivalent', :length => 2, :time => -2
   load :physical_quantity => 'radioactivity', :time => -1
-  load :physical_quantity => 'solid_angle' # area / area = dimensionless
-  load :physical_quantity => 'surface_tension', :mass => 1, :time => -2
+  load :physical_quantity => 'solid angle' # area / area = dimensionless
+  load :physical_quantity => 'surface tension', :mass => 1, :time => -2
   load :physical_quantity => 'velocity', :length => 1, :time => -1
-  load :physical_quantity => 'dynamic_viscosity', :length => -1, :mass => 1, :time => -1
-  load :physical_quantity => 'kinematic_viscosity', :length => 2, :time => -1
+  load :physical_quantity => 'dynamic viscosity', :length => -1, :mass => 1, :time => -1
+  load :physical_quantity => 'kinematic viscosity', :length => 2, :time => -1
   load :physical_quantity => 'volume', :length => 3
-  load :physical_quantity => 'energy_density', :length => -1, :mass => 1, :time => -2
-  load :physical_quantity => 'thermal_resistance', :temperature => 1, :mass => -1, :time => 3
+  load :physical_quantity => 'energy density', :length => -1, :mass => 1, :time => -2
+  load :physical_quantity => 'thermal resistance', :temperature => 1, :mass => -1, :time => 3
 
 end
 
@@ -174,7 +174,7 @@ Unit::SI.configure do
   # kilogram is commented out here (trying to assign a prefix to a unit which
   # already contains a prefix throws an error)
   #
-  # load :name => 'kilogram', :physical_quantity => :mass, :symbol => 'kg'
+  load :name => 'kilogram', :physical_quantity => :mass, :symbol => 'kg'
   load :name => 'gram', :physical_quantity => 'mass', :factor => 1e-3, :symbol => 'g', :acts_as_surrogate => true
 
   # add required prefixes individually
@@ -183,9 +183,13 @@ Unit::SI.configure do
   # Or ... add required prefixes on a multiple basis
   [:kilo,:mega,:giga,:tera].map do |prefix|
     Unit.si_units.map do |unit|
-      unit.with_prefix(prefix)
+      unit.with_prefix(prefix) unless unit.name == 'kilogram' 
     end
-  end.flatten.each {|unit| unit.load }
+  end.flatten.compact.each {|unit| unit.load }
+
+  [:mega,:giga,:tera].map do |prefix|
+    Unit.g.with_prefix(prefix).load
+  end
 
 end
 
