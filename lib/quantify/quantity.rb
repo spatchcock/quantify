@@ -123,7 +123,19 @@ module Quantify
     end
 
     def to_si
-
+      if self.unit.is_compound_unit?
+        until self.unit.is_si_unit? do
+          unit = self.unit.base_units.find do |unit|
+            !unit[:unit].is_si_unit?
+          end[:unit]
+          quantity = self.to unit.si_unit
+          @value = quantity.value
+          @unit = quantity.unit
+        end
+        return self
+      else
+        self.to(self.unit.si_unit)
+      end
     end
 
     # Add two quantities.

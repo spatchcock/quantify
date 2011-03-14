@@ -225,19 +225,25 @@ module Quantify
       @physical_quantity = (similar.nil? ? nil : similar.physical_quantity )
     end
 
+    def units
+      Unit.units.select do |unit|
+        unit.dimensions == self
+      end
+    end
+
     def si_unit
       return Unit.steridian if self.describe == 'solid angle'
       return Unit.radian if self.describe == 'plane angle' 
-      return base_si_units.inject() do |compound,unit|
+      return si_base_units.inject(Unit.unity) do |compound,unit|
         compound * unit
       end.or_equivalent_known_unit
     rescue
       return nil
     end
 
-    def base_si_units
+    def si_base_units
       self.to_hash.map do |dimension,index|
-        Unit.base_si_units.select do |unit|
+        Unit.si_base_units.select do |unit|
           unit.measures == dimension.standardize
         end.first ** index
       end

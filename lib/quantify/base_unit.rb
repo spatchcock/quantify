@@ -217,16 +217,13 @@ module Quantify
       # are returned within the array
       #
       def alternatives(by=nil)
-        list = Quantify::Unit.units.select do |unit|
-          self.is_alternative_for? unit and
-          (self == unit) == false
-        end
+        list = self.dimensions.units.reject do |unit|
+          unit.is_same_as? self
+        end.map(&by)
+      end
 
-        if by.nil?
-          return list
-        else
-          return list.map { |unit| unit.send(by) }
-        end
+      def si_unit
+        self.dimensions.si_unit
       end
 
       # Multiply two units together. This results in the generation of a compound

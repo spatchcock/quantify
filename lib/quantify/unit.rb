@@ -133,7 +133,7 @@ module Quantify
     end
 
     # Returns an array containing objects representing all known SI units
-    def self.si_units(include_multiples_and_divisors=false)
+    def self.si_units(include_multiples=false)
       units = @units.select do |unit|
         if block_given?
           unit.is_si_unit? and
@@ -142,18 +142,18 @@ module Quantify
           unit.is_si_unit?
         end
       end
-      return units if include_multiples_and_divisors
+      return units if include_multiples
       units.select do |unit|
         unit.is_benchmark_unit?
       end
     end
 
-    def self.si_base_units(include_multiples_and_divisors=false)
-      self.si_units(include_multiples_and_divisors) { |unit| unit.is_base_unit? }
+    def self.si_base_units(include_multiples=false)
+      self.si_units(include_multiples) { |unit| unit.is_base_unit? }
     end
 
-    def self.si_derived_units(include_multiples_and_divisors=false)
-      self.si_units(include_multiples_and_divisors) { |unit| unit.is_derived_unit? }
+    def self.si_derived_units(include_multiples=false)
+      self.si_units(include_multiples) { |unit| unit.is_derived_unit? }
     end
 
     # Returns an array containing objects representing all known non-SI units
