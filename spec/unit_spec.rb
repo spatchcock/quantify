@@ -343,11 +343,11 @@ describe Unit do
   end
 
   it "squared unit should be called that" do
-    (Unit.m**2).name.should == "metre squared"
+    (Unit.m**2).name.should == "square metre"
   end
 
   it "cubed unit should be called that" do
-    (Unit.s**3).name.should == "second cubed"
+    (Unit.s**3).name.should == "cubic second"
   end
 
   it "raised unit should be called that" do
@@ -360,8 +360,110 @@ describe Unit do
 
   it "should raise to power -2" do
     unit = Unit.m**-2
-    unit.name.should == 'per metre squared'
+    unit.name.should == 'per square metre'
   end
 
+  it "should parse string into correct single unit" do
+    Unit.parse("kg").name.should == "kilogram"
+  end
+
+  it "should parse string into correct single unit" do
+    Unit.parse("T").name.should == "tesla"
+  end
+
+  it "should parse string into correct single unit" do
+    Unit.parse("Tm").name.should == "terametre"
+  end
+
+  it "should parse string into correct compound unit" do
+    Unit.parse("kg kWh^-1").name.should == "kilogram per kilowatt hour"
+  end
+
+  it "should parse string into correct compound unit" do
+    Unit.parse("m^2").name.should == "square metre"
+  end
+
+  it "should parse string into correct compound unit" do
+    Unit.parse("m^-3").name.should == "per cubic metre"
+  end
+
+  it "should return correct unit ratio quantity with symbols" do
+    Unit.ratio(:lb,:kg).to_s(:name).should == "2.20462262184878 pounds per kilogram"
+  end
+
+  it "should return correct unit ratio quantity with symbols and rounding" do
+    Unit.ratio(:lb,:kg).round(3).to_s(:name).should == "2.205 pounds per kilogram"
+  end
+
+ it "should return correct unit ratio quantity with strings" do
+    Unit.ratio('K','degree farenheit').round(5).to_s(:name).should == "0.55556 kelvins per degree farenheit"
+  end
+
+  it "should return correct unit ratio quantity with unit instance" do
+    Unit.ratio(Unit.square_metre,'hectare').round.to_s(:name).should == "10000 square metres per hectare"
+  end
+
+  it "should recognise a base unit" do
+    Unit.m.is_base_unit?.should == true
+    Unit.K.is_base_unit?.should == true
+    Unit.degree_celsius.is_base_unit?.should == true
+    Unit.ft.is_base_unit?.should == true
+    Unit.cd.is_base_unit?.should == true
+    (Unit.square_metre/Unit.m).is_base_unit?.should == true
+    (Unit.km/Unit.h).is_base_unit?.should == false
+    Unit.J.is_base_unit?.should == false
+    Unit.N.is_base_unit?.should == false
+    Unit.W.is_base_unit?.should == false
+  end
+
+  it "should recognise a derived unit" do
+    Unit.m.is_derived_unit?.should == false
+    Unit.K.is_derived_unit?.should == false
+    Unit.degree_celsius.is_derived_unit?.should == false
+    Unit.ft.is_derived_unit?.should == false
+    Unit.cd.is_derived_unit?.should == false
+    (Unit.cubic_metre/Unit.square_metre).is_derived_unit?.should == false
+    Unit.J.is_derived_unit?.should == true
+    Unit.N.is_derived_unit?.should == true
+    Unit.W.is_derived_unit?.should == true
+    Unit.parse("m^3").is_derived_unit?.should == true
+    (Unit.m/Unit.s).is_derived_unit?.should == true
+  end
+
+  it "should recognise a prefixed unit" do
+    Unit.m.is_prefixed_unit?.should == false
+    Unit.K.is_prefixed_unit?.should == false
+    Unit.degree_celsius.is_prefixed_unit?.should == false
+    Unit.ft.is_prefixed_unit?.should == false
+    Unit.cd.is_prefixed_unit?.should == false
+    (Unit.cubic_metre/Unit.square_metre).is_derived_unit?.should == false
+    Unit.TJ.is_prefixed_unit?.should == true
+    Unit.GN.is_prefixed_unit?.should == true
+    Unit.kW.is_prefixed_unit?.should == true
+    Unit.parse("Gcd").is_prefixed_unit?.should == true
+    Unit.parse("picosecond").is_prefixed_unit?.should == true
+  end
+
+  it "should recognise a benchmark unit" do
+    Unit.m.is_benchmark_unit?.should == true
+    Unit.K.is_benchmark_unit?.should == true
+    Unit.degree_celsius.is_benchmark_unit?.should == true
+    Unit.ft.is_benchmark_unit?.should == false
+    Unit.cd.is_benchmark_unit?.should == true
+    (Unit.cubic_metre/Unit.square_metre).is_benchmark_unit?.should == true
+    Unit.TJ.is_benchmark_unit?.should == false
+    Unit.N.is_benchmark_unit?.should == true
+    Unit.kW.is_benchmark_unit?.should == false
+    Unit.parse("kg").is_benchmark_unit?.should == true
+    Unit.parse("picosecond").is_benchmark_unit?.should == false
+  end
+
+  it "should return correct SI unit" do
+    Unit.ft.si_unit.name.should == 'metre'
+    Unit.lb.si_unit.name.should == 'kilogram'
+    Unit.BTU.si_unit.name.should == 'joule'
+    (Unit.ft**2).si_unit.name.should == 'square metre'
+    Unit.pounds_force_per_square_inch.si_unit.name.should == 'pascal'
+  end
 end
 

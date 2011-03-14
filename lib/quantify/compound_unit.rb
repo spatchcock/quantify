@@ -153,11 +153,8 @@ module Quantify
       def denominator_units
         @base_units.select { |unit| unit[:index] < 0 }
       end
-      
-      def convert_base_unit(from,to)
-        # change all specified units to new unot of same dimensions
-      end
 
+      # Convenient accessor method for pluralized names
       def pluralized_name
         derive_name :plural
       end

@@ -162,5 +162,47 @@ describe Quantity do
     quantity.to_s.should == "0.5 ft^-1"
     quantity.to_s(:name).should == "0.5 per foot"
   end
+
+  it "should convert temperature correctly" do
+    30.degree_celsius.to_K.to_s.should == "303.15 K"
+  end
+
+  it "should convert temperature correctly" do
+    30.degree_celsius.to_degree_farenheit.round.to_s.should == "86 °F"
+  end
+
+  it "should convert standard units correctly" do
+    27.feet.to_yards.round.to_s(:name).should == "9 yards"
+  end
+
+  it "should convert standard units correctly" do
+    6000.BTU.to_megajoules.to_s(:name).should == "6.330336 megajoules"
+  end
+
+  it "should convert standard units correctly" do
+    13.1.stones.to_kg.to_s(:name).should == "83.1888383 kilograms"
+  end
+
+  it "should convert compound units correctly" do
+    speed = Quantity.new 100, (Unit.km/Unit.h)
+    speed.to_mi.round(2).to_s.should == "62.14 mi h^-1"
+  end
+
+  it "should convert to SI unit correctly" do
+    100.cm.to_si.to_s.should == "1.0 m"
+    2.kWh.to_si.to_s.should == "7200000.0 J"
+    400.ha.to_si.to_s.should == "4000000.0 m^2"
+    35.degree_celsius.to_si.to_s.should == "308.15 K"
+  end
+
+  it "should convert compound units to SI correctly" do
+    speed = Quantity.new 100, (Unit.mi/Unit.h)
+    speed.to_si.to_s(:name).should == "44.704 metres per second"
+  end
+
+  it "should convert compound units to SI correctly" do
+    pressure = Quantity.new 100, (Unit.pound_force_per_square_inch)
+    pressure.to_si.round.to_s(:name).should == "689476 newtons per square metre"
+  end
 end
 

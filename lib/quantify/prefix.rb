@@ -78,8 +78,8 @@ module Quantify
         end
       end
 
-      def self.configure &block
-        class_eval &block
+      def self.configure
+        yield self if block_given?
       end
 
       attr_reader :name, :symbol, :factor

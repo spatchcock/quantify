@@ -122,6 +122,7 @@ module Quantify
       end      
     end
 
+    # Converts a quantity to the equivalent quantity using only SI units
     def to_si
       if self.unit.is_compound_unit?
         until self.unit.is_si_unit? do
@@ -220,23 +221,26 @@ module Quantify
     # argument is given, the value is rounded to NO decimal places, i.e. to an
     # integer
     #
-    # Returns rounded value only, and leaves @value unadulterated
-    #
-    def round!(decimal_places=nil)
-      if decimal_places == 0 or decimal_places.nil?
-        @value = @value.to_i
-      else
-        factor = 10.0 ** decimal_places
-        @value = (@value * factor).round / factor
-      end
+    def round!(decimal_places=0)
+      factor = ( decimal_places == 0 ? 1 : 10.0 ** decimal_places )
+      @value = (@value * factor).round / factor
       self
     end
 
-    def round(decimal_places=nil)
+    # Similar to #round! but returns new Quantity instance rather than rounding
+    # in place
+    #
+    def round(decimal_places=0)
       rounded_quantity = Quantity.new @value, @unit
       rounded_quantity.round! decimal_places
     end
 
+    # Enables neat shorthand for reciprocal of quantity, e.g.
+    #
+    #   quantity = 2.m
+    #
+    #   (1/quantity).to_s :name                 #=> "0.5 per metre"
+    #
     def coerce(object)
       if object.kind_of? Numeric
         return Quantity.new(object, Unit.unity), self
@@ -245,6 +249,12 @@ module Quantify
       end
     end
 
+    # Dynamic method for converting to another unit, e.g
+    #
+    #   2.ft.to_metre.to_s                           #=> "0.6096 m"
+    #
+    #   30.degree_celsius.to_K.to_s :name            #=> "303.15 kelvins"
+    #
     def method_missing(method, *args, &block)
       if method.to_s =~ /(to_)(.*)/
         to($2)

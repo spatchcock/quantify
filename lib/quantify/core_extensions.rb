@@ -8,8 +8,8 @@ class String
     name = self.clone
     case index
     when 1 then name
-    when 2 then name << " squared"
-    when 3 then name << " cubed"
+    when 2 then "square #{name}"
+    when 3 then "cubic #{name}"
     else
       ordinal = ActiveSupport::Inflector.ordinalize index
       name << " to the #{ordinal} power"

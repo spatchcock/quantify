@@ -17,7 +17,8 @@ module Quantify
     # prefixes specified in config.rb. New units can be defined (with or without
     # prefixes) at any time and either used in place or loaded into the known
     # system.
-    
+
+    # Make the @units instance array readable
     class << self
       attr_reader :units
     end
@@ -81,7 +82,10 @@ module Quantify
 
     # Parse complex strings into compound unit.
     #
-    # NOT COMPREHENSIVELY TESTED
+    # Method currently only accepts unit symbols using "^" syntax for powers.
+    #
+    # Intention is to permit unit names, together with syntax such as "/" and
+    # "per" for 'per' quantities
     #
     def self.parse(string)
       units = string.split(" ").map do |substring|
@@ -96,7 +100,7 @@ module Quantify
       end
     end
 
-    # Returns a Quantify::Quantity instance which represents the ratio of two
+    # Returns an instance of the class Quantity which represents the ratio of two
     # units. For example, the ratio of miles to kilometers is 1.609355, or there
     # are 1.609355 km in 1 mile.
     #
@@ -132,7 +136,25 @@ module Quantify
       end
     end
 
-    # Returns an array containing objects representing all known SI units
+    
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+    # The following represent some of the various useful ways in which the known
+    # system of units might want to be searched and retrieved.
+    #
+    # These can probably be tidied up using some dynamic method building at some
+    # stage.
+    #
+
+
+    # Returns an array containing objects representing all known SI units. By
+    # default, only the standard (non-prefixed) units are returned - e.g. m, s,
+    # J, N, W...
+    #
+    # If <true> is passed as an argument all multiples and divisors are returned
+    # - e.g. cm, dm, m, km, Mm,... J, kJ, MJ, GJ,... W, kW, MW,...
+    #
     def self.si_units(include_multiples=false)
       units = @units.select do |unit|
         if block_given?
@@ -148,10 +170,12 @@ module Quantify
       end
     end
 
+    # Just the SI base units (metre, second, kelvin)
     def self.si_base_units(include_multiples=false)
       self.si_units(include_multiples) { |unit| unit.is_base_unit? }
     end
 
+    # Just the SI derived units (joule, newton, watt, etc.)
     def self.si_derived_units(include_multiples=false)
       self.si_units(include_multiples) { |unit| unit.is_derived_unit? }
     end

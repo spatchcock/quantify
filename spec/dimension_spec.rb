@@ -179,5 +179,117 @@ describe Dimensions do
     dimension.is_dimensionless?.should == false
     dimension
   end
+
+  it "should return appropriate associated units" do
+    dimension = Dimensions.power
+    units = dimension.units :name
+    units.class.should == Array
+    units.include?('watt').should == true
+  end
+
+  it "should return appropriate associated units" do
+    dimension = Dimensions.length
+    units = dimension.units :name
+    units.class.should == Array
+    units.include?('furlong').should == true
+    units.include?('yard').should == true
+    units.include?('siemens').should == false
+  end
+
+  it "should return appropriate associated units" do
+    dimension = Dimensions.energy
+    units = dimension.units :symbol
+    units.class.should == Array
+    units.include?('J').should == true
+    units.include?('ft').should == false
+    units.include?('kWh').should == true
+  end
+
+  it "should return appropriate associated units" do
+    dimension = Dimensions.temperature
+    units = dimension.units :symbol
+    units.class.should == Array
+    units.include?('K').should == true
+    units.include?('°C').should == true
+    units.include?('L').should == false
+  end
+
+  it "should return correct SI unit" do
+    dimension = Dimensions.temperature
+    dimension.si_unit.symbol.should == 'K'
+  end
+
+  it "should return correct SI unit" do
+    dimension = Dimensions.power
+    dimension.si_unit.symbol.should == 'W'
+  end
+
+  it "should return correct SI unit" do
+    dimension = Dimensions.kinematic_viscosity
+    dimension.si_unit.name.should == 'square metre per second'
+  end
+
+  it "should return correct SI unit" do
+    dimension = Dimensions.mass
+    dimension.si_unit.symbol.should == 'kg'
+    dimension.si_unit.symbol.should_not == 'd'
+  end
+
+  it "should return correct SI unit" do
+    dimension = Dimensions.plane_angle
+    dimension.si_unit.symbol.should == 'rad'
+    dimension.si_unit.symbol.should_not == 'W'
+  end
+
+  it "should return the correct SI base units" do
+    units = Dimensions.mass.si_base_units :name
+    units.class.should == Array
+    units.include?('kilogram').should == true
+    units.include?('gram').should == false
+  end
+
+  it "should return the correct SI base units" do
+    units = Dimensions.energy.si_base_units :name
+    units.class.should == Array
+    units.include?('kilogram').should == true
+    units.include?('square metre').should == true
+    units.include?('per square second').should == true
+    units.include?('kelvin').should == false
+    units.size.should == 3
+  end
+
+  it "should return the correct SI base units" do
+    units = Dimensions.force.si_base_units :name
+    units.class.should == Array
+    units.include?('kilogram').should == true
+    units.include?('metre').should == true
+    units.include?('second').should == false
+    units.size.should == 3
+  end
+
+  it "should return the correct SI base units" do
+    units = Dimensions.mass.si_base_units :symbol
+    units.class.should == Array
+    units.include?('kg').should == true
+    units.size.should == 1
+  end
+
+  it "should return the correct SI base units" do
+    units = Dimensions.area.si_base_units :symbol
+    units.class.should == Array
+    units.include?('m^2').should == true
+  end
+
+  it "should recognise molar quantity" do
+    dimension = Dimensions.mass/Dimensions.amount_of_substance
+    dimension.is_molar_quantity?.should == true
+    dimension.is_specific_quantity?.should == false
+  end
+
+  it "should recognise specific quantity" do
+    dimension = Dimensions.volume/Dimensions.mass
+    dimension.is_molar_quantity?.should == false
+    dimension.is_specific_quantity?.should == true
+  end
 end
 

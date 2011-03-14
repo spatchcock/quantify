@@ -15,8 +15,10 @@ module Quantify
   #
   # Standard physical quantities (e.g. length, acceleration, energy)
   # are loaded into the @@dimensions class variable at runtime. These
-  # can be accessed, used and manipulated for arbitrary dimensional uses
-  # and are also used to define and create objects of the Unit::Base class.
+  # can be accessed, used and manipulated for arbitrary dimensional uses.
+  # 
+  # Instances of Dimensions are also used as the basis for defining and
+  # manipulating objects of the Unit::Base class.
 
   class Dimensions
 
@@ -37,7 +39,7 @@ module Quantify
       :luminous_intensity, :amount_of_substance, :information,
       :currency, :item ]
 
-    # Class variable which holds in memory defined quantities
+    # Class variable which holds in memory all defined (and 'loaded') quantities
     @@dimensions = []
 
     # Provides access the class array which holds all defined quantities
@@ -45,16 +47,19 @@ module Quantify
       @@dimensions
     end
 
+    # Returns an array of Dimensions objects representing just the base quantities,
+    # i.e. length, mass, time, temperature, etc.
+    #
     def self.base_dimensions
       @@dimensions.select do |dimensions|
         BASE_QUANTITIES.map(&:standardize).include? dimensions.describe
       end
     end
 
-    # This method allows specific, named quantities to initialized and
+    # This method allows specific, named quantities to be initialized and
     # loaded into the @@dimensions array. Quantities are specified by their
-    # consituent base dimensions, but also must include a name/description,
-    # i.e. 'acceleration', :force, andindicated by the :physical_quantity key,
+    # consituent base dimensions, but must also include a name/description,
+    # i.e. 'acceleration', :force - indicated by the :physical_quantity key -
     # in order to be included in the system of known dimensions, e.g.:
     #
     #  Dimensions.load :physical_quantity => :force,
@@ -64,8 +69,8 @@ module Quantify
     #
     # Standard quantities such as force, energy, mass, etc. should not need to
     # be defined as they are included in the set of quantities already defined
-    # (below) and automatically loaded. These can, in principle, be removed,
-    # overridden or configured differently if required.
+    # (see config.rb) and automatically loaded. These can be removed, overridden
+    # or configured differently if desired.
     #
     def self.load(options)
       if options[:physical_quantity]
@@ -78,13 +83,13 @@ module Quantify
     # Returns an array containing the names/descriptions of all known (loaded)
     # physical quantities, e.g.:
     #
-    #  Dimensions.physical_quantities     #=>    [ 'Acceleration',
-    #                                              'Area',
-    #                                              'Electric Current',
+    #  Dimensions.physical_quantities     #=>    [ 'acceleration',
+    #                                              'area',
+    #                                              'electric Current',
     #                                               ... ]
     #
     def self.physical_quantities
-      @@dimensions.map { |quantity| quantity.physical_quantity }
+      @@dimensions.map(&:physical_quantity)
     end
 
     # Retrieve a known quantity - returns a Dimensions instance, which is a
@@ -115,6 +120,22 @@ module Quantify
       end
     end
 
+    # Syntactic sugar for defining the known quantities. This method simply
+    # evaluates code within the context of the Dimensions class, enabling
+    # the required quantities to be loaded at runtime, e.g.
+    #
+    #  Dimensions.configure do |config|
+    #
+    #    config.load :physical_quantity => :length, :length => 1
+    #    config.load :physical_quantity => :area, :length => 2
+    #    config.load :physical_quantity => :power, :mass => 1, :length => 2, :time => -3
+    #
+    #  end
+    #
+    def self.configure
+      yield self if block_given?
+    end
+
     # Provides a shorthand for retrieving known quantities, e.g.:
     #
     #  Dimensions.force
@@ -134,28 +155,8 @@ module Quantify
       end
     end
 
-    # Syntactic sugar for defining the known quantities. This method simply
-    # evaluates code within the context of the Dimensions class, enabling
-    # the required quantities to be loaded at runtime, e.g.
-    #
-    #  Dimensions.configure do
-    #
-    #    load :physical_quantity => :length, :length => 1
-    #    load :physical_quantity => :area, :length => 2
-    #    load :physical_quantity => :power, :mass => 1, :length => 2, :time => -3
-    #
-    #  end
-    #
-    def self.configure &block
-      class_eval &block
-    end
-
-    # Make all base quantities readable attributes of each instance
     BASE_QUANTITIES.each { |quantity| attr_reader quantity }
 
-    # Make the name/description of the physical quantity represented by the
-    # Dimensions object and accesible attribute.
-    #
     attr_accessor :physical_quantity
 
     # Initialize a new Dimension object.
@@ -166,7 +167,7 @@ module Quantify
     # index/power of that base quantity.
     #
     # In addition, a name or description of the physical quantity can be
-    # specified (i.e. 'acceleration', 'electric_current'). This is optinal for
+    # specified (i.e. 'acceleration', 'electric_current'). This is optional for
     # creating a new Dimensions instance, but required if that object is to be
     # loaded into the @@dimensions class array. e.g.:
     #
@@ -183,8 +184,8 @@ module Quantify
     end
 
     # Load an already instantiated Dimensions object into the @@dimensions class
-    # array, from which it will be provide a universal representation of that
-    # physical quantity.
+    # array, from which it will be accessible as a universal representation of
+    # that physical quantity.
     #
     # Object must include a non-nil @physical_quantity attribute, i.e. a name or
     # description of the physical quantity represented.
@@ -215,8 +216,8 @@ module Quantify
     #
     # This method is useful in cases where Dimensions instances are manipulated
     # using operators (e.g. multiply, divide, power, reciprocal), resulting in
-    # a change to the configuration of base dimensions. This method tries to
-    # find a description of the new quantity.
+    # a change to the configuration of base dimensions (perhaps as a new instance).
+    # This method tries to find a description of the new quantity.
     #
     # If none is found, self.physical_quantity is set to nil.
     #
@@ -225,12 +226,50 @@ module Quantify
       @physical_quantity = (similar.nil? ? nil : similar.physical_quantity )
     end
 
-    def units
+    # Returns an array containing the known units which represent the physical
+    # quantity described by self
+    #
+    # If no argument is given, the array holds instances of Unit::Base (or
+    # subclasses) which represent each unit. Alternatively only the names or
+    # symbols of each unit can be returned by providing the appropriate unit
+    # attribute as a symbolized argument, e.g.
+    #
+    #   Dimensions.energy.units             #=> [ #<Quantify::Dimensions: .. >,
+    #                                             #<Quantify::Dimensions: .. >,
+    #                                             ... ]
+    #
+    #   Dimensions.mass.units :name         #=> [ 'kilogram',
+    #                                             'ounce',
+    #                                             'pound',
+    #                                             ... ]
+    #
+    #
+    #   Dimensions.length.units :symbol     #=> [ 'm',
+    #                                             'ft',
+    #                                             'yd',
+    #                                             ... ]
+    def units(by=nil)
       Unit.units.select do |unit|
         unit.dimensions == self
-      end
+      end.map(&by)
     end
 
+    # Returns the SI unit for the physical quantity described by self.
+    #
+    # Plane/solid angle are special cases which are dimensionless units, and so
+    # are handled explicitly. Otherwise, the si base units for each of the base
+    # dimensions of self are indentified and the corresponding compound unit is
+    # derived. If this new unit is the same as a known (SI derived) unit, the
+    # known unit is returned.
+    #
+    #   Dimensions.energy.units                  #=> #<Quantify::Dimensions: .. >
+    #
+    #   Dimensions.energy.si_unit.name           #=> 'joule'
+    #
+    #   Dimensions.kinematic_viscosity.si_unit.name
+    #
+    #                                            #=> 'metre squared per second'
+    #
     def si_unit
       return Unit.steridian if self.describe == 'solid angle'
       return Unit.radian if self.describe == 'plane angle' 
@@ -241,12 +280,32 @@ module Quantify
       return nil
     end
 
-    def si_base_units
+    # Returns an array representing the base SI units for the physical quantity
+    # described by self
+    #
+    # If no argument is given, the array holds instances of Unit::Base (or
+    # subclasses) which represent each base unit. Alternatively only the names
+    # or symbols of each unit can be returned by providing the appropriate unit
+    # attribute as a symbolized argument, e.g.
+    #
+    #   Dimensions.energy.si_base_units       #=> [ #<Quantify::Dimensions: .. >,
+    #                                               #<Quantify::Dimensions: .. >,
+    #                                               ... ]
+    #
+    #   Dimensions.energy.si_base_units :name
+    #
+    #                                         #=> [ "metre squared",
+    #                                               "per second squared",
+    #                                               "kilogram"]    #
+    #
+    #   Dimensions.force.units :symbol        #=> [ "m", "s^-2", "kg"]
+    #
+    def si_base_units(by=nil)
       self.to_hash.map do |dimension,index|
         Unit.si_base_units.select do |unit|
           unit.measures == dimension.standardize
         end.first ** index
-      end
+      end.map(&by)
     end
 
     # Compares the base quantities of two Dimensions objects and returns true if
@@ -402,10 +461,12 @@ module Quantify
       return quantities
     end
 
+    # Just the base quantities which have positive indices
     def numerator_quantities
       base_quantities.select { |quantity| self.instance_variable_get(quantity) > 0 }
     end
 
+    # Just the base quantities which have negative indices
     def denominator_quantities
       base_quantities.select { |quantity| self.instance_variable_get(quantity) < 0 }
     end
@@ -461,8 +522,6 @@ module Quantify
         remove_instance_variable(var)
       end
     end
-
-    
 
   end
 end

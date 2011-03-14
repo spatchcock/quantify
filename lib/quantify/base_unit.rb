@@ -27,8 +27,8 @@ module Quantify
       #
       #  end
       #
-      def self.configure &block
-        class_eval &block
+      def self.configure
+        yield self if block_given?
       end
 
       attr_reader :name, :symbol, :label
@@ -116,7 +116,27 @@ module Quantify
         self.name.pluralize
       end
 
-      def valid_prefixes
+
+      # Returns an array representing the valid prefixes for the unit described 
+      # by self
+      #
+      # If no argument is given, the array holds instances of Prefix::Base (or
+      # subclasses). Alternatively only the names or symbols of each prefix can 
+      # be returned by providing the appropriate prefix attribute as a symbolized 
+      # argument, e.g.
+      #
+      #   Unit.m.valid_prefixes                 #=> [ #<Quantify::Prefix: .. >,
+      #                                               #<Quantify::Prefix: .. >,
+      #                                               ... ]
+      #
+      #   Unit.m.valid_prefixes :name           #=> [ "deca", "hecto", "kilo", 
+      #                                               "mega", "giga", "tera"
+      #                                               ... ]    
+      #
+      #   Unit.m.valid_prefixes :symbol         #=> [ "da", "h", "k", "M", "G",
+      #                                               "T", "P" ... ]
+      #
+      def valid_prefixes(by=nil)
         return nil if self.is_compound_unit?
         Prefix.prefixes.select do |prefix|
           if self.is_si_unit?
@@ -124,23 +144,33 @@ module Quantify
           elsif self.is_non_si_unit?
             prefix.is_non_si_prefix?
           end
-        end
+        end.map(&by)
       end
 
+      # Determine if the unit represents one of the base quantities
       def is_base_unit?
         Dimensions::BASE_QUANTITIES.map(&:standardize).include? self.measures
       end
 
+      # Determine is the unit is a derived unit - that is, a unit made up of more
+      # than one of the base quantities
+      #
       def is_derived_unit?
         not is_base_unit?
       end
 
+      # Determine if the unit is a prefixed unit
       def is_prefixed_unit?
         return true if valid_prefixes and
           self.name =~ /\A(#{valid_prefixes.map(&:name).join("|")})/
         return false
       end
 
+      # Determine if the unit is one of the units against which all other units
+      # of the same physical quantity are defined. These units are almost entirely
+      # equivalent to the non-prefixed, SI units, but the one exception is the
+      # kilogram, making this method necessary.
+      #
       def is_benchmark_unit?
         self.factor == 1.0
       end
@@ -217,11 +247,16 @@ module Quantify
       # are returned within the array
       #
       def alternatives(by=nil)
-        list = self.dimensions.units.reject do |unit|
+        self.dimensions.units(nil).reject do |unit|
           unit.is_same_as? self
         end.map(&by)
       end
 
+      # Returns the SI unit for the same physical quantity which is represented
+      # by self, e.g.
+      #
+      #   Unit.lb.si_unit.name               #=> 'kilogram'
+      #
       def si_unit
         self.dimensions.si_unit
       end
