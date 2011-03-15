@@ -366,9 +366,13 @@ Unit::Compound.configure do |config|
   (Unit.kg / Unit.kWh).load
 
   # reciprocal/inverse units, e.g. inverse length
-  (1/Unit.centimetre).load
+  (1/Unit.centimetre).load do |unit|
+    unit.name = 'inverse centimetre'
+  end
 
   # pounds per square inch
-  (Unit.pound_force/(Unit.in**2)).load
+  (Unit.pound_force/(Unit.in**2)).load do |unit|
+    unit.symbol = 'psi'
+  end
 
 end

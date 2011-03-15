@@ -19,11 +19,11 @@ module Quantify
       # evaluates code within the context of the self class, enabling
       # the required assocaited units to be loaded at runtime, e.g.
       #
-      #  Unit::[Base|SI|NonSI].configure do
+      #  Unit::[Base|SI|NonSI].configure do |config|
       #
-      #    load :name => :metre, :physical_quantity => :length
-      #    load :name => 'hectare', :physical_quantity => :area, :factor => 10000
-      #    load :name => :watt, :physical_quantity => :power, :symbol => 'W'
+      #    config.load :name => :metre, :physical_quantity => :length
+      #    config.load :name => 'hectare', :physical_quantity => :area, :factor => 10000
+      #    config.load :name => :watt, :physical_quantity => :power, :symbol => 'W'
       #
       #  end
       #
@@ -31,7 +31,7 @@ module Quantify
         yield self if block_given?
       end
 
-      attr_reader :name, :symbol, :label
+      attr_accessor :name, :symbol, :label
       attr_reader :dimensions, :factor
 
       # Create a new Unit::Base instance.
@@ -81,8 +81,18 @@ module Quantify
         @label = options[:label].nil? ? nil : options[:label].to_s
       end
 
-      # Load an initialized Unit into the system of known units
+      # Load an initialized Unit into the system of known units.
+      #
+      # If a block is given this can be used to modify the attributes of the unit.
+      # This is useful when defining units on the basis of operation on existing
+      # units for adding specific (rather than derived) names or symbols, e.g.
+      #
+      #   (Unit.pound_force/(Unit.in**2)).load do |unit|
+      #     unit.symbol = 'psi'
+      #   end
+      #
       def load
+        yield self if block_given?
         Quantify::Unit.units << self
       end
 
@@ -335,6 +345,12 @@ module Quantify
       alias :/ :divide
       alias :** :pow
 
+      # Enables neat shorthand for reciprocal of a unit, e.g.
+      #
+      #   unit = Unit.m
+      #
+      #   (1/unit).symbol                     #=> "m^-1"
+      #
       def coerce(object)
         if object.kind_of? Numeric and object == 1
           return Unit.unity, self

@@ -238,16 +238,11 @@ module Quantify
     #                                             #<Quantify::Dimensions: .. >,
     #                                             ... ]
     #
-    #   Dimensions.mass.units :name         #=> [ 'kilogram',
-    #                                             'ounce',
-    #                                             'pound',
-    #                                             ... ]
+    #   Dimensions.mass.units :name         #=> [ 'kilogram', 'ounce',
+    #                                             'pound', ... ]
     #
+    #   Dimensions.length.units :symbol     #=> [ 'm', 'ft', 'yd', ... ]
     #
-    #   Dimensions.length.units :symbol     #=> [ 'm',
-    #                                             'ft',
-    #                                             'yd',
-    #                                             ... ]
     def units(by=nil)
       Unit.units.select do |unit|
         unit.dimensions == self
