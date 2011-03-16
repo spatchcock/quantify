@@ -11,7 +11,9 @@ module Quantify
       #
       def self.load(options)
         if options.is_a? Hash
-          Quantify::Unit.units << self.new(options)
+          unit = self.new(options)
+          raise InvalidArgumentError, "A unit with the same identity (name, symbol or label: #{unit.name}) already exists" if unit.loaded?
+          Quantify::Unit.units << unit if unit.valid?
         end
       end
 
@@ -32,7 +34,7 @@ module Quantify
       end
 
       attr_accessor :name, :symbol, :label
-      attr_reader :dimensions, :factor
+      attr_accessor :dimensions, :factor
 
       # Create a new Unit::Base instance.
       #
@@ -64,36 +66,70 @@ module Quantify
       # representation in the Dimensions class. This dimensions attribunte is used
       # in much of the unit functionality
       #
-      def initialize(options={})
-        unless options.keys.include?(:name) && options.keys.include?(:physical_quantity)
-          raise InvalidArgumentError, "Unit definition must include a :name and :physical quantity"
+      def initialize(options=nil)
+        if options.is_a? Hash
+          @name = options[:name].standardize.singularize.downcase
+          options[:dimensions] = options[:dimensions] || options[:physical_quantity]
+          if options[:dimensions].is_a? Dimensions
+            @dimensions = options[:dimensions]
+          elsif options[:dimensions].is_a? String or options[:dimensions].is_a? Symbol
+            @dimensions = Dimensions.for options[:dimensions]
+          else
+            raise InvalidArgumentError, "Unknown physical_quantity specified"
+          end
+          @factor = options[:factor].nil? ? 1.0 : options[:factor].to_f
+          @symbol = options[:symbol].nil? ? nil : options[:symbol].standardize
+          @label = options[:label].nil? ? nil : options[:label].to_s
         end
-        @name = options[:name].standardize.singularize.downcase
-        if options[:physical_quantity].is_a? Dimensions
-          @dimensions = options[:physical_quantity]
-        elsif options[:physical_quantity].is_a? String or options[:physical_quantity].is_a? Symbol
-          @dimensions = Dimensions.for options[:physical_quantity]
-        else
-          raise InvalidArgumentError, "Unknown physical_quantity specified"
-        end
-        @factor = options[:factor].nil? ? 1.0 : options[:factor].to_f
-        @symbol = options[:symbol].nil? ? nil : options[:symbol].standardize
-        @label = options[:label].nil? ? nil : options[:label].to_s
+        yield self if block_given?
+        valid?
+      end
+
+      def valid?
+        return true if valid_name? and valid_dimensions?
+        raise InvalidArgumentError, "Unit definition must include a name and physical quantity"
+      end
+
+      def valid_name?
+        @name.is_a? String and not @name.empty?
+      end
+
+      def valid_dimensions?
+        @dimensions.is_a? Dimensions
+      end
+
+      # Permits a block to be used, operating on self. This is useful for modifying
+      # the attributes of an already instantiated unit, especially when defining
+      # units on the basis of operation on existing units for adding specific
+      # (rather than derived) names or symbols, e.g.
+      #
+      #   (Unit.pound_force/(Unit.in**2)).operate do |unit|
+      #     unit.symbol = 'psi'
+      #     unit.label = 'psi'
+      #     unit.name = 'pound per square inch'
+      #   end
+      #
+      def operate
+        yield self if block_given?
+        return self if valid?
       end
 
       # Load an initialized Unit into the system of known units.
       #
-      # If a block is given this can be used to modify the attributes of the unit.
-      # This is useful when defining units on the basis of operation on existing
-      # units for adding specific (rather than derived) names or symbols, e.g.
-      #
-      #   (Unit.pound_force/(Unit.in**2)).load do |unit|
-      #     unit.symbol = 'psi'
-      #   end
+      # If a block is given, the unit can be operated on prior to loading, in a
+      # similar to way to the #operate method.
       #
       def load
         yield self if block_given?
-        Quantify::Unit.units << self
+        raise InvalidArgumentError, "A unit with the same identifiy (name, symbol or label: #{self.name}) already exists" if loaded?
+        Quantify::Unit.units << self if valid?
+      end
+
+      def loaded?
+        return true if Quantify::Unit.units.inject(false) do |status,unit|
+          status ||= self.has_same_identity_as? unit
+        end
+        return false
       end
 
       # Returns the scaling factor for the unit with repsect to its SI alternative.
@@ -101,8 +137,8 @@ module Quantify
       # For example the scaling factor for degrees celsius is 273.15, i.e. celsius
       # is a value of 273.15 greater than kelvin (but with no multiplicative factor).
       #
-      # Since these are rare and only used in non-SI units, an accessible attribute
-      # is not deemed necessary
+      # Since these are rare and only used in non-SI, temperature units, an accessible
+      # attribute was deemed overkill
       #
       def scaling
         @scaling || 0.0
@@ -125,7 +161,6 @@ module Quantify
       def pluralized_name
         self.name.pluralize
       end
-
 
       # Returns an array representing the valid prefixes for the unit described 
       # by self
@@ -230,6 +265,14 @@ module Quantify
       end
 
       alias :== :is_same_as?
+
+      # Check if unit has the identity as another, i.e. the same label. This is
+      # used to determine if a unit with the same accessors already exists in
+      # the module variable @@units
+      #
+      def has_same_identity_as?(other)
+        self.label == other.label and not self.label.nil?
+      end
 
       # Determine if another unit is an alternative unit for self, i.e. do the two
       # units represent the same physical quantity. This is established by compraing

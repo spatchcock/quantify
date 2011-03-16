@@ -58,7 +58,7 @@ module Quantify
       if name_symbol_or_label.is_a? String or
          name_symbol_or_label.is_a? Symbol
         if unit = @units.find do |unit|
-            unit.label == name_symbol_or_label or
+            unit.label == name_symbol_or_label.to_s or
             unit.name == name_symbol_or_label.standardize.singularize.downcase or
             unit.symbol == name_symbol_or_label.standardize
           end

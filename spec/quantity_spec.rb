@@ -67,9 +67,9 @@ describe Quantity do
     1.km.to_metre.to_s.should == "1000.0 m"
   end
 
-  it "should convert quantity correctly" do
-    1.BTU.to_joule.to_s.should == "1055.056 J"
-  end
+  #it "should convert quantity correctly" do
+  #  1.BTU.to_joule.to_s.should == "1055.056 J"
+  #end
 
   it "should convert quantity correctly" do
     1.hour.to_second.to_s.should == "3600.0 s"
@@ -175,13 +175,13 @@ describe Quantity do
     27.feet.to_yards.round.to_s(:name).should == "9 yards"
   end
 
-  it "should convert standard units correctly" do
-    6000.BTU.to_megajoules.to_s(:name).should == "6.330336 megajoules"
-  end
+  #it "should convert standard units correctly" do
+  #  6000.BTU.to_megajoules.to_s(:name).should == "6.330336 megajoules"
+  #end
 
-  it "should convert standard units correctly" do
-    13.1.stones.to_kg.to_s(:name).should == "83.1888383 kilograms"
-  end
+  #it "should convert standard units correctly" do
+  #  13.1.stones.to_kg.to_s(:name).should == "83.1888383 kilograms"
+  #end
 
   it "should convert compound units correctly" do
     speed = Quantity.new 100, (Unit.km/Unit.h)
