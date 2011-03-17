@@ -10,11 +10,8 @@ module Quantify
       # into the system of known units. See initialize for details of options
       #
       def self.load(options)
-        if options.is_a? Hash
-          unit = self.new(options)
-          raise InvalidArgumentError, "A unit with the same identity (name, symbol or label: #{unit.name}) already exists" if unit.loaded?
-          Quantify::Unit.units << unit if unit.valid?
-        end
+        unit = self.new(options)
+        unit.load
       end
 
       # Syntactic sugar for defining the known units. This method simply
@@ -59,7 +56,7 @@ module Quantify
       #                    :scaling           => A scaling factor, used on by NonSI
       #                                          temperature units (see Unit::NonSI)
       #
-      #                    :label    => The label used by JScience for the
+      #                    :label             => The label used by JScience for the
       #                                          unit
       #
       # The physical quantity option is used to locate the corresponding dimensional
@@ -121,10 +118,11 @@ module Quantify
       #
       def load
         yield self if block_given?
-        raise InvalidArgumentError, "A unit with the same identifiy (name, symbol or label: #{self.name}) already exists" if loaded?
+        raise InvalidArgumentError, "A unit with the same label: #{self.name}) already exists" if loaded?
         Quantify::Unit.units << self if valid?
       end
 
+      # check if an object with the same label already exists
       def loaded?
         return true if Quantify::Unit.units.inject(false) do |status,unit|
           status ||= self.has_same_identity_as? unit

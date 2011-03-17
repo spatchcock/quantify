@@ -83,7 +83,7 @@ describe Unit do
     Unit.Gg.name.should == 'gigagram'
     Unit.cm.factor.should == 0.01
     Unit.TJ.name.should == 'terajoule'
-    #Unit.MMBTU.name.should == 'million british thermal unit'
+    Unit.MMBTU.name.should == 'million british thermal unit (59 °f)'
   end
 
   it "dynamic unit retrieval with symbol and invalid prefix should raise error" do
@@ -142,10 +142,10 @@ describe Unit do
     unit.measures.should == 'energy'
   end
 
-  #it "should return the physical quantity" do
-  #  unit = Unit.BTU
-  #  unit.measures.should == 'energy'
-  #end
+  it "should return the physical quantity" do
+    unit = Unit.BTU
+    unit.measures.should == 'energy'
+  end
 
   it "should recognise joule as SI" do
     unit = Unit.J
@@ -172,10 +172,10 @@ describe Unit do
   #  unit.is_si_unit?.should_not == true
   #end
 
-  #it "should recognise BTU as non SI" do
-  #  unit = Unit.british_thermal_unit
-  #  unit.is_si_unit?.should_not == true
-  #end
+  it "should recognise BTU as non SI" do
+    unit = Unit.british_thermal_unit
+    unit.is_si_unit?.should_not == true
+  end
 
   it "should recognise similar units" do
     unit_1 = Unit.yard
@@ -461,7 +461,7 @@ describe Unit do
   it "should return correct SI unit" do
     Unit.ft.si_unit.name.should == 'metre'
     Unit.lb.si_unit.name.should == 'kilogram'
-    #Unit.BTU.si_unit.name.should == 'joule'
+    Unit.BTU.si_unit.name.should == 'joule'
     (Unit.ft**2).si_unit.name.should == 'square metre'
     Unit.pounds_force_per_square_inch.si_unit.name.should == 'pascal'
   end
@@ -538,6 +538,21 @@ describe Unit do
   it "should allow dimensions to be specified with :dimensions key" do
     unit = Unit::Base.new :dimensions => :mass, :name => 'gigapile'
     unit.class.should == Quantify::Unit::Base
+  end
+
+  it "should derive correct label for compound unit" do
+    unit = (Unit.kg/(Unit.t*Unit.km))
+    unit.label.should == "kg/t·km"
+  end
+
+  it "should derive correct label for compound unit" do
+    unit = 1/Unit.m
+    unit.label.should == "m^-1"
+  end
+
+  it "should derive correct label for compound unit" do
+    unit = Unit.MJ*(Unit.m**3)/(Unit.kg**2)
+    unit.label.should == "MJ·m^3/kg^2"
   end
 end
 

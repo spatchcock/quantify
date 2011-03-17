@@ -140,29 +140,27 @@ module Quantify
         unit_label = ""
         unless numerator_units.empty?
           numerator_units.inject(unit_label) do |label,base|
+            unit_label << "·" unless unit_label.empty?
             base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
             base_unit_label = base[:unit].label + base_unit_index
-            label << "#{base_unit_label}·"
+            label << "#{base_unit_label}"
           end
         end
-        unit_label.gsub!("·","") unless unit_label.empty?
+
         unless denominator_units.empty?
-          if unit_label.empty?
-            denominator_units.inject(unit_label) do |label,base|
-              base_unit_index = ( base[:index].nil? or base[:index] == 1 ? "" : "^#{base[:index]}" )
-              base_unit_label = base[:unit].label + base_unit_index
-              label << "#{base_unit_label}·"
-            end
-          else
-            unit_label << "/"
-            denominator_units.inject(unit_label) do |label,base|
-              base_unit_index = ( base[:index].nil? or base[:index] == -1 ? "" : "^#{base[:index]*-1}" )
-              base_unit_label = base[:unit].label + base_unit_index
-              label << "#{base_unit_label}·"
-            end
+          factor = case unit_label.empty?
+          when true then 1
+          when false then -1
+          end
+          unit_label << "/" unless unit_label.empty?
+          denominator_units.inject(unit_label) do |label,base|
+            unit_label << "·" unless unit_label.empty? or unit_label =~ /\/\z/
+            base_unit_index = ( base[:index].nil? ? nil : base[:index]*factor )
+            base_unit_label = base[:unit].label + (base_unit_index == 1 ? "" : "^#{base_unit_index}")
+            label << "#{base_unit_label}"
           end
         end
-        return unit_label.chop.chop
+        return unit_label
       end
 
       # Derive the multiplicative factor for the unit based on those of the base

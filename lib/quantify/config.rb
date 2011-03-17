@@ -234,7 +234,15 @@ Unit::NonSI.configure do |config|
   # config.load :name => 'us dry barrel', :physical_quantity => 'volume', :factor => 115.6271e-3, :symbol => 'bl (US)'
   # config.load :name => 'us liquid barrel', :physical_quantity => 'volume', :factor => 119.2405e-3, :symbol => 'fl bl (US)'
   # config.load :name => 'biot', :physical_quantity => 'electric current', :factor => 10.0, :symbol => 'Bi'
-  # config.load :name => 'british thermal unit', :physical_quantity => 'energy', :factor => 1.055056e3, :symbol => 'BTU'
+  config.load :name => 'british thermal unit (59 °F)', :physical_quantity => 'energy', :factor => 1054.804, :symbol => 'BTU', :label => 'BTU_FiftyNineF'
+  # The IT (International [Steam] Table) defined BTU is apparently the most widely used so is given the basic name here
+  config.load :name => 'british thermal unit', :physical_quantity => 'energy', :factor => 1055.05585262, :symbol => 'BTU', :label => 'BTU_IT'
+  config.load :name => 'british thermal unit (39 °F)', :physical_quantity => 'energy', :factor => 1059.67, :symbol => 'BTU', :label => 'BTU_ThirtyNineF'
+  config.load :name => 'british thermal unit (mean)', :physical_quantity => 'energy', :factor => 1055.87, :symbol => 'BTU', :label => 'BTU_Mean'
+  config.load :name => 'british thermal unit (ISO)', :physical_quantity => 'energy', :factor => 1055.056, :symbol => 'BTU', :label => 'BTU_ISO'
+  config.load :name => 'british thermal unit (60 °F)', :physical_quantity => 'energy', :factor => 1054.68, :symbol => 'BTU', :label => 'BTU_SixtyF'
+  config.load :name => 'british thermal unit (63 °F)', :physical_quantity => 'energy', :factor => 1054.6, :symbol => 'BTU', :label => 'BTU_SixtyThreeF'
+  config.load :name => 'british thermal unit (thermochemical)', :physical_quantity => 'energy', :factor => 1054.35026444, :symbol => 'BTU', :label => 'BTU_Thermochemical'
   # config.load :name => 'bushel_uk', :physical_quantity => 'volume', :factor => 36.36872e-3, :symbol => 'bu (Imp)'
   # config.load :name => 'bushel_us', :physical_quantity => 'volume', :factor => 35.23907e-3, :symbol => 'bu (US lvl)'
   # config.load :name => 'butt', :physical_quantity => 'volume', :factor => 477.3394e-3
