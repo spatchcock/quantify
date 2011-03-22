@@ -80,6 +80,25 @@ module Quantify
       end
     end
 
+    def self.assign_prevailing_quantity(dimension)
+      if dimension.is_a? String
+        dimension = dimension.to_sym
+      elsif dimension.is_a? Dimensions
+        dimension = dimension.physical_quantity.to_sym
+      end
+      if quantity = @@dimensions.find do |q|
+          q.physical_quantity == dimension.standardize.downcase
+        end
+        quantity.make_prevailing_quantity
+      end
+    end
+
+    def self.mass_assign_prevailing_quantities(*dimensions)
+      dimensions.flatten.each do |dimension|
+        Dimensions.assign_prevailing_quantity(dimension)
+      end
+    end
+
     # Returns an array containing the names/descriptions of all known (loaded)
     # physical quantities, e.g.:
     #
@@ -97,7 +116,7 @@ module Quantify
     # the object to be modified/manipulated without corrupting the representation
     # of the quantity in the @@dimensions class array.
     #
-    # The required quantity name/desriptor can be specified as a symbol or a
+    # The required quantity name/descriptor can be specified as a symbol or a
     # string, e.g.:
     # 
     #  Dimensions.for :acceleration
@@ -191,11 +210,19 @@ module Quantify
     # description of the physical quantity represented.
     #
     def load
-      if describe
+      if describe and not loaded?
         @@dimensions << self
       else
         raise InvalidDimensionError, "Cannot load dimensions without physical quantity description"
       end
+    end
+
+    def loaded?
+      Dimensions.dimensions.any? { |quantity| self.has_same_identity_as? quantity }
+    end
+
+    def has_same_identity_as?(other)
+      self.physical_quantity == other.physical_quantity and not self.physical_quantity.nil?
     end
 
     # Return a description of what physical quantity self represents. If no
@@ -223,14 +250,17 @@ module Quantify
     #
     def get_description
       similar = @@dimensions.find { |quantity| quantity == self }
-      @physical_quantity = (similar.nil? ? nil : similar.physical_quantity )
+      @physical_quantity = ( similar.nil? ? nil : similar.physical_quantity )
     end
 
     # Returns an array containing the known units which represent the physical
     # quantity described by self
     #
     # If no argument is given, the array holds instances of Unit::Base (or
-    # subclasses) which represent each unit. Alternatively only the names or
+    # subclasses) which represent each unit. Alternatively o      #
+      # Iterate through all base units looking for a single instance of a non-SI
+      # unit. Coumpound units are only SI if they are entirely composed of SI
+      # unitsnly the names or
     # symbols of each unit can be returned by providing the appropriate unit
     # attribute as a symbolized argument, e.g.
     #
@@ -270,7 +300,7 @@ module Quantify
       return Unit.radian if self.describe == 'plane angle' 
       return si_base_units.inject(Unit.unity) do |compound,unit|
         compound * unit
-      end.or_equivalent_known_unit
+      end.or_equivalent
     rescue
       return nil
     end
@@ -512,7 +542,7 @@ module Quantify
 
     # Make object represent a dimensionless quantity.
     def make_dimensionless
-      self.physical_quantity = 'Dimensionless'
+      self.physical_quantity = 'dimensionless'
       base_quantities.each do |var|
         remove_instance_variable(var)
       end

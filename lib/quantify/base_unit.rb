@@ -124,10 +124,7 @@ module Quantify
 
       # check if an object with the same label already exists
       def loaded?
-        return true if Quantify::Unit.units.inject(false) do |status,unit|
-          status ||= self.has_same_identity_as? unit
-        end
-        return false
+        Unit.units.any? { |unit| self.has_same_identity_as? unit }
       end
 
       # Returns the scaling factor for the unit with repsect to its SI alternative.
@@ -140,6 +137,10 @@ module Quantify
       #
       def scaling
         @scaling || 0.0
+      end
+
+      def has_scaling?
+        scaling != 0.0
       end
 
       # Describes what the unit measures/represents. This is taken from the
@@ -256,10 +257,9 @@ module Quantify
       #                                      #=> true
       #
       def is_same_as?(other)
-        return false unless self.dimensions == other.dimensions
-        return false unless self.factor == other.factor
-        return false unless self.scaling == other.scaling
-        return true
+        [:dimensions,:factor,:scaling].all? do |attr|
+          self.send(attr) == other.send(attr)
+        end
       end
 
       alias :== :is_same_as?
@@ -283,8 +283,7 @@ module Quantify
       #  Unit.metre.is_alternative_for? Unit.metre   #=> true
       #
       def is_alternative_for?(other)
-        return true if other.dimensions == self.dimensions
-        return false
+        other.dimensions == self.dimensions
       end
 
       # List the alternative units for self, i.e. the other units which share
@@ -306,17 +305,12 @@ module Quantify
       # Returns the SI unit for the same physical quantity which is represented
       # by self, e.g.
       #
-      #   Unit.lb.si_unit.name               #=> 'kilogram'
-      #
       def si_unit
         self.dimensions.si_unit
       end
 
       # Multiply two units together. This results in the generation of a compound
       # unit.
-      #
-      # In the event that the new unit represents a known unit, the non-compound
-      # representation is returned (i.e. of the SI or NonSI class).
       #
       def multiply(other)
         options = []
@@ -331,7 +325,7 @@ module Quantify
         else
           options << { :unit => other }
         end
-        Unit::Compound.new(options)#.or_equivalent_known_unit
+        Unit::Compound.new(options)
       end
 
       # Divide one unit by another. This results in the generation of a compound
@@ -355,7 +349,7 @@ module Quantify
         else
           options << { :unit => other, :index => -1 }
         end
-        Unit::Compound.new(options)#.or_equivalent_known_unit
+        Unit::Compound.new(options)
       end
 
       # Raise a unit to a power. This results in the generation of a compound
@@ -386,6 +380,38 @@ module Quantify
       alias :/ :divide
       alias :** :pow
 
+      def with_prefix(name_or_symbol)
+        if self.name =~ /\A(#{valid_prefixes(:name).join("|")})/
+          raise InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
+        end
+
+        if name_or_symbol.is_a? Prefix
+          prefix = name_or_symbol
+        else
+          prefix = Prefix.for(name_or_symbol)
+        end
+
+        unless prefix.nil?
+          new_unit_options = {}
+          new_unit_options[:name] = "#{prefix.name}#{self.name}"
+          new_unit_options[:symbol] = "#{prefix.symbol}#{self.symbol}"
+          new_unit_options[:label] = "#{prefix.symbol}#{self.label}"
+          new_unit_options[:factor] = prefix.factor * self.factor
+          new_unit_options[:physical_quantity] = self.dimensions
+          self.class.new(new_unit_options)
+        else
+          raise InvalidArgumentError, "Prefix unit is not known: #{prefix}"
+        end
+      end
+
+      def or_equivalent
+        equivalent_known_unit || self
+      end
+
+      def equivalent_known_unit
+        Unit.units.find {|unit| unit == self and not unit.is_compound_unit? }
+      end
+
       # Enables neat shorthand for reciprocal of a unit, e.g.
       #
       #   unit = Unit.m
@@ -412,19 +438,27 @@ module Quantify
         return new
       end
 
-      # Provides syntactic sugar for generating a prefixed version of self. E.g.
+      # Provides syntactic sugar for several methods. E.g.
       #
       #  Unit.metre.to_kilo
       #
-      # is equivalent to Unit.metre.with_prefix :kilo
+      # is equivalent to Unit.metre.with_prefix :kilo.
+      # 
+      #  Unit.m.alternatives_by_name
+      #  
+      # is equaivalent to Unit.m.alternatives :name
+      #
+      #
       #
       def method_missing(method, *args, &block)
-        if method.to_s =~ /(to_)(.*)/
-          if prefix = Prefix.for($2.to_sym)
-            self.with_prefix prefix
-          end
+        if method.to_s =~ /(to_)(.*)/ and prefix = Prefix.for($2.to_sym)
+          self.with_prefix prefix
+        elsif method.to_s =~ /(alternatives_by_)(.*)/ and self.respond_to? $2.to_sym
+          self.alternatives $2.to_sym
+        elsif method.to_s =~ /(valid_prefixes_by_)(.*)/ and Prefix::Base.instance_methods.include? $2.to_s
+          self.valid_prefixes $2.to_sym
         else
-          raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
+          super
         end
       end
 

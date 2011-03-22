@@ -116,7 +116,7 @@ Prefix::NonSI.configure do |config|
   #
   # The 'MM' prefix is considered bad practice, but is nevertheless commonly
   # used in the US, so is added here to provide this support.
-  config.load :name => 'million', :symbol => 'MM', :factor => 1e6
+  config.load :name => 'million ', :symbol => 'MM', :factor => 1e6
 
 end
 
@@ -341,7 +341,7 @@ Unit::NonSI.configure do |config|
   config.load :name => 'sphere', :physical_quantity => 'solid angle', :factor => 4*Math::PI, :label => 'sphere'
   # config.load :name => 'sthene', :physical_quantity => 'force', :factor => 1e3, :symbol => 'sn'
   # config.load :name => 'stokes', :physical_quantity => 'kinematic viscosity', :factor => 100e-6, :symbol => 'St'
-  # config.load :name => 'stone', :physical_quantity => 'mass', :factor => 6.350293, :symbol => 'st'
+  config.load :name => 'stone', :physical_quantity => 'mass', :factor => 6.350293, :symbol => 'st', :label => 'st'
   # config.load :name => 'therm', :physical_quantity => 'energy', :factor => 105.506e6, :symbol => 'thm'
   # config.load :name => 'thermie', :physical_quantity => 'energy', :factor => 4.185407e6, :symbol => 'th'
   config.load :name => 'short ton', :physical_quantity => 'mass', :factor => 907.1847, :symbol => 'ton', :label => 'ton_us'

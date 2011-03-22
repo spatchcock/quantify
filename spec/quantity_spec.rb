@@ -175,13 +175,13 @@ describe Quantity do
     27.feet.to_yards.round.to_s(:name).should == "9 yards"
   end
 
-  #it "should convert standard units correctly" do
-  #  6000.BTU.to_megajoules.to_s(:name).should == "6.330336 megajoules"
-  #end
+  it "should convert standard units correctly" do
+    6000.BTU.to_megajoules.to_s(:name).should == "6.328824 megajoules"
+  end
 
-  #it "should convert standard units correctly" do
-  #  13.1.stones.to_kg.to_s(:name).should == "83.1888383 kilograms"
-  #end
+  it "should convert standard units correctly" do
+    13.1.stones.to_kg.to_s(:name).should == "83.1888383 kilograms"
+  end
 
   it "should convert compound units correctly" do
     speed = Quantity.new 100, (Unit.km/Unit.h)

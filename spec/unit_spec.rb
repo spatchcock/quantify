@@ -264,7 +264,7 @@ describe Unit do
 
   it "should recognise known units from compound units based on dimensions and factor" do
     unit = Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s
-    unit.name.should == 'joule'
+    unit.equivalent_known_unit.name.should == 'joule'
   end
 
   it "should recognise a compound unit" do
@@ -277,7 +277,7 @@ describe Unit do
   end
 
   it "coerce method should handle reciprocal syntax" do
-    (1/Unit.s).name.should == 'bequerel'
+    (1/Unit.s).name.should == 'per second'
   end
 
   it "should throw error when trying to add prefix to prefixed-unit" do
@@ -297,7 +297,7 @@ describe Unit do
     #Unit.centimetre_of_water.pluralized_name.should == 'centimetres of water'
     (Unit.t*Unit.km).pluralized_name.should == 'tonne kilometres'
     (Unit.t*Unit.km/Unit.year).pluralized_name.should == 'tonne kilometres per year'
-    (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).pluralized_name.should == 'joules'
+    (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).or_equivalent.pluralized_name.should == 'joules'
   end
 
   it "should create unit with dynamic method and pluralized name" do
@@ -553,6 +553,17 @@ describe Unit do
   it "should derive correct label for compound unit" do
     unit = Unit.MJ*(Unit.m**3)/(Unit.kg**2)
     unit.label.should == "MJ·m^3/kg^2"
+  end
+
+  it "should find equivalent unit for compound unit" do
+    (Unit.m*Unit.m).equivalent_known_unit.name.should == 'square metre'
+    (Unit.km*Unit.lb).equivalent_known_unit.should == nil
+  end
+
+  it "should return equivalent unit if appropriate" do
+    (Unit.m*Unit.m).or_equivalent.name.should == 'square metre'
+    (Unit.km*Unit.lb).or_equivalent.name.should == 'kilometre pound'
+    (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).or_equivalent.name.should == 'joule'
   end
 end
 

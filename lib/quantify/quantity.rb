@@ -111,12 +111,12 @@ module Quantify
     #
     def to(new_unit)
       new_unit = Unit.for new_unit unless new_unit.is_a? Unit::Base
-      if is_temperature_conversion?(new_unit)
-        conversion_with_scalings(new_unit)
+      if is_basic_conversion_with_scalings? new_unit
+        conversion_with_scalings new_unit
       elsif self.unit.is_alternative_for? new_unit
-        basic_unit_conversion(new_unit)
+        conversion_with_equivalent_units new_unit
       elsif self.unit.is_compound_unit?
-        compound_unit_conversion(new_unit)
+        conversion_with_compound_and_non_equivalent_units new_unit
       else
         nil # raise? or ...
       end      
@@ -265,15 +265,14 @@ module Quantify
 
     protected
 
-    def is_temperature_conversion?(new_unit)
-      return true if self.represents == 'temperature' and
-        new_unit.measures == 'temperature' and
+    def is_basic_conversion_with_scalings?(new_unit)
+      return true if (self.unit.has_scaling? or new_unit.has_scaling?) and
         not self.unit.is_compound_unit? and
         not new_unit.is_compound_unit?
       return false
     end
 
-    def basic_unit_conversion(new_unit)
+    def conversion_with_equivalent_units(new_unit)
       self * (Unit.ratio new_unit, self.unit)
     end
 
@@ -282,7 +281,7 @@ module Quantify
       Quantity.new new_value, new_unit
     end
 
-    def compound_unit_conversion(new_unit)
+    def conversion_with_compound_and_non_equivalent_units(new_unit)
       self.unit.base_units.select do |unit|
         unit[:unit].is_alternative_for? new_unit
       end.map do |unit|

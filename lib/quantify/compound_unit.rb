@@ -189,31 +189,12 @@ module Quantify
 
       # Determine is a unit object represents an SI named unit.
       #
-      # Iterate through all base units looking for a single instance of a non-SI
-      # unit. Coumpound units are only SI if they are entirely composed of SI
-      # units
-      #
       def is_si_unit?
-        # if this expression is false - i.e. no instance of an SI check returning
-        # false occurs - return true... The unit is an SI unit.
-        not @base_units.inject(false) do |status,unit|
-          status ||= !unit[:unit].is_si_unit?
-        end
+        @base_units.all? { |unit| unit[:unit].is_si_unit? }
       end
 
-      # This can be used to determine if the compound unit which was derived from
-      # some operation simply represents a known, established unit, which can then
-      # be returned instead of representing the unit as an instance of the Compound
-      # class.
-      #
-      # This has the advantage of enabling the use of SI and NonSI specific methods
-      # and prefixes.
-      #
-      def or_equivalent_known_unit
-        return self unless known_unit = Unit.units.find do |unit|
-          unit == self and not unit.is_compound_unit?
-        end
-        return known_unit
+      def is_non_si_unit?
+        @base_units.any? { |unit| unit[:unit].is_non_si_unit? }
       end
 
     end
