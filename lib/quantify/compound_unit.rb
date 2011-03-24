@@ -197,6 +197,15 @@ module Quantify
         @base_units.any? { |unit| unit[:unit].is_non_si_unit? }
       end
 
+      def rationalized
+        grouped_units = @base_units.group_by {|unit| unit[:unit].dimensions.physical_quantity }
+        rationalized_units = @base_units.map do |base|
+          new_unit = grouped_units[base[:unit].dimensions.physical_quantity].first[:unit]
+          { :unit => new_unit, :index => base[:index] }
+        end
+        return Unit::Compound.new rationalized_units
+      end
+
     end
   end
 end

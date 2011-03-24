@@ -114,101 +114,130 @@ module Quantify
       if is_basic_conversion_with_scalings? new_unit
         conversion_with_scalings new_unit
       elsif self.unit.is_alternative_for? new_unit
-        conversion_with_equivalent_units new_unit
+        convert_to_equivalent_unit new_unit
       elsif self.unit.is_compound_unit?
-        conversion_with_compound_and_non_equivalent_units new_unit
+        convert_compound_unit_to_non_equivalent_unit new_unit
       else
         nil # raise? or ...
       end      
     end
 
+    def is_basic_conversion_with_scalings?(new_unit)
+      return true if (self.unit.has_scaling? or new_unit.has_scaling?) and
+        not self.unit.is_compound_unit? and
+        not new_unit.is_compound_unit?
+      return false
+    end
+
+    # Conversion where both units (including compound units) are of precisely
+    # equivalent dimensions, i.e. direct alternatives for one another
+    def convert_to_equivalent_unit(new_unit)
+      self.multiply!(Unit.ratio new_unit, self.unit)
+    end
+
+    def conversion_with_scalings(new_unit)
+      @value = (((self.value + self.unit.scaling) * self.unit.factor) / new_unit.factor) - new_unit.scaling
+      @unit = new_unit
+      return self
+    end
+
+    # Conversion where self is a compound unit, and new unit is not an alternative
+    # to the whole compound but IS an alternative to one or more of the base units,
+    # e.g.,
+    #
+    #   Unit.kilowatt_hour.to :second           #=> 'kilowatt second'
+    #convert_compound_unit_to_non_equivalent_unit(
+    def convert_compound_unit_to_non_equivalent_unit(new_unit)
+      self.unit.base_units.select do |unit|
+        unit[:unit].is_alternative_for? new_unit
+      end.map do |unit|
+        Unit.ratio(new_unit**unit[:index],unit[:unit]**unit[:index])
+      end.inject(self) do |quantity,factor|
+        quantity.multiply! factor # can possibly change this to bang method
+      end
+    end
+
     # Converts a quantity to the equivalent quantity using only SI units
     def to_si
       if self.unit.is_compound_unit?
-        until self.unit.is_si_unit? do
-          unit = self.unit.base_units.find do |unit|
-            !unit[:unit].is_si_unit?
-          end[:unit]
-          quantity = self.to unit.si_unit
-          @value = quantity.value
-          @unit = quantity.unit
-        end
-        return self
+        convert_compound_unit_to_si
       else
         self.to(self.unit.si_unit)
       end
     end
 
-    # Add two quantities.
-    #
+    def convert_compound_unit_to_si
+      until self.unit.is_si_unit? do
+        unit = self.unit.base_units.find do |unit|
+          !unit[:unit].is_si_unit?
+        end[:unit]
+        self.convert_compound_unit_to_non_equivalent_unit unit.si_unit
+      end
+      return self
+    end
+
     # Quantities must be of the same dimension in order to operate. If they are
     # represented by different units (but represent the same physical quantity)
     # the second quantity is converted into the unit belonging to the first unit
     # and the addition is completed
     #
+    def add_or_subtract!(operator,other)
+      if other.is_a? Quantity
+        other = other.to(unit) if other.unit.is_alternative_for?(unit)
+        if self.unit == other.unit
+          @value = value.send operator, other.value
+          return self
+        else
+          raise Quantify::InvalidObjectError "Cannot add or subtract Quantities with different dimensions"
+        end
+      else
+        raise Quantify::InvalidObjectError "Cannot add or subtract non-Quantity objects"
+      end
+    end
+
+    def multiply_or_divide!(operator,other)
+      if other.kind_of? Numeric
+        @value = value.send(operator,other)
+        return self
+      elsif other.kind_of? Quantity
+        @unit = unit.send(operator,other.unit)
+        @value = value.send(operator,other.value)
+        return self
+      else
+        raise Quantify::InvalidArgumentError "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"
+      end
+    end
+
+    def add!(other)
+      add_or_subtract!(:+, other)
+    end
+
+    def subtract!(other)
+      add_or_subtract!(:-, other)
+    end
+
+    def multiply!(other)
+      multiply_or_divide!(:*, other)
+    end
+
+    def divide!(other)
+      multiply_or_divide!(:/, other)
+    end
+
     def add(other)
-      if other.is_a? Quantity
-        other = other.to self.unit if other.unit.is_alternative_for? self.unit
-        if self.unit == other.unit
-          @value += other.value
-          return self
-        else
-          raise Quantify::InvalidObjectError "Cannot add Quantities with different dimensions"
-        end
-      else
-        raise Quantify::InvalidObjectError "Cannot add non-Quantity objects"
-      end
+      Quantity.new(value,unit).add!(other)
     end
 
-    # Subtract two quantities.
-    #
-    # Quantities must be of the same dimension in order to operate. If they are
-    # represented by different units (but represent the same physical quantity)
-    # the second quantity is converted into the unit belonging to the first unit
-    # and the subtraction is completed
-    #
     def subtract(other)
-      if other.is_a? Quantity
-        other = other.to self.unit if other.unit.is_alternative_for? self.unit
-        if self.unit == other.unit
-          @value -= other.value
-          return self
-        else
-          raise Quantify::InvalidObjectError "Cannot subtract Quantities with different dimensions"
-        end
-      else
-        raise Quantify::InvalidObjectError "Cannot subtract non-Quantity objects"
-      end
+      Quantity.new(value,unit).subtract!(other)
     end
 
-    # Multiply a quantity by a scalar value, i.e. a value of the Numeric class
-    #
     def multiply(other)
-      if other.kind_of? Numeric
-        @value *= other
-        return self
-      elsif other.kind_of? Quantity
-        new_unit = self.unit * other.unit
-        new_value = self.value * other.value
-        return Quantity.new new_value, new_unit
-      else
-        raise Quantify::InvalidArgumentError "Cannot multiply a Quantity by a non-Quantity or non-Numeric object"
-      end
+      Quantity.new(value,unit).multiply!(other)
     end
 
-    # Divide a quantity by a scalar value, i.e. a value of the Numeric class
-    #
     def divide(other)
-      if other.kind_of? Numeric
-        @value /= other
-        return self
-      elsif other.kind_of? Quantity
-        new_unit = self.unit / other.unit
-        new_value = self.value / other.value
-        return Quantity.new new_value, new_unit
-      else
-        raise Quantify::InvalidArgumentError "Cannot divide a Quantity by a non-Quantity or non-Numeric object"
-      end
+      Quantity.new(value,unit).divide!(other)
     end
 
     alias :times :multiply
@@ -216,6 +245,11 @@ module Quantify
     alias :+ :add
     alias :- :subtract
     alias :/ :divide
+
+    def rationalize_unit
+      return self unless unit.is_a? Unit::Compound
+      self.to unit.rationalized
+    end
 
     # Round the value attribute to the specified number of decimal places. If no
     # argument is given, the value is rounded to NO decimal places, i.e. to an
@@ -260,34 +294,6 @@ module Quantify
         to($2)
       else
         raise NoMethodError, "Undefined method '#{method}' for #{self}:#{self.class}"
-      end
-    end
-
-    protected
-
-    def is_basic_conversion_with_scalings?(new_unit)
-      return true if (self.unit.has_scaling? or new_unit.has_scaling?) and
-        not self.unit.is_compound_unit? and
-        not new_unit.is_compound_unit?
-      return false
-    end
-
-    def conversion_with_equivalent_units(new_unit)
-      self * (Unit.ratio new_unit, self.unit)
-    end
-
-    def conversion_with_scalings(new_unit)
-      new_value = (((self.value + self.unit.scaling) * self.unit.factor) / new_unit.factor) - new_unit.scaling
-      Quantity.new new_value, new_unit
-    end
-
-    def conversion_with_compound_and_non_equivalent_units(new_unit)
-      self.unit.base_units.select do |unit|
-        unit[:unit].is_alternative_for? new_unit
-      end.map do |unit|
-        Unit.ratio(new_unit**unit[:index],unit[:unit]**unit[:index])
-      end.inject(self) do |quantity,factor|
-        quantity * factor
       end
     end
 
