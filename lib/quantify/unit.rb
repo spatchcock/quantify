@@ -55,29 +55,46 @@ module Quantify
     # units to use only NonSI prefixes
     #
     def self.for(name_symbol_or_label)
-      if name_symbol_or_label.is_a? String or
-         name_symbol_or_label.is_a? Symbol
-        if unit = @units.find do |unit|
-            unit.label == name_symbol_or_label.to_s or
-            unit.name == name_symbol_or_label.standardize.singularize.downcase or
-            unit.symbol == name_symbol_or_label.standardize
-          end
-
-          return unit.deep_clone
-        elsif name_symbol_or_label =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_labels.join("|")})\z/ or
-          name_symbol_or_label =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_labels.join("|")})\z/ or
-          name_symbol_or_label.standardize.singularize.downcase =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
-          name_symbol_or_label.standardize.singularize.downcase =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
-          name_symbol_or_label.standardize =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
-          name_symbol_or_label.standardize =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/
-          
-          return Unit.for($2).with_prefix($1).deep_clone
-        else
-          raise InvalidArgumentError, "Unit not known: #{name_symbol_or_label}"
-        end
-      else
+      unless name_symbol_or_label.is_a? String or name_symbol_or_label.is_a? Symbol
         raise InvalidArgumentError, "Argument must be a Symbol or String"
       end
+      if unit = Unit.match_known_unit_or_prefixed_variant(name_symbol_or_label)
+        return unit
+      end
+      if unit = Unit.parse(name_symbol_or_label)
+        return unit
+      end
+      raise InvalidArgumentError, "Unit not known: #{name_symbol_or_label}"
+    end
+
+    def self.match_known_unit_or_prefixed_variant(name_symbol_or_label)
+      Unit.match_known_unit_or_prefixed_variant_by_label(name_symbol_or_label) ||
+        Unit.match_known_unit_or_prefixed_variant_by_name_or_symbol(name_symbol_or_label)
+    end
+
+    def self.match_known_unit_or_prefixed_variant_by_label(label)
+      if unit = @units.find { |unit| unit.label == label.to_s }
+        return unit.deep_clone
+      elsif label =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_labels.join("|")})\z/ or
+        label =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_labels.join("|")})\z/
+        return Unit.for($2).with_prefix($1).deep_clone
+      end
+      return nil
+    end
+
+    def self.match_known_unit_or_prefixed_variant_by_name_or_symbol(name_or_symbol)
+      if unit = @units.find do |unit|
+           unit.name == name_or_symbol.standardize.singularize.downcase or
+           unit.symbol == name_or_symbol.standardize
+         end
+        return unit.deep_clone
+      elsif name_or_symbol.standardize.singularize.downcase =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
+          name_or_symbol.standardize.singularize.downcase =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
+          name_or_symbol.standardize =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
+          name_or_symbol.standardize =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/
+        return Unit.for($2).with_prefix($1).deep_clone
+      end
+      return nil
     end
 
     # Parse complex strings into compound unit.
@@ -88,15 +105,40 @@ module Quantify
     # "per" for 'per' quantities
     #
     def self.parse(string)
-      units = string.split(" ").map do |substring|
+      if string.scan(/(\/|per)/).size > 1
+        raise InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
+      end
+
+      units = []
+      numerator, splitter, denominator = string.split(/(\/|per)/)
+      units.concat parse_numerator_units(numerator)
+      units.concat parse_denominator_units(denominator) unless denominator.nil?
+
+      if units.size == 1 and units[0][:index].nil?
+        return Unit.match_known_unit_or_prefixed_variant(units[0][:unit]) ||
+          raise(InvalidArgumentError, "Cannot parse unit: #{string}")
+      else
+        return Unit::Compound.new(units) ||
+          raise(InvalidArgumentError, "Cannot parse unit: #{string}")
+      end
+    end
+
+    def self.parse_numerator_units(string)
+      if string =~ /·/
+        num_units = string.split("·")
+      else
+        num_units = string.split(" ") # cludge, need to think about multi word unit names
+      end
+      
+      num_units.map! do |substring|
         substring.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
         { :unit => $1.to_s, :index => ( $2.nil? or $2.empty? ? nil : $2.to_i ) }
       end
+    end
 
-      if units.size == 1 and units[0][:index].nil?
-        return Unit.for units[0][:unit]
-      else
-        return Unit::Compound.new(units)
+    def self.parse_denominator_units(string)
+      denom_units = parse_numerator_units(string).map do |unit|
+        { :unit => unit[:unit], :index => ( unit[:index].nil? ? -1 : unit[:index]* -1 ) }
       end
     end
 

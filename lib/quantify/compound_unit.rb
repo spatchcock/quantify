@@ -20,6 +20,10 @@ module Quantify
       # The Compound class provides support for arbitrarily defined compound units
       # which don't have well-established names.
 
+      def self.base_unit_hash(unit,index=1)
+        { :unit => unit, :index => index }
+      end
+
       attr_reader :base_units
 
       # Initialize a compound unit by providing an array of hashes containing the
@@ -46,7 +50,7 @@ module Quantify
           else
             index = unit[:index]
           end
-          @base_units << { :unit => base_unit, :index => index }
+          @base_units << Compound.base_unit_hash(base_unit,index)
         end
         consolidate_base_units
         @dimensions = derive_dimensions
@@ -201,7 +205,7 @@ module Quantify
         grouped_units = @base_units.group_by {|unit| unit[:unit].dimensions.physical_quantity }
         rationalized_units = @base_units.map do |base|
           new_unit = grouped_units[base[:unit].dimensions.physical_quantity].first[:unit]
-          { :unit => new_unit, :index => base[:index] }
+          Compound.base_unit_hash(new_unit,base[:index])
         end
         return Unit::Compound.new rationalized_units
       end

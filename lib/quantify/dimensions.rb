@@ -80,25 +80,6 @@ module Quantify
       end
     end
 
-    def self.assign_prevailing_quantity(dimension)
-      if dimension.is_a? String
-        dimension = dimension.to_sym
-      elsif dimension.is_a? Dimensions
-        dimension = dimension.physical_quantity.to_sym
-      end
-      if quantity = @@dimensions.find do |q|
-          q.physical_quantity == dimension.standardize.downcase
-        end
-        quantity.make_prevailing_quantity
-      end
-    end
-
-    def self.mass_assign_prevailing_quantities(*dimensions)
-      dimensions.flatten.each do |dimension|
-        Dimensions.assign_prevailing_quantity(dimension)
-      end
-    end
-
     # Returns an array containing the names/descriptions of all known (loaded)
     # physical quantities, e.g.:
     #
@@ -344,22 +325,19 @@ module Quantify
 
     # Returns true if the physical quantity that self represents is known
     def is_known?
-      return true if describe
-      return false
+      describe ? true : false
     end
 
     # Returns true if self is a dimensionless quantity
     def is_dimensionless?
-      return true if base_quantities.empty?
-      return false
+      base_quantities.empty?
     end
 
     # Returns true if self represents one of the base quantities (i.e. length,
     # mass, time, etc.)
     def is_base?
-      return true if base_quantities.size == 1 and
-        self.instance_variable_get(base_quantities.first) == 1
-      return false
+      base_quantities.size == 1 and
+        self.instance_variable_get(base_quantities.first) == 1 ? true : false
     end
 
     # Method for identifying quantities which are 'specific' quantities, i.e
@@ -399,9 +377,7 @@ module Quantify
     # the physical quantity which results from the multiplication.
     #
     def multiply(other)
-      new_dimensions = Dimensions.new(self.to_hash)
-      new_dimensions.multiply! other
-      return new_dimensions
+      Dimensions.new(self.to_hash).multiply! other
     end
 
     # Similar to #multiply! but performs a division of self by the specified
@@ -417,9 +393,7 @@ module Quantify
     # the physical quantity which results from the division.
     #
     def divide(other)
-      new_dimensions = Dimensions.new(self.to_hash)
-      new_dimensions.divide! other
-      return new_dimensions
+      Dimensions.new(self.to_hash).divide! other
     end
 
     # Raises self to the power provided. As with multiply and divide, the
@@ -442,9 +416,7 @@ module Quantify
     # the physical quantity which results from the raised power.
     #
     def pow(power)
-      new_dimensions = Dimensions.new(self.to_hash)
-      new_dimensions.pow!(power)
-      return new_dimensions
+      Dimensions.new(self.to_hash).pow!(power)
     end
 
     # Inverts self, returning a representation of 1/self. This is equivalent to
@@ -464,8 +436,7 @@ module Quantify
     # the physical quantity which results from the inversion.
     #
     def reciprocalize
-      new_dimensions = Dimensions.new(self.to_hash)
-      return new_dimensions.reciprocalize!
+      Dimensions.new(self.to_hash).reciprocalize!
     end
 
     alias :times :multiply
@@ -521,10 +492,8 @@ module Quantify
     def enumerate_base_quantities(options)
       options.each_pair do |base_quantity,index|
         base_quantity = base_quantity.to_s.downcase.to_sym
-        unless index.is_a? Integer and
-            BASE_QUANTITIES.include? base_quantity
-          raise InvalidDimensionError,
-            "An invalid base quantity was specified (#{base_quantity})"
+        unless index.is_a? Integer and BASE_QUANTITIES.include? base_quantity
+          raise InvalidDimensionError, "An invalid base quantity was specified (#{base_quantity})"
         end
         variable = "@#{base_quantity}"
         if self.instance_variable_defined? variable

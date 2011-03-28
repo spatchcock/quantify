@@ -44,11 +44,13 @@ module Quantify
     # Parse a string and return a Quantity object based upon the value and
     # subseqent unit name, symbol or JScience label
     def self.parse(string)
-      if quantity = /([\d\s.,]+)([\w\s\/\^\d-]*)/.match(string)
-        Quantity.new($1, $2)
+      if quantity = /\A([\d\s.,]+)(\D+.*)\z/.match(string)
+        Quantity.new($1.strip, $2)
       else
-        raise Quantify::QuantityParseError "Cannot parse string into value and unit"
+        raise Quantify::QuantityParseError, "Cannot parse string into value and unit"
       end
+    rescue Quantify::InvalidArgumentError
+      raise Quantify::QuantityParseError, "Cannot parse string into value and unit"
     end
 
     attr_accessor :value, :unit
@@ -89,7 +91,7 @@ module Quantify
           "#{self.value} #{self.unit.pluralized_name}"
         end
       else
-        "#{self.value} #{self.unit.symbol}"
+        "#{self.value} #{self.unit.send format}"
       end
     end
 
@@ -146,7 +148,7 @@ module Quantify
     # e.g.,
     #
     #   Unit.kilowatt_hour.to :second           #=> 'kilowatt second'
-    #convert_compound_unit_to_non_equivalent_unit(
+    #
     def convert_compound_unit_to_non_equivalent_unit(new_unit)
       self.unit.base_units.select do |unit|
         unit[:unit].is_alternative_for? new_unit

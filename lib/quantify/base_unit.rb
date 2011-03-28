@@ -317,13 +317,13 @@ module Quantify
         if self.instance_of? Unit::Compound
           self.base_units.each { |unit| options << unit }
         else
-          options << { :unit => self }
+          options << Compound.base_unit_hash(self)
         end
 
         if other.instance_of? Unit::Compound
           other.base_units.each { |unit| options << unit }
         else
-          options << { :unit => other }
+          options << Compound.base_unit_hash(other)
         end
         Unit::Compound.new(options)
       end
@@ -339,15 +339,15 @@ module Quantify
         if self.instance_of? Unit::Compound
           self.base_units.each { |unit| options << unit }
         else
-          options << { :unit => self }
+          options << Compound.base_unit_hash(self)
         end
 
         if other.instance_of? Unit::Compound
           other.base_units.each do |unit|
-            options << { :unit => unit[:unit], :index => unit[:index] * -1 }
+            options << Compound.base_unit_hash(unit[:unit], unit[:index] * -1)
           end
         else
-          options << { :unit => other, :index => -1 }
+          options << Compound.base_unit_hash(other,-1)
         end
         Unit::Compound.new(options)
       end
@@ -367,7 +367,7 @@ module Quantify
             new_unit *= original_unit
           end
         elsif power < 0
-          new_unit = Compound.new( [{ :unit => self, :index => -1 }] )
+          new_unit = Compound.new( [Compound.base_unit_hash(self,-1)] )
           ((power.abs) - 1).times do
             new_unit /= original_unit
           end
