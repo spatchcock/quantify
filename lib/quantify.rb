@@ -17,8 +17,8 @@ require 'quantify/base_unit'
 require 'quantify/si_unit'
 require 'quantify/non_si_unit'
 require 'quantify/compound_unit'
-require 'quantify/config'
 require 'quantify/quantity'
+require 'quantify/config'
 
 module Quantify
  

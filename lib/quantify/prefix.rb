@@ -78,8 +78,8 @@ module Quantify
         end
       end
 
-      def self.configure
-        yield self if block_given?
+      def self.configure &block
+        self.class_eval &block if block
       end
 
       attr_reader :name, :symbol, :factor
@@ -96,6 +96,10 @@ module Quantify
 
       def is_non_si_prefix?
         self.is_a? NonSI
+      end
+
+      def label
+        symbol #cludge
       end
 
     end

@@ -67,9 +67,9 @@ describe Quantity do
     1.km.to_metre.to_s.should == "1000.0 m"
   end
 
-  #it "should convert quantity correctly" do
-  #  1.BTU.to_joule.to_s.should == "1055.056 J"
-  #end
+  it "should convert quantity correctly" do
+    1.BTU.to_joule.to_s.should == "1054.804 J"
+  end
 
   it "should convert quantity correctly" do
     1.hour.to_second.to_s.should == "3600.0 s"
@@ -203,6 +203,12 @@ describe Quantity do
   it "should convert compound units to SI correctly" do
     pressure = Quantity.new 100, (Unit.pound_force_per_square_inch)
     pressure.to_si.round.to_s(:name).should == "689476 newtons per square metre"
+  end
+
+  it "should return equivalent unit according to specification" do
+    (50.square_metres/10.m).to_s.should == "5.0 m"
+    (1.kg*20.m*2.m/4.s/5.s).to_s(:name).should == '2.0 joules'
+    (80.kg/2.m/4.s/5.s).to_s(:name).should_not == '2.0 pascals'
   end
 end
 

@@ -39,6 +39,9 @@ ActiveSupport::Inflector.inflections do |inflect|
   inflect.plural /(league)/i, '\1s'
   inflect.singular /(league)s?/i, '\1'
 
+  inflect.plural /(mass)/i, '\1es'
+  inflect.singular /(mass)(es)?/i, '\1'
+
   inflect.plural /(mile)/i, '\1s'
   inflect.singular /(mile)s?/i, '\1'
 

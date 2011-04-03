@@ -15,6 +15,14 @@ class String
       name << " to the #{ordinal} power"
     end
   end
+
+  def words
+    split(/\s+/)
+  end
+
+  def word_count
+    words.size
+  end
    
 end
 

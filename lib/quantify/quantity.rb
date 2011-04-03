@@ -53,6 +53,10 @@ module Quantify
       raise Quantify::QuantityParseError, "Cannot parse string into value and unit"
     end
 
+    def self.configure &block
+        self.class_eval &block if block
+    end
+
     attr_accessor :value, :unit
 
     # Initialize a new Quantity object. Two arguments are required: a value and
@@ -61,11 +65,7 @@ module Quantify
     # unit
     def initialize(value, unit)
       @value = value.to_f
-      if unit.is_a? Quantify::Unit::Base
-        @unit = unit
-      else
-        @unit = Unit.for(unit)
-      end
+      @unit = Unit.for(unit)
     end
 
     # Returns a description of what the quantity describes, based upon the physica
@@ -112,7 +112,7 @@ module Quantify
     # in terms of the new unit.
     #
     def to(new_unit)
-      new_unit = Unit.for new_unit unless new_unit.is_a? Unit::Base
+      new_unit = Unit.for new_unit
       if is_basic_conversion_with_scalings? new_unit
         conversion_with_scalings new_unit
       elsif self.unit.is_alternative_for? new_unit
@@ -134,7 +134,8 @@ module Quantify
     # Conversion where both units (including compound units) are of precisely
     # equivalent dimensions, i.e. direct alternatives for one another
     def convert_to_equivalent_unit(new_unit)
-      self.multiply!(Unit.ratio new_unit, self.unit)
+      old_unit = unit
+      self.multiply!(Unit.ratio new_unit, old_unit).cancel_base_units!(old_unit)
     end
 
     def conversion_with_scalings(new_unit)
@@ -150,12 +151,11 @@ module Quantify
     #   Unit.kilowatt_hour.to :second           #=> 'kilowatt second'
     #
     def convert_compound_unit_to_non_equivalent_unit(new_unit)
-      self.unit.base_units.select do |unit|
-        unit[:unit].is_alternative_for? new_unit
-      end.map do |unit|
-        Unit.ratio(new_unit**unit[:index],unit[:unit]**unit[:index])
-      end.inject(self) do |quantity,factor|
-        quantity.multiply! factor # can possibly change this to bang method
+      self.unit.base_units.select do |base|
+        base.unit.is_alternative_for? new_unit
+      end.inject(self) do |quantity,base|
+        factor = Unit.ratio(new_unit**base.index, base.unit**base.index)
+        quantity.multiply!(factor).cancel_base_units!(base.unit)
       end
     end
 
@@ -164,16 +164,16 @@ module Quantify
       if self.unit.is_compound_unit?
         convert_compound_unit_to_si
       else
-        self.to(self.unit.si_unit)
+        self.to(unit.si_unit)
       end
     end
 
     def convert_compound_unit_to_si
       until self.unit.is_si_unit? do
-        unit = self.unit.base_units.find do |unit|
-          !unit[:unit].is_si_unit?
-        end[:unit]
-        self.convert_compound_unit_to_non_equivalent_unit unit.si_unit
+        unit = self.unit.base_units.find do |base|
+          !base.unit.is_si_unit?
+        end.unit
+        self.convert_compound_unit_to_non_equivalent_unit(unit.si_unit)
       end
       return self
     end
@@ -202,7 +202,7 @@ module Quantify
         @value = value.send(operator,other)
         return self
       elsif other.kind_of? Quantity
-        @unit = unit.send(operator,other.unit)
+        @unit = unit.send(operator,other.unit).or_equivalent &MULTIPLY_OR_DIVIDE_PROC
         @value = value.send(operator,other.value)
         return self
       else
@@ -250,7 +250,12 @@ module Quantify
 
     def rationalize_unit
       return self unless unit.is_a? Unit::Compound
-      self.to unit.rationalized
+      self.to unit.rationalize_base_units
+    end
+
+    def cancel_base_units!(*units)
+      @unit = unit.cancel_base_units!(*units) if unit.is_compound_unit?
+      return self
     end
 
     # Round the value attribute to the specified number of decimal places. If no

@@ -14,20 +14,24 @@ module Quantify
         unit.load
       end
 
+      def self.define(compound_unit)
+        self.new compound_unit.to_hash
+      end
+
       # Syntactic sugar for defining the known units. This method simply
       # evaluates code within the context of the self class, enabling
       # the required assocaited units to be loaded at runtime, e.g.
       #
       #  Unit::[Base|SI|NonSI].configure do |config|
       #
-      #    config.load :name => :metre, :physical_quantity => :length
-      #    config.load :name => 'hectare', :physical_quantity => :area, :factor => 10000
-      #    config.load :name => :watt, :physical_quantity => :power, :symbol => 'W'
+      #    load :name => :metre, :physical_quantity => :length
+      #    load :name => 'hectare', :physical_quantity => :area, :factor => 10000
+      #    load :name => :watt, :physical_quantity => :power, :symbol => 'W'
       #
       #  end
       #
-      def self.configure
-        yield self if block_given?
+      def self.configure &block
+        self.class_eval &block if block
       end
 
       attr_accessor :name, :symbol, :label
@@ -235,6 +239,10 @@ module Quantify
         self.is_a? Compound
       end
 
+      def is_dimensionless?
+        self.dimensions.is_dimensionless?
+      end
+
       # Determine if self is the same unit as another. Similarity is based on
       # representing the same physical quantity (i.e. dimensions) and the same
       # factor and scaling values.
@@ -315,17 +323,17 @@ module Quantify
       def multiply(other)
         options = []
         if self.instance_of? Unit::Compound
-          self.base_units.each { |unit| options << unit }
+          self.base_units.each { |base| options << base }
         else
-          options << Compound.base_unit_hash(self)
+          options << CompoundBaseUnit.new(self)
         end
 
         if other.instance_of? Unit::Compound
-          other.base_units.each { |unit| options << unit }
+          other.base_units.each { |base| options << base }
         else
-          options << Compound.base_unit_hash(other)
+          options << CompoundBaseUnit.new(other)
         end
-        Unit::Compound.new(options)
+        Unit::Compound.new(*options)
       end
 
       # Divide one unit by another. This results in the generation of a compound
@@ -337,19 +345,19 @@ module Quantify
       def divide(other)
         options = []
         if self.instance_of? Unit::Compound
-          self.base_units.each { |unit| options << unit }
+          self.base_units.each { |base| options << base }
         else
-          options << Compound.base_unit_hash(self)
+          options << CompoundBaseUnit.new(self)
         end
 
         if other.instance_of? Unit::Compound
-          other.base_units.each do |unit|
-            options << Compound.base_unit_hash(unit[:unit], unit[:index] * -1)
+          other.base_units.each do |base|
+            options << CompoundBaseUnit.new(base.unit, base.index * -1)
           end
         else
-          options << Compound.base_unit_hash(other,-1)
+          options << CompoundBaseUnit.new(other,-1)
         end
-        Unit::Compound.new(options)
+        Unit::Compound.new(*options)
       end
 
       # Raise a unit to a power. This results in the generation of a compound
@@ -367,7 +375,7 @@ module Quantify
             new_unit *= original_unit
           end
         elsif power < 0
-          new_unit = Compound.new( [Compound.base_unit_hash(self,-1)] )
+          new_unit = Compound.new(CompoundBaseUnit.new(self,-1))
           ((power.abs) - 1).times do
             new_unit /= original_unit
           end
@@ -404,12 +412,13 @@ module Quantify
         end
       end
 
-      def or_equivalent
-        equivalent_known_unit || self
-      end
-
-      def equivalent_known_unit
-        Unit.units.find {|unit| unit == self and not unit.is_compound_unit? }
+      def to_hash
+        hash = {}
+        self.instance_variables.each do |var|
+          symbol = var.gsub("@","").to_sym
+          hash[symbol] = send symbol
+        end
+        return hash
       end
 
       # Enables neat shorthand for reciprocal of a unit, e.g.

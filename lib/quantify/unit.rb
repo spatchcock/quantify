@@ -31,6 +31,28 @@ module Quantify
       @units << unit if unit.is_a? Unit::Base
     end
 
+    # Returns an instance of the class Quantity which represents the ratio of two
+    # units. For example, the ratio of miles to kilometers is 1.609355, or there
+    # are 1.609355 km in 1 mile.
+    #
+    #   ratio = Unit.ratio :km, :mi         #=> <Quantify::Quantity:0xj9ab878a7>
+    #
+    #   ratio.to_s :name                    #=> "1.609344 kilometres per mile"
+    #
+    # In other words the quantity represents the definition of one unit in terms
+    # of the other.
+    #
+    def self.ratio(unit,other_unit)
+      unit = Unit.for unit unless unit.is_a? Unit::Base
+      other_unit = Unit.for other_unit unless other_unit.is_a? Unit::Base
+      unless unit.is_alternative_for? other_unit
+        raise InvalidUnitError, "Units do not represent the same physical quantity"
+      end
+      new_unit = (unit / other_unit)
+      value = 1/new_unit.factor
+      Quantity.new value, new_unit
+    end
+
     # Retrieve an object representing the specified unit.
     #
     # Argument can be the unit name, symbol or JScience label and provided as
@@ -54,11 +76,14 @@ module Quantify
     # method is designed to only allow SI units to use SI prefixes, and NonSI
     # units to use only NonSI prefixes
     #
-    def self.for(name_symbol_or_label)
+    def self.for(name_symbol_label_or_object)
+      return name_symbol_label_or_object if name_symbol_label_or_object.is_a? Unit::Base
+      name_symbol_or_label = name_symbol_label_or_object
       unless name_symbol_or_label.is_a? String or name_symbol_or_label.is_a? Symbol
+        puts name_symbol_or_label
         raise InvalidArgumentError, "Argument must be a Symbol or String"
       end
-      if unit = Unit.match_known_unit_or_prefixed_variant(name_symbol_or_label)
+      if unit = Unit.match(name_symbol_or_label)
         return unit
       end
       if unit = Unit.parse(name_symbol_or_label)
@@ -67,60 +92,67 @@ module Quantify
       raise InvalidArgumentError, "Unit not known: #{name_symbol_or_label}"
     end
 
-    def self.match_known_unit_or_prefixed_variant(name_symbol_or_label)
-      Unit.match_known_unit_or_prefixed_variant_by_label(name_symbol_or_label) ||
-        Unit.match_known_unit_or_prefixed_variant_by_name_or_symbol(name_symbol_or_label)
+    def self.match(name_symbol_or_label)
+      Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
+      Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
+      Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
     end
 
-    def self.match_known_unit_or_prefixed_variant_by_label(label)
-      if unit = @units.find { |unit| unit.label == label.to_s }
-        return unit.deep_clone
-      elsif label =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_labels.join("|")})\z/ or
-        label =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_labels.join("|")})\z/
+    def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
+      Unit.match_known_unit(attribute, string_or_symbol) or
+        Unit.match_prefixed_variant(attribute, string_or_symbol)
+    end
+
+    def self.match_known_unit(attribute, string_or_symbol)
+      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+      unit = @units.find { |unit| unit.send(attribute) == string_or_symbol }
+      return unit.deep_clone rescue nil
+    end
+
+    def self.match_prefixed_variant(attribute, string_or_symbol)
+      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+      if string_or_symbol =~ /\A(#{Prefix.si_prefixes.map(&attribute).join("|")})(#{Unit.si_units.map(&attribute).join("|")})\z/ or
+          string_or_symbol =~ /\A(#{Prefix.non_si_prefixes.map(&attribute).join("|")})(#{Unit.non_si_units.map(&attribute).join("|")})\z/
         return Unit.for($2).with_prefix($1).deep_clone
       end
       return nil
     end
 
-    def self.match_known_unit_or_prefixed_variant_by_name_or_symbol(name_or_symbol)
-      if unit = @units.find do |unit|
-           unit.name == name_or_symbol.standardize.singularize.downcase or
-           unit.symbol == name_or_symbol.standardize
-         end
-        return unit.deep_clone
-      elsif name_or_symbol.standardize.singularize.downcase =~ /\A(#{Prefix.si_names.join("|")})(#{Unit.si_names.join("|")})\z/ or
-          name_or_symbol.standardize.singularize.downcase =~ /\A(#{Prefix.non_si_names.join("|")})(#{Unit.non_si_names.join("|")})\z/ or
-          name_or_symbol.standardize =~ /\A(#{Prefix.si_symbols.join("|")})(#{Unit.si_symbols.join("|")})\z/ or
-          name_or_symbol.standardize =~ /\A(#{Prefix.non_si_symbols.join("|")})(#{Unit.non_si_symbols.join("|")})\z/
-        return Unit.for($2).with_prefix($1).deep_clone
+    def self.format_unit_attribute(attribute, string_or_symbol)
+      string_or_symbol = case attribute
+        when :symbol then string_or_symbol.standardize
+        when :name then string_or_symbol.standardize.singularize.downcase
+        else string_or_symbol.to_s
       end
-      return nil
     end
 
-    # Parse complex strings into compound unit.
-    #
-    # Method currently only accepts unit symbols using "^" syntax for powers.
-    #
-    # Intention is to permit unit names, together with syntax such as "/" and
-    # "per" for 'per' quantities
+    # Parse complex strings into unit.
     #
     def self.parse(string)
+      string = string.standardize
       if string.scan(/(\/|per)/).size > 1
         raise InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
       end
 
       units = []
       numerator, splitter, denominator = string.split(/(\/|per)/)
-      units.concat parse_numerator_units(numerator)
-      units.concat parse_denominator_units(denominator) unless denominator.nil?
+      units.concat Unit.parse_numerator_units(numerator)
+      units.concat Unit.parse_denominator_units(denominator) unless denominator.nil?
 
-      if units.size == 1 and units[0][:index].nil?
-        return Unit.match_known_unit_or_prefixed_variant(units[0][:unit]) ||
+      if units.size == 1 and units[0][1] == 1
+        return Unit.match units[0][0] ||
           raise(InvalidArgumentError, "Cannot parse unit: #{string}")
       else
-        return Unit::Compound.new(units) ||
+        units.map! {|unit| CompoundBaseUnit.new(*unit) }
+        return Unit::Compound.new(*units) ||
           raise(InvalidArgumentError, "Cannot parse unit: #{string}")
       end
+    end
+    
+    def self.parse_unit_and_index(string)
+      string.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
+      # [ unit, index ]
+      [$1.to_s,( $2.nil? or $2.empty? ? 1 : $2.to_i )]
     end
 
     def self.parse_numerator_units(string)
@@ -131,37 +163,26 @@ module Quantify
       end
       
       num_units.map! do |substring|
-        substring.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
-        { :unit => $1.to_s, :index => ( $2.nil? or $2.empty? ? nil : $2.to_i ) }
+        Unit.parse_unit_and_index(substring)
       end
     end
 
     def self.parse_denominator_units(string)
-      denom_units = parse_numerator_units(string).map do |unit|
-        { :unit => unit[:unit], :index => ( unit[:index].nil? ? -1 : unit[:index]* -1 ) }
+      denom_units = Unit.parse_numerator_units(string).map do |unit|
+        [unit[0], unit[1] * -1]
       end
     end
 
-    # Returns an instance of the class Quantity which represents the ratio of two
-    # units. For example, the ratio of miles to kilometers is 1.609355, or there
-    # are 1.609355 km in 1 mile.
-    #
-    #   ratio = Unit.ratio :km, :mi         #=> <Quantify::Quantity:0xj9ab878a7>
-    #
-    #   ratio.to_s :name                    #=> "1.609344 kilometres per mile"
-    #
-    # In other words the quantity represents the definition of one unit in terms
-    # of the other.
-    #
-    def self.ratio(unit,other_unit)
-      unit = Unit.for unit unless unit.is_a? Unit::Base
-      other_unit = Unit.for other_unit unless other_unit.is_a? Unit::Base
-      unless unit.is_alternative_for? other_unit
-        raise InvalidUnitError, "Units do not represent the same physical quantity"
-      end
-      new_unit = (unit / other_unit)
-      value = 1/new_unit.factor
-      Quantity.new value, new_unit
+    def self.multi_word_unit_names
+      @units.map(&:name).compact.select {|name| name.word_count > 1 }
+    end
+
+    def self.multi_word_unit_pluralized_names
+      multi_word_unit_names.map(&:pluralize)
+    end
+
+    def self.multi_word_unit_symbols
+      @units.map(&:symbol).compact.select {|symbol| symbol.word_count > 1 }
     end
 
     # Provides syntactic sugar for accessing units. Specify:

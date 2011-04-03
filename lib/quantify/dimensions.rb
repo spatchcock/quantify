@@ -124,16 +124,16 @@ module Quantify
     # evaluates code within the context of the Dimensions class, enabling
     # the required quantities to be loaded at runtime, e.g.
     #
-    #  Dimensions.configure do |config|
+    #  Dimensions.configure do
     #
-    #    config.load :physical_quantity => :length, :length => 1
-    #    config.load :physical_quantity => :area, :length => 2
-    #    config.load :physical_quantity => :power, :mass => 1, :length => 2, :time => -3
+    #    load :physical_quantity => :length, :length => 1
+    #    load :physical_quantity => :area, :length => 2
+    #    load :physical_quantity => :power, :mass => 1, :length => 2, :time => -3
     #
     #  end
     #
-    def self.configure
-      yield self if block_given?
+    def self.configure &block
+        self.class_eval &block if block
     end
 
     # Provides a shorthand for retrieving known quantities, e.g.:
