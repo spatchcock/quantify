@@ -414,7 +414,7 @@ end
 
 Quantity.configure do
 
-  MULTIPLY_OR_DIVIDE_PROC = Proc.new do |eq,unit|
+  describe_prevailing_unit_rules do |eq,unit|
     eq.is_base_unit? or
     eq.name == 'joule' or
     eq.name == 'newton' or

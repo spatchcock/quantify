@@ -83,10 +83,16 @@ module Quantify
       # The Compound class provides support for arbitrarily defined compound units
       # which don't have well-established names.
 
-      # This method consilidates base quantities by finding multiple instances
-      # of the same unit type and reducing them into a single unit represenation
-      # by altering the repsective index. It has the effect of raising units to
-      # powers and cancelling those which appear in the numerator AND denominator
+
+
+      # Consilidates base quantities by finding multiple instances of the same unit
+      # type and reducing them into a single unit represenation, by altering the
+      # repsective index. It has the effect of raising units to powers and cancelling
+      # those which appear in the numerator AND denominator
+      #
+      # This is a class method which takes an arbitrary array of base units as an
+      # argument. This means that consolidation can be performed on either all
+      # base units or just a subset - the numerator or denominator units.
       #
       def self.consolidate_base_units(base_units)
         raise InvalidArgumentError, "Must provide an array of base units" unless base_units.is_a? Array
@@ -109,6 +115,18 @@ module Quantify
         return new_base_units
       end
 
+      # Make compound unit use consistent units for representing each physical
+      # quantity. For example, lb/kg => kg/kg.
+      #
+      # This is a class method which takes an arbitrary array of base units as an
+      # argument. This means that consolidation can be performed on either all
+      # base units or just a subset - the numerator or denominator units.
+      #
+      # The units to use for particular physical dimension can be specified
+      # following the inital argument. If no unit is specified for a physical
+      # quantity which is represented in the array of base units, then the first
+      # unit found for that physical quantity is used as the canonical one.
+      #
       def self.rationalize_base_units(base_units=[],*required_units)
         base_units.each do |base|
           new_unit = required_units.map { |unit| Unit.for(unit) }.find { |unit| unit.measures == base.measures } ||
@@ -121,8 +139,6 @@ module Quantify
 
       # Initialize a compound unit by providing an array containing a represenation
       # of each base unit.
-      #
-      # Where no index is provided, this is assumed to be 1.
       #
       def initialize(*units)
         @base_units = []
@@ -148,7 +164,16 @@ module Quantify
         @label = derive_label
       end
 
-      
+      # Consolidate base units. By default, base units are 'partially' consolidated,
+      # i.e. numerator and denomiator are consolidated separately. This means that
+      # two instances of the same unit should not occur in the numerator OR denominator
+      # (rather they are combined and the index changed accordingly), but similar
+      # units are not cancelled across the numerator and denominators.
+      #
+      # If :full is passed as an argument, a full consolidation is performed, i.e.
+      # consolidation across numerator and denominator. This is equivalent to a
+      # partial consolidation AND a cancelling of units (i.e. #cancel_base_units!)
+      #
       def consolidate_base_units!(scope=:partial)
         if scope == :full
           @base_units = Compound.consolidate_base_units(@base_units)

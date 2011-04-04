@@ -57,6 +57,10 @@ module Quantify
         self.class_eval &block if block
     end
 
+    def self.describe_prevailing_unit_rules &block
+      @@prevailing_unit_rules = block
+    end
+
     attr_accessor :value, :unit
 
     # Initialize a new Quantity object. Two arguments are required: a value and
@@ -202,7 +206,7 @@ module Quantify
         @value = value.send(operator,other)
         return self
       elsif other.kind_of? Quantity
-        @unit = unit.send(operator,other.unit).or_equivalent &MULTIPLY_OR_DIVIDE_PROC
+        @unit = unit.send(operator,other.unit).or_equivalent &@@prevailing_unit_rules
         @value = value.send(operator,other.value)
         return self
       else
@@ -248,7 +252,7 @@ module Quantify
     alias :- :subtract
     alias :/ :divide
 
-    def rationalize_unit
+    def rationalize_units
       return self unless unit.is_a? Unit::Compound
       self.to unit.rationalize_base_units
     end
