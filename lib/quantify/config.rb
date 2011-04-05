@@ -117,6 +117,7 @@ Prefix::NonSI.configure do
   # The 'MM' prefix is considered bad practice, but is nevertheless commonly
   # used in the US, so is added here to provide this support.
   load :name => 'million ', :symbol => 'MM', :factor => 1e6
+  load :name => 'billion ', :symbol => 'B', :factor => 1e9
 
 end
 
@@ -135,30 +136,30 @@ Unit::SI.configure do
   # load :name => 'amagat', :physical_quantity => 'number_density', :symbol => 'η'
   load :name => 'bit', :physical_quantity => 'information', :symbol => 'bit', :label => 'bit'
   load :name => 'bequerel', :physical_quantity => 'radioactivity', :symbol => 'Bq', :label => 'Bq'
-  load :name => 'candela', :physical_quantity => 'luminous_intensity', :symbol => 'cd', :label => 'cd', :acts_as_surrogate => true
+  load :name => 'candela', :physical_quantity => 'luminous_intensity', :symbol => 'cd', :label => 'cd'
   load :name => 'coloumb', :physical_quantity => 'electric_charge', :symbol => 'C', :label => 'C'
   load :name => 'farad', :physical_quantity => 'electrical_capacitance', :symbol => 'F', :label => 'F'
   load :name => 'gray', :physical_quantity => 'radiation_absorbed_dose', :symbol => 'Gy', :label => 'Gy'
-  load :name => 'hertz', :physical_quantity => 'frequency', :symbol => 'Hz', :label => 'Hz', :acts_as_surrogate => true
+  load :name => 'hertz', :physical_quantity => 'frequency', :symbol => 'Hz', :label => 'Hz'
   load :name => 'henry', :physical_quantity => 'inductance', :symbol => 'H', :label => 'H'
-  load :name => 'joule', :physical_quantity => 'energy', :symbol => 'J', :label => 'J', :acts_as_surrogate => true
+  load :name => 'joule', :physical_quantity => 'energy', :symbol => 'J', :label => 'J'
   load :name => 'katal', :physical_quantity => 'catalytic activity', :symbol => 'kat', :label => 'kat'
-  load :name => 'kelvin', :physical_quantity => 'temperature', :symbol => 'K', :label => 'K', :acts_as_surrogate => true
+  load :name => 'kelvin', :physical_quantity => 'temperature', :symbol => 'K', :label => 'K'
   load :name => 'lumen', :physical_quantity => 'luminous_flux', :symbol => 'lm', :label => 'lm'
   load :name => 'lux', :physical_quantity => 'illuminance', :symbol => 'lx', :label => 'lx'
-  load :name => 'metre', :physical_quantity => 'length', :symbol => 'm', :label => 'm', :acts_as_surrogate => true
-  load :name => 'mole', :physical_quantity => 'amount_of_substance', :symbol => 'mol', :label => 'mol', :acts_as_surrogate => true
-  load :name => 'newton', :physical_quantity => 'force', :symbol => 'N', :label => 'N', :acts_as_surrogate => true
+  load :name => 'metre', :physical_quantity => 'length', :symbol => 'm', :label => 'm'
+  load :name => 'mole', :physical_quantity => 'amount_of_substance', :symbol => 'mol', :label => 'mol'
+  load :name => 'newton', :physical_quantity => 'force', :symbol => 'N', :label => 'N'
   load :name => 'ohm', :physical_quantity => 'electric_resistance', :symbol => 'Ω', :label => 'Ohm'
   load :name => 'pascal', :physical_quantity => 'pressure', :symbol => 'Pa', :label => 'Pa'
   load :name => 'radian', :physical_quantity => 'plane_angle', :symbol => 'rad', :label => 'rad'
-  load :name => 'second', :physical_quantity => 'time', :symbol => 's', :label => 's', :acts_as_surrogate => true
+  load :name => 'second', :physical_quantity => 'time', :symbol => 's', :label => 's'
   load :name => 'siemens', :physical_quantity => 'electric_conductance', :symbol => 'S', :label => 'S'
   load :name => 'sievert', :physical_quantity => 'radiation_dose_equivalent', :symbol => 'Sv', :label => 'Sv'
   load :name => 'steridian', :physical_quantity => 'solid_angle', :symbol => 'sr', :label => 'sr'
   load :name => 'tesla', :physical_quantity => 'magnetic_flux_density', :symbol => 'T', :label => 'T'
   load :name => 'volt', :physical_quantity => 'electric_potential_difference', :symbol => 'V', :label => 'V'
-  load :name => 'watt', :physical_quantity => 'power', :symbol => 'W', :label => 'W', :acts_as_surrogate => true
+  load :name => 'watt', :physical_quantity => 'power', :symbol => 'W', :label => 'W'
   load :name => 'weber', :physical_quantity => 'magnetic_flux', :symbol => 'Wb', :label => 'Wb'
 
   # The kilogram is unusual in being the SI unit of mass yet containing the
@@ -414,11 +415,11 @@ end
 
 Quantity.configure do
 
-  describe_prevailing_unit_rules do |eq,unit|
-    eq.is_base_unit? or
-    eq.name == 'joule' or
-    eq.name == 'newton' or
-    eq.name == 'watt'
+  describe_prevailing_unit_rules do |unit,equivalent_unit|
+    equivalent_unit.is_base_unit? or
+    equivalent_unit.name == 'joule' or
+    equivalent_unit.name == 'newton' or
+    equivalent_unit.name == 'watt'
   end
 
 end

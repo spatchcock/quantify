@@ -317,21 +317,25 @@ module Quantify
         self.dimensions.si_unit
       end
 
+      #def multiplier(factor)
+      #  self.deep_clone.operate do |unit|
+      #    unit.name = "#{factor} " + unit.name
+      #    unit.symbol = "#{factor} " + unit.symbol
+      #    unit.label = "#{factor} " + unit.label
+      #    unit.factor *= factor
+      #  end
+      #end
+
       # Multiply two units together. This results in the generation of a compound
       # unit.
       #
       def multiply(other)
         options = []
-        if self.instance_of? Unit::Compound
-          self.base_units.each { |base| options << base }
-        else
-          options << CompoundBaseUnit.new(self)
-        end
-
-        if other.instance_of? Unit::Compound
-          other.base_units.each { |base| options << base }
-        else
-          options << CompoundBaseUnit.new(other)
+        self.instance_of?(Unit::Compound) ? options += self.base_units : options << self
+        if other.is_a? Unit::Base or other.is_a? Unit::Compound
+          other.instance_of?(Unit::Compound) ? options += other.base_units : options << other
+        elsif other.is_a? Numeric
+          options << unit_multiplier(other)
         end
         Unit::Compound.new(*options)
       end
@@ -344,16 +348,10 @@ module Quantify
       #
       def divide(other)
         options = []
-        if self.instance_of? Unit::Compound
-          self.base_units.each { |base| options << base }
-        else
-          options << CompoundBaseUnit.new(self)
-        end
+        self.instance_of?(Unit::Compound) ? options += self.base_units : options << self
 
         if other.instance_of? Unit::Compound
-          other.base_units.each do |base|
-            options << CompoundBaseUnit.new(base.unit, base.index * -1)
-          end
+          options += other.base_units.map { |base| base.index *= -1; base }
         else
           options << CompoundBaseUnit.new(other,-1)
         end
@@ -375,7 +373,7 @@ module Quantify
             new_unit *= original_unit
           end
         elsif power < 0
-          new_unit = Compound.new(CompoundBaseUnit.new(self,-1))
+          new_unit = reciprocalize
           ((power.abs) - 1).times do
             new_unit /= original_unit
           end
@@ -387,6 +385,10 @@ module Quantify
       alias :* :multiply
       alias :/ :divide
       alias :** :pow
+      
+      def reciprocalize
+        Compound.new([self,-1])
+      end
 
       def with_prefix(name_or_symbol)
         if self.name =~ /\A(#{valid_prefixes(:name).join("|")})/

@@ -210,5 +210,28 @@ describe Quantity do
     (1.kg*20.m*2.m/4.s/5.s).to_s(:name).should == '2.0 joules'
     (80.kg/2.m/4.s/5.s).to_s(:name).should_not == '2.0 pascals'
   end
+
+  it "should raise a quantity to a power correctly" do
+    unit = 50.ft ** 2
+    unit.to_s.should == "2500.0 ft^2"
+    unit = 50.ft ** 3
+    unit.to_s.should == "125000.0 ft^3"
+    unit = 50.ft ** -1
+    unit.to_s.should == "0.02 ft^-1"
+    unit = (10.m/1.s)**2
+    unit.to_s.should == "100.0 m^2 s^-2"
+    unit = (10.m/1.s)**-1
+    unit.to_s.should == "0.1 s m^-1"
+    lambda{ ((10.m/1.s)** 0.5) }.should raise_error
+  end
+
+  it "should raise a quantity to a power correctly" do
+    (50.ft.pow! 2).to_s.should == "2500.0 ft^2"
+    (50.ft.pow! 3).to_s.should == "125000.0 ft^3"
+    (50.ft.pow! -1).to_s.should == "0.02 ft^-1"
+    ((10.m/1.s).pow! 2).to_s.should == "100.0 m^2 s^-2"
+    ((10.m/1.s).pow! -1).to_s.should == "0.1 s m^-1"
+    lambda{ ((10.m/1.s).pow! 0.5) }.should raise_error
+  end
 end
 

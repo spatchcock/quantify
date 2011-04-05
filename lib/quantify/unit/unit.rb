@@ -53,6 +53,21 @@ module Quantify
       Quantity.new value, new_unit
     end
 
+    # Provides syntactic sugar for accessing units via the #for method.
+    # Specify:
+    #
+    #  Unit.degree_celsius
+    #
+    # rather than Unit.for :degree_celsius
+    #
+    def self.method_missing(method, *args, &block)
+      if unit = self.for(method)
+        return unit
+      else
+        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
+      end
+    end
+
     # Retrieve an object representing the specified unit.
     #
     # Argument can be the unit name, symbol or JScience label and provided as
@@ -77,10 +92,9 @@ module Quantify
     # units to use only NonSI prefixes
     #
     def self.for(name_symbol_label_or_object)
-      return name_symbol_label_or_object if name_symbol_label_or_object.is_a? Unit::Base
+      return name_symbol_label_or_object.deep_clone if name_symbol_label_or_object.is_a? Unit::Base
       name_symbol_or_label = name_symbol_label_or_object
       unless name_symbol_or_label.is_a? String or name_symbol_or_label.is_a? Symbol
-        puts name_symbol_or_label
         raise InvalidArgumentError, "Argument must be a Symbol or String"
       end
       if unit = Unit.match(name_symbol_or_label)
@@ -139,8 +153,8 @@ module Quantify
       units.concat Unit.parse_numerator_units(numerator)
       units.concat Unit.parse_denominator_units(denominator) unless denominator.nil?
 
-      if units.size == 1 and units[0][1] == 1
-        return Unit.match units[0][0] ||
+      if units.size == 1 and units.first.last == 1
+        return Unit.match units.first.first ||
           raise(InvalidArgumentError, "Cannot parse unit: #{string}")
       else
         units.map! {|unit| CompoundBaseUnit.new(*unit) }
@@ -156,12 +170,8 @@ module Quantify
     end
 
     def self.parse_numerator_units(string)
-      if string =~ /·/
-        num_units = string.split("·")
-      else
-        num_units = string.split(" ") # cludge, need to think about multi word unit names
-      end
-      
+      num_units = ( string =~ /·/ ? string.split("·") : string.split(" ") )
+      # cludge, need to think about multi word unit names
       num_units.map! do |substring|
         Unit.parse_unit_and_index(substring)
       end
@@ -184,21 +194,6 @@ module Quantify
     def self.multi_word_unit_symbols
       @units.map(&:symbol).compact.select {|symbol| symbol.word_count > 1 }
     end
-
-    # Provides syntactic sugar for accessing units. Specify:
-    #
-    #  Unit.degree_celsius
-    #
-    # rather than Unit.for :degree_celsius
-    #
-    def self.method_missing(method, *args, &block)
-      if unit = self.for(method)
-        return unit
-      else
-        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
-      end
-    end
-
     
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 

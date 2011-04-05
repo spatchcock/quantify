@@ -214,6 +214,13 @@ module Quantify
       end
     end
 
+    def pow!(power)
+      raise InvalidArgumentError, "Argument must be an integer" unless power.is_a? Integer
+      @value = value ** power
+      @unit = unit ** power
+      return self
+    end
+
     def add!(other)
       add_or_subtract!(:+, other)
     end
@@ -246,11 +253,16 @@ module Quantify
       Quantity.new(value,unit).divide!(other)
     end
 
+    def pow(power)
+      Quantity.new(value,unit).pow!(power)
+    end
+
     alias :times :multiply
     alias :* :multiply
     alias :+ :add
     alias :- :subtract
     alias :/ :divide
+    alias :** :pow
 
     def rationalize_units
       return self unless unit.is_a? Unit::Compound

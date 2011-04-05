@@ -565,5 +565,32 @@ describe Unit do
     (Unit.km*Unit.lb).or_equivalent.name.should == 'kilometre pound'
     (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).or_equivalent.name.should == 'joule'
   end
+
+  it "should consolidate across all base units" do
+    unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+    unit.symbol.should == "m^2 s kg s^-1 m^-3"
+    unit.base_units.size.should == 5
+    unit.consolidate_base_units!(:full)
+    unit.symbol.should == "kg m^-1"
+    unit.base_units.size.should == 2
+  end
+
+  it "should cancel base units with one argument" do
+    unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+    unit.symbol.should == "m^2 s kg s^-1 m^-3"
+    unit.base_units.size.should == 5
+    unit.cancel_base_units! :m
+    unit.symbol.should == "s kg m^-1 s^-1"
+    unit.base_units.size.should == 4
+  end
+
+  it "should cancel base units with multiple arguments" do
+    unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+    unit.symbol.should == "m^2 s kg s^-1 m^-3"
+    unit.base_units.size.should == 5
+    unit.cancel_base_units! :m, :s
+    unit.symbol.should == "kg m^-1"
+    unit.base_units.size.should == 2
+  end
 end
 

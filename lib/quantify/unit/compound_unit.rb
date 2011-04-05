@@ -1,69 +1,6 @@
 
 module Quantify
   module Unit
-
-    class CompoundBaseUnit
-
-      attr_accessor :unit, :index
-
-      def initialize(unit,index=1)
-        @unit = Unit.for(unit)
-        @index = index
-      end
-
-      def dimensions
-        @unit.dimensions ** @index
-      end
-
-      def is_dimensionless?
-        @index == 0
-      end
-
-      def name
-        @unit.name.to_power(@index.abs)
-      end
-
-      def pluralized_name
-        @unit.pluralized_name.to_power(@index.abs)
-      end
-
-      def symbol
-        @unit.symbol.to_s + ( @index.nil? or @index == 1 ? "" : "^#{@index}" )
-      end
-
-      def label
-        @unit.label + (@index == 1 ? "" : "^#{@index}")
-      end
-
-      def reciprocalized_label
-        @unit.label + (@index == -1 ? "" : "^#{@index * -1}")
-      end
-
-      def factor
-        @unit.factor ** @index
-      end
-
-      def is_numerator?
-        @index > 0
-      end
-
-      def is_denominator?
-        @index < 0
-      end
-
-      def is_si_unit?
-        @unit.is_si_unit?
-      end
-
-      def is_non_si_unit?
-        @unit.is_non_si_unit?
-      end
-
-      def measures
-        @unit.dimensions.physical_quantity
-      end
-    end
-
     class Compound < Base
 
       # Compound units are units made up of two or more units and powers thereof.
@@ -147,8 +84,8 @@ module Quantify
             @base_units << unit
           elsif unit.is_a? Unit::Base
             @base_units << CompoundBaseUnit.new(unit)
-          elsif unit.is_a? Array and unit.size == 2
-            @base_units << CompoundBaseUnit.new(unit[0],unit[1])
+          elsif unit.is_a? Array and unit.size == 2 and not unit.first.is_a? Compound
+            @base_units << CompoundBaseUnit.new(unit.first,unit.last)
           else
             raise InvalidArgumentError, "#{unit} does not represent a valid base unit"
           end
@@ -220,7 +157,7 @@ module Quantify
         equivalent_unit = equivalent_known_unit
         if equivalent_unit
           if block_given?
-            if yield(equivalent_unit,self)
+            if yield(self,equivalent_unit)
               return equivalent_unit
             else
               return self
@@ -229,6 +166,14 @@ module Quantify
           return equivalent_unit
         end
         return self
+      end
+
+      def reciprocalize
+        @base_units.map! do |base|
+          base.index *= -1
+          base
+        end
+        consolidate_base_units!
       end
 
       # Derive a representation of the physical dimensions of the compound unit
