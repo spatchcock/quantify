@@ -54,11 +54,7 @@ module Quantify
     end
 
     def self.configure &block
-        self.class_eval &block if block
-    end
-
-    def self.describe_prevailing_unit_rules &block
-      @@prevailing_unit_rules = block
+      self.class_eval &block if block
     end
 
     attr_accessor :value, :unit
@@ -206,7 +202,7 @@ module Quantify
         @value = value.send(operator,other)
         return self
       elsif other.kind_of? Quantity
-        @unit = unit.send(operator,other.unit).or_equivalent &@@prevailing_unit_rules
+        @unit = unit.send(operator,other.unit).or_equivalent &Quantify.prevailing_unit_rules
         @value = value.send(operator,other.value)
         return self
       else

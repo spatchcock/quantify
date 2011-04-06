@@ -48,6 +48,7 @@ module Quantify
     end
 
     def self.for(name_or_symbol)
+      return name_or_symbol.clone if name_or_symbol.is_a? Prefix
       if name_or_symbol.is_a? String or name_or_symbol.is_a? Symbol
         if prefix = @prefixes.find do |prefix|
            prefix.name == name_or_symbol.standardize.downcase or
@@ -99,7 +100,7 @@ module Quantify
       end
 
       def label
-        symbol #cludge
+        symbol
       end
 
     end

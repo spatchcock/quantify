@@ -413,7 +413,7 @@ Unit::Compound.configure do
 
 end
 
-Quantity.configure do
+Quantify.configure do
 
   describe_prevailing_unit_rules do |unit,equivalent_unit|
     equivalent_unit.is_base_unit? or

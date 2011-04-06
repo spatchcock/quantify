@@ -150,9 +150,8 @@ module Quantify
     def self.method_missing(method, *args, &block)
       if dimensions = self.for(method)
         return dimensions
-      else
-        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
       end
+      super
     end
 
     BASE_QUANTITIES.each { |quantity| attr_reader quantity }
@@ -343,18 +342,12 @@ module Quantify
     # Method for identifying quantities which are 'specific' quantities, i.e
     # quantities which represent a quantity of something *per unit mass*
     #
-    # This is intended to be used eventually as part of a richer system for
-    # recognising and naming unknown quantities
-    #
     def is_specific_quantity?
       denominator_quantities == ["@mass"]
     end
 
     # Method for identifying quantities which are 'molar' quantities, i.e
     # quantities which represent a quantity of something *per mole*
-    #
-    # This is intended to be used eventually as part of a richer system for
-    # recognising and naming unknown quantities
     #
     def is_molar_quantity?
       denominator_quantities == ["@amount_of_substance"]
@@ -496,7 +489,7 @@ module Quantify
           raise InvalidDimensionError, "An invalid base quantity was specified (#{base_quantity})"
         end
         variable = "@#{base_quantity}"
-        if self.instance_variable_defined? variable
+        if self.instance_variable_defined?(variable)
           new_index = self.instance_variable_get(variable) + index
           if new_index == 0
             remove_instance_variable(variable)

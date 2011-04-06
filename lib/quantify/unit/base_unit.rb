@@ -14,13 +14,24 @@ module Quantify
         unit.load
       end
 
-      def self.define(compound_unit)
-        self.new compound_unit.to_hash
+      # Define a new unit in terms of an already instantiated compound unit. This
+      # unit becomes a representation of the compound - without explicitly holding
+      # the base units, e.g.
+      #
+      #   Unit::Base.define(Unit.m**2).name              #=> "square metre"
+      #
+      #   Unit::Base.define(Unit**3) do |unit|
+      #     unit.name = "metres cubed"
+      #   end.name                                       #=> "metres cubed"
+      #
+      def self.define(compound_unit,&block)
+        new_unit = self.new compound_unit.to_hash
+        yield new_unit if block_given?
+        return new_unit
       end
 
-      # Syntactic sugar for defining the known units. This method simply
-      # evaluates code within the context of the self class, enabling
-      # the required assocaited units to be loaded at runtime, e.g.
+      # Syntactic sugar for defining the known units, enabling the required
+      # associated units to be loaded at runtime, e.g.
       #
       #  Unit::[Base|SI|NonSI].configure do |config|
       #
@@ -41,10 +52,12 @@ module Quantify
       #
       # Valid options are: :name              => The unit name, e.g. :kilometre
       #
-      #                    :physical_quantity => The physical quantity represented
+      #                    :dimensions        => The physical quantity represented
       #                                          by the unit (e.g. force, mass).
       #                                          This must be recognised as a member
       #                                          of the Dimensions.dimensions array
+      #
+      #                    :physical_quantity => Alias for :dimensions
       #
       #                    :symbol            => The unit symbol, e.g. 'kg'
       #
@@ -55,17 +68,17 @@ module Quantify
       #                                          = 0.3048 m (metre is the SI unit of
       #                                          length). If no factor is set, it is
       #                                          assumed to be 1 - which represents
-      #                                          an SI unit.
+      #                                          an SI benchmark unit.
       #
-      #                    :scaling           => A scaling factor, used on by NonSI
-      #                                          temperature units (see Unit::NonSI)
+      #                    :scaling           => A scaling factor, used only by NonSI
+      #                                          temperature units
       #
       #                    :label             => The label used by JScience for the
       #                                          unit
       #
       # The physical quantity option is used to locate the corresponding dimensional
-      # representation in the Dimensions class. This dimensions attribunte is used
-      # in much of the unit functionality
+      # representation in the Dimensions class. This dimensions attribute is to
+      # provide much of the unit functionality
       #
       def initialize(options=nil)
         if options.is_a? Hash
@@ -136,9 +149,6 @@ module Quantify
       # For example the scaling factor for degrees celsius is 273.15, i.e. celsius
       # is a value of 273.15 greater than kelvin (but with no multiplicative factor).
       #
-      # Since these are rare and only used in non-SI, temperature units, an accessible
-      # attribute was deemed overkill
-      #
       def scaling
         @scaling || 0.0
       end
@@ -148,14 +158,12 @@ module Quantify
       end
 
       # Describes what the unit measures/represents. This is taken from the
-      # @dimensions ivar, being, ultimately and attribute of the assocaited
+      # @dimensions ivar, being, ultimately an attribute of the assocaited
       # Dimensions object, e.g.
       #
-      #  unit = Unit.metre
-      #  unit.measure                      #=> :length
+      #  Unit.metre.measures                      #=> :length
       #
-      #  unit = Unit.J
-      #  unit.measure                      #=> :energy
+      #  Unit.J.measures                          #=> :energy
       #
       def measures
         @dimensions.describe
@@ -169,9 +177,9 @@ module Quantify
       # by self
       #
       # If no argument is given, the array holds instances of Prefix::Base (or
-      # subclasses). Alternatively only the names or symbols of each prefix can 
-      # be returned by providing the appropriate prefix attribute as a symbolized 
-      # argument, e.g.
+      # subclasses; SI, NonSI...). Alternatively only the names or symbols of each
+      # prefix can be returned by providing the appropriate prefix attribute as a
+      # symbolized argument, e.g.
       #
       #   Unit.m.valid_prefixes                 #=> [ #<Quantify::Prefix: .. >,
       #                                               #<Quantify::Prefix: .. >,
@@ -385,20 +393,24 @@ module Quantify
       alias :* :multiply
       alias :/ :divide
       alias :** :pow
-      
+
+      # Return new unit representing the reciprocal of self, i.e. 1/self
       def reciprocalize
-        Compound.new([self,-1])
+        Unit.unity / self
       end
 
+      # Apply a prefix to self. Returns new unit according to the prefixed version
+      # of self, complete with modified name, symbol, factor, etc..
+      #
       def with_prefix(name_or_symbol)
         if self.name =~ /\A(#{valid_prefixes(:name).join("|")})/
           raise InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
         end
+        
+        prefix = Prefix.for(name_or_symbol) unless name_or_symbol.is_a? Prefix
 
-        if name_or_symbol.is_a? Prefix
-          prefix = name_or_symbol
-        else
-          prefix = Prefix.for(name_or_symbol)
+        unless self.valid_prefixes(:name).include? prefix.name
+          raise InvalidArgumentError, "Prefix '#{prefix.name}' not valid for unit: #{self.name}"
         end
 
         unless prefix.nil?
@@ -414,6 +426,9 @@ module Quantify
         end
       end
 
+      # Return a hash representation of self containing each unit attribute (i.e
+      # each instance variable)
+      #
       def to_hash
         hash = {}
         self.instance_variables.each do |var|
@@ -423,7 +438,7 @@ module Quantify
         return hash
       end
 
-      # Enables neat shorthand for reciprocal of a unit, e.g.
+      # Enables shorthand for reciprocal of a unit, e.g.
       #
       #   unit = Unit.m
       #
@@ -437,11 +452,13 @@ module Quantify
         end
       end
       
-      # Clone self and explicitly and additionally clone the Dimensions object
-      # located at @dimensions. This enables full or 'deep' copies of the already
-      # initialized units to be retrieve and manipulated without corrupting the
-      # known unit representations. (self.clone make only a shallow copy, i.e.
-      # clones attributes but not referenced objects)
+      # Clone self and explicitly clone the associated Dimensions object located
+      # at @dimensions.
+      # 
+      # This enables full or 'deep' copies of the already initialized units to be
+      # retrieved and manipulated without corrupting the known unit representations.
+      # (self.clone makes only a shallow copy, i.e. clones attributes but not
+      # referenced objects)
       #
       def deep_clone
         new = self.clone
@@ -458,8 +475,6 @@ module Quantify
       #  Unit.m.alternatives_by_name
       #  
       # is equaivalent to Unit.m.alternatives :name
-      #
-      #
       #
       def method_missing(method, *args, &block)
         if method.to_s =~ /(to_)(.*)/ and prefix = Prefix.for($2.to_sym)

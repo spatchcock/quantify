@@ -575,7 +575,7 @@ describe Unit do
     unit.base_units.size.should == 2
   end
 
-  it "should cancel base units with one argument" do
+  it "should cancel base units with one argument which is a symbol" do
     unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
     unit.symbol.should == "m^2 s kg s^-1 m^-3"
     unit.base_units.size.should == 5
@@ -584,13 +584,125 @@ describe Unit do
     unit.base_units.size.should == 4
   end
 
-  it "should cancel base units with multiple arguments" do
+  it "should cancel base units with multiple arguments including unit objects and strings" do
     unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
     unit.symbol.should == "m^2 s kg s^-1 m^-3"
     unit.base_units.size.should == 5
-    unit.cancel_base_units! :m, :s
+    unit.cancel_base_units! Unit.m, 's'
     unit.symbol.should == "kg m^-1"
     unit.base_units.size.should == 2
+  end
+
+  it "should refuse to cancel by a compound unit" do
+    unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+    lambda{unit.cancel_base_units!(Unit.m**2)}.should raise_error
+  end
+
+  it "trying to add invalid prefix should raise error" do
+    lambda{Unit.ft.with_prefix(:kilo)}.should raise_error
+  end
+
+  it "should initialize compound unit with one CompoundBaseUnit" do
+    base = Unit::CompoundBaseUnit.new Unit.h, -1
+    compound_unit = Unit::Compound.new base
+    compound_unit.symbol.should == "h^-1"
+  end
+
+  it "should initialize compound unit with multiple CompoundBaseUnits" do
+    base1 = Unit::CompoundBaseUnit.new Unit.h, -1
+    base2 = Unit::CompoundBaseUnit.new Unit.mi
+    compound_unit = Unit::Compound.new base1, base2
+    compound_unit.symbol.should == "mi h^-1"
+  end
+
+  it "should initialize compound unit with multiple individual units" do
+    base1 = Unit.kW
+    base2 = Unit.h
+    compound_unit = Unit::Compound.new base1, base2
+    compound_unit.symbol.should == "kW h"
+  end
+
+  it "should initialize compound unit with array splat of multiple individual units" do
+    base1 = Unit.kW
+    base2 = Unit.h
+    array = [base1,base2]
+    compound_unit = Unit::Compound.new *array
+    compound_unit.symbol.should == "kW h"
+  end
+
+  it "should initialize compound unit with one sub-array" do
+    base1 = [Unit.h, -1]
+    compound_unit = Unit::Compound.new base1
+    compound_unit.symbol.should == "h^-1"
+  end
+
+  it "should initialize compound unit with multiple sub-arrays" do
+    base1 = [Unit.h, -1]
+    base2 = [Unit.m, 2]
+    compound_unit = Unit::Compound.new base1, base2
+    compound_unit.symbol.should == "m^2 h^-1"
+  end
+
+  it "should initialize compound unit with variable arguments" do
+    base1 = Unit.kg
+    base2 = Unit::CompoundBaseUnit.new Unit.m, 2
+    base3 = [Unit.s, -2]
+    compound_unit = Unit::Compound.new base1, base2, base3
+    compound_unit.measures.should == "energy"
+  end
+
+  it "should initialize compound unit with variable arguments in splat array" do
+    base1 = Unit.kg
+    base2 = Unit::CompoundBaseUnit.new Unit.m, 2
+    base3 = [Unit.s, -2]
+    array = [base1,base2,base3]
+    compound_unit = Unit::Compound.new *array
+    compound_unit.measures.should == "energy"
+  end
+
+  it "should throw error is base unit is a compound unit" do
+    base1 = Unit.kg*Unit.m
+    base2 = Unit::CompoundBaseUnit.new Unit.m, 2
+    base3 = [Unit.s, -2]
+    array = [base1,base2,base3]
+    lambda{compound_unit = Unit::Compound.new *array}.should raise_error
+  end
+
+  it "should throw error is base unit is a compound unit" do
+    base1 = Unit.kg
+    base2 = Unit::CompoundBaseUnit.new Unit.m, 2
+    base3 = [Unit.kg*Unit.m, -2]
+    array = [base1,base2,base3]
+    lambda{compound_unit = Unit::Compound.new *array}.should raise_error
+  end
+
+  it "should throw error is base unit array too big" do
+    base1 = Unit.kg
+    base2 = Unit::CompoundBaseUnit.new Unit.m, 2
+    base3 = [Unit.kg, -2, "something else"]
+    array = [base1,base2,base3]
+    lambda{compound_unit = Unit::Compound.new *array}.should raise_error
+  end
+
+  it "should not allow comound unit to be used to initialize CompoundBaseUnit" do
+    lambda{Unit::CompoundBaseUnit.new((Unit.m*Unit.m), 2)}.should raise_error
+  end
+
+  it "should parse per unit correctly" do
+    unit = Unit.parse "s^-1"
+    unit.name.should == 'per second'
+  end
+
+  it "should raise error when parsing on unknown units" do
+    lambda{unit = Unit.parse "kg b^2"}.should raise_error
+  end
+
+  it "compound unit should be recognsed as Unit::Base and Compound" do
+    unit = Unit.m*Unit.kg*Unit.s
+    unit.is_a?(Unit::Base).should be_true
+    unit.is_a?(Unit::Compound).should be_true
+    unit.is_a?(Unit::SI).should_not be_true
+    unit.is_a?(Unit::NonSI).should_not be_true
   end
 end
 

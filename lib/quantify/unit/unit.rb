@@ -43,8 +43,8 @@ module Quantify
     # of the other.
     #
     def self.ratio(unit,other_unit)
-      unit = Unit.for unit unless unit.is_a? Unit::Base
-      other_unit = Unit.for other_unit unless other_unit.is_a? Unit::Base
+      unit = Unit.for unit
+      other_unit = Unit.for other_unit
       unless unit.is_alternative_for? other_unit
         raise InvalidUnitError, "Units do not represent the same physical quantity"
       end
@@ -87,9 +87,7 @@ module Quantify
     #   Unit.centimetre ... or, alternatively ... Unit.cm
     #
     # will return a Unit::SI object with attributes representing a centimetre
-    # based on the initialized Unit for :metre and Prefix :centi. Note: this
-    # method is designed to only allow SI units to use SI prefixes, and NonSI
-    # units to use only NonSI prefixes
+    # based on the initialized Unit for :metre and Prefix :centi.
     #
     def self.for(name_symbol_label_or_object)
       return name_symbol_label_or_object.deep_clone if name_symbol_label_or_object.is_a? Unit::Base
@@ -107,6 +105,7 @@ module Quantify
     end
 
     def self.match(name_symbol_or_label)
+      return name_symbol_or_label.deep_clone if name_symbol_or_label.is_a? Unit::Base
       Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
       Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
       Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
@@ -132,6 +131,9 @@ module Quantify
       return nil
     end
 
+    # Standardizes query strings or symbols into canonical form for unit names,
+    # symbols and labels
+    #
     def self.format_unit_attribute(attribute, string_or_symbol)
       string_or_symbol = case attribute
         when :symbol then string_or_symbol.standardize
@@ -149,37 +151,34 @@ module Quantify
       end
 
       units = []
-      numerator, splitter, denominator = string.split(/(\/|per)/)
-      units.concat Unit.parse_numerator_units(numerator)
-      units.concat Unit.parse_denominator_units(denominator) unless denominator.nil?
-
-      if units.size == 1 and units.first.last == 1
-        return Unit.match units.first.first ||
-          raise(InvalidArgumentError, "Cannot parse unit: #{string}")
+      numerator, per, denominator = string.split(/(\/|per)/)
+      units += Unit.parse_numerator_units(numerator)
+      units += Unit.parse_denominator_units(denominator) unless denominator.nil?
+      if units.size == 1 and units.first.is_a? Unit::Base
+        return units.first
       else
-        units.map! {|unit| CompoundBaseUnit.new(*unit) }
-        return Unit::Compound.new(*units) ||
-          raise(InvalidArgumentError, "Cannot parse unit: #{string}")
+        return Unit::Compound.new(*units)
       end
     end
     
     def self.parse_unit_and_index(string)
       string.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
-      # [ unit, index ]
-      [$1.to_s,( $2.nil? or $2.empty? ? 1 : $2.to_i )]
+      ($2.nil? or $2.empty?) ? Unit.match($1.to_s) : CompoundBaseUnit.new($1.to_s, $2.to_i)
     end
 
     def self.parse_numerator_units(string)
+      # If no middot then names parsed by whitespace
+      # Need to consider multi word unit names
       num_units = ( string =~ /·/ ? string.split("·") : string.split(" ") )
-      # cludge, need to think about multi word unit names
       num_units.map! do |substring|
         Unit.parse_unit_and_index(substring)
       end
     end
 
     def self.parse_denominator_units(string)
-      denom_units = Unit.parse_numerator_units(string).map do |unit|
-        [unit[0], unit[1] * -1]
+      Unit.parse_numerator_units(string).map do |unit|
+        unit.index *= -1
+        unit
       end
     end
 

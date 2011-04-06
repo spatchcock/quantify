@@ -58,7 +58,7 @@ module Quantify
       # This is a class method which takes an arbitrary array of base units as an
       # argument. This means that consolidation can be performed on either all
       # base units or just a subset - the numerator or denominator units.
-      #
+      #''
       # The units to use for particular physical dimension can be specified
       # following the inital argument. If no unit is specified for a physical
       # quantity which is represented in the array of base units, then the first
@@ -77,6 +77,15 @@ module Quantify
       # Initialize a compound unit by providing an array containing a represenation
       # of each base unit.
       #
+      # Array may contain elements specified as follows:
+      #
+      #  1. a instance of CompoundBaseUnit
+      #
+      #  2. an instance of Unit::Base (in which case its index is assumed as 1
+      #
+      #  3. a sub-array of size 2 containing an instance of Unit::Base and an
+      #     explicit index
+      #
       def initialize(*units)
         @base_units = []
         units.each do |unit|
@@ -84,7 +93,8 @@ module Quantify
             @base_units << unit
           elsif unit.is_a? Unit::Base
             @base_units << CompoundBaseUnit.new(unit)
-          elsif unit.is_a? Array and unit.size == 2 and not unit.first.is_a? Compound
+          elsif unit.is_a? Array and unit.first.is_a? Unit::Base and
+              not unit.first.is_a? Compound and unit.size == 2
             @base_units << CompoundBaseUnit.new(unit.first,unit.last)
           else
             raise InvalidArgumentError, "#{unit} does not represent a valid base unit"
@@ -124,9 +134,25 @@ module Quantify
         return self
       end
 
+      # Cancel base units across numerator and denominator. If similar units occur
+      # in both the numerator and denominator, they can be cancelled, i.e. their
+      # powers reduced correspondingly until one is removed.
+      #
+      # This method is useful when wanting to remove specific units that can be
+      # cancelled from the compound unit configuration while retaining the
+      # remaining units in the current format.
+      #
+      # If no other potentially cancelable units need to be retained, the method
+      # #consolidate_base_units! can be called with the :full argument instead
+      #
+      # This method takes an arbitrary number of arguments which represent the units
+      # which are required to be cancelled (string, symbol or object)
+      #
       def cancel_base_units!(*units)
         units.each do |unit|
-          unit = Unit.for unit
+          raise InvalidArgumentError, "Cannot cancel by a compound unit" if unit.is_a? Unit::Compound
+          unit = Unit.for unit unless unit.is_a? Unit::Base
+
           numerator_unit = numerator_units.find { |base| unit == base.unit }
           denominator_unit = denominator_units.find { |base| unit == base.unit }
 
@@ -141,10 +167,10 @@ module Quantify
 
       def rationalize_base_units!(scope=:partial,*units)
         if scope == :full
-          Compound.rationalize_base_units(@base_units,*units)
+          Compound.rationalize_base_units(@base_units,units)
         else
-          Compound.rationalize_base_units(numerator_units,*units)
-          Compound.rationalize_base_units(denominator_units,*units)
+          Compound.rationalize_base_units(numerator_units,units)
+          Compound.rationalize_base_units(denominator_units,units)
         end
         consolidate_base_units!
       end
@@ -168,14 +194,6 @@ module Quantify
         return self
       end
 
-      def reciprocalize
-        @base_units.map! do |base|
-          base.index *= -1
-          base
-        end
-        consolidate_base_units!
-      end
-
       # Derive a representation of the physical dimensions of the compound unit
       # by multilying together the dimensions of each of the base units.
       #
@@ -188,10 +206,13 @@ module Quantify
       # Derive a name for the unit based on the names of the base units
       #
       # Both singluar and plural names can be derived. In the case of pluralized
-      # names, the last unit in the numerator is pluralized.
+      # names, the last unit in the numerator is pluralized. Singular names are
+      # assumed by default, in which case no argument is required.
       #
-      # Singular names are assumed by default, in which case no argument is
-      # required.
+      # Format for names includes the phrase 'per' to differentiate denominator
+      # units and words, rather than numbers, for representing powers, e.g.
+      #
+      #   square metres per second
       #
       def derive_name(inflection=:singular)
         unit_name = ""
@@ -217,6 +238,10 @@ module Quantify
       # Get the units in order first so that the denominator values (i.e. those
       # with negative powers) follow the numerators
       #
+      # Symbol format use unit symbols, with numerator symbols followed by
+      # denominator symbols and powers expressed using the "^" notation with 'true'
+      # values (i.e. preservation of minus signs).
+      #
       def derive_symbol
         @base_units.sort do |base,next_unit|
           next_unit.index <=> base.index
@@ -225,6 +250,13 @@ module Quantify
         end.strip
       end
 
+      # Derive a label for the comound unit. This follows the format used in the
+      # JScience library in using a middot notation ("·") to spearate units and
+      # slash notation "/" to separate numerator and denominator. Since the
+      # denominator is differentiated, denominator unit powers are rendered in
+      # absolute terms (i.e. minus sign omitted) except when no numerator values
+      # are present.
+      #
       def derive_label
         unit_label = ""
         unless numerator_units.empty?

@@ -3,10 +3,19 @@ module Quantify
   module Unit
     class CompoundBaseUnit
 
+      # Container class for compound unit base units. Each instance is represented
+      # by a unit and an index, i.e. a unit raised to some power. If no index is
+      # present, 1 is assumed.
+      #
+      # Instances of this class can be used to initialize base units, and are the
+      # structures which hold base units within compound units
+      #
+
+
       attr_accessor :unit, :index
 
       def initialize(unit,index=1)
-        @unit = Unit.for(unit)
+        @unit = Unit.match(unit) || raise(InvalidArgumentError, "Base unit not known")
         raise InvalidArgumentError, "Base unit cannot be compound unit" if @unit.is_a? Compound
         @index = index
       end
@@ -15,10 +24,14 @@ module Quantify
         @unit.dimensions ** @index
       end
 
+      # Only refers to the unit index, rather than the dimensions configuration
+      # of the actual unit
+      #
       def is_dimensionless?
         @index == 0
       end
 
+      # Absolute index as names always contain 'per' before denominator units
       def name
         @unit.name.to_power(@index.abs)
       end
@@ -35,6 +48,10 @@ module Quantify
         @unit.label + (@index == 1 ? "" : "^#{@index}")
       end
 
+      # Reciprocalized version of label, i.e. sign changed. This is used to make
+      # a denominator unit renerable in case where there are no numerator units,
+      # i.e. where no '/' appears in the label
+      #
       def reciprocalized_label
         @unit.label + (@index == -1 ? "" : "^#{@index * -1}")
       end
