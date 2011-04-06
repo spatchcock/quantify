@@ -49,7 +49,7 @@ module Quantify
       end
 
       # Reciprocalized version of label, i.e. sign changed. This is used to make
-      # a denominator unit renerable in case where there are no numerator units,
+      # a denominator unit renderable in cases where there are no numerator units,
       # i.e. where no '/' appears in the label
       #
       def reciprocalized_label
@@ -76,8 +76,18 @@ module Quantify
         @unit.is_non_si_unit?
       end
 
+      # Physical quantity represented by self. This refers only to the unit, rather
+      # than the unit together with the index. Is used to match base units with
+      # similar units of same physical quantity
+      #
       def measures
         @unit.dimensions.physical_quantity
+      end
+
+      def deep_clone
+        new = self.clone
+        new.instance_variable_set("@unit", unit.deep_clone)
+        return new
       end
     end
   end

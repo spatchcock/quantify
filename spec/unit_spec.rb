@@ -704,5 +704,10 @@ describe Unit do
     unit.is_a?(Unit::SI).should_not be_true
     unit.is_a?(Unit::NonSI).should_not be_true
   end
+
+  it "should derive compound unit correctly" do
+    # check for deep cloning of CompoundBaseUnit's - was causing erroneous results
+    (Unit.MW_h/Unit.MMBTU).factor.should be_close 3.41295634070405, 0.00000001
+  end
 end
 

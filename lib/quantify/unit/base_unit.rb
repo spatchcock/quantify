@@ -463,6 +463,9 @@ module Quantify
       def deep_clone
         new = self.clone
         new.instance_variable_set("@dimensions", self.dimensions.clone)
+        if self.is_compound_unit?
+          new.instance_variable_set("@base_units", self.base_units.map {|base| base.deep_clone })
+        end
         return new
       end
 
