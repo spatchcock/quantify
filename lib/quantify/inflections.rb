@@ -51,6 +51,9 @@ ActiveSupport::Inflector.inflections do |inflect|
   inflect.plural /(ton)/i, '\1s'
   inflect.singular /(ton)s?/i, '\1'
 
+  inflect.plural /(tonne)/i, '\1s'
+  inflect.singular /(tonne)s?/i, '\1'
+
   inflect.plural /(stone)/i, '\1s'
   inflect.singular /(stone)s?/i, '\1'
 
