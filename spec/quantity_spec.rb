@@ -233,5 +233,12 @@ describe Quantity do
     ((10.m/1.s).pow! -1).to_s.should == "0.1 s m^-1"
     lambda{ ((10.m/1.s).pow! 0.5) }.should raise_error
   end
+
+  it "should parse using string method" do
+    "20 m".to_q.value.should == 20.0
+    "45.45 BTU".to_q.class.should == Quantity
+    "65 kilometres per hour".to_q.unit.class.should == Unit::Compound
+    "65 kilometre per hour".to_q.unit.class.should == Unit::Compound
+  end
 end
 

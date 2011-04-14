@@ -114,11 +114,11 @@ module Quantify
     def to(new_unit)
       new_unit = Unit.for new_unit
       if is_basic_conversion_with_scalings? new_unit
-        conversion_with_scalings new_unit
+        Quantity.new(value,unit).conversion_with_scalings! new_unit
       elsif self.unit.is_alternative_for? new_unit
-        convert_to_equivalent_unit new_unit
+        Quantity.new(value,unit).convert_to_equivalent_unit! new_unit
       elsif self.unit.is_compound_unit?
-        convert_compound_unit_to_non_equivalent_unit new_unit
+        Quantity.new(value,unit).convert_compound_unit_to_non_equivalent_unit! new_unit
       else
         nil # raise? or ...
       end      
@@ -133,12 +133,12 @@ module Quantify
 
     # Conversion where both units (including compound units) are of precisely
     # equivalent dimensions, i.e. direct alternatives for one another
-    def convert_to_equivalent_unit(new_unit)
+    def convert_to_equivalent_unit!(new_unit)
       old_unit = unit
       self.multiply!(Unit.ratio new_unit, old_unit).cancel_base_units!(old_unit)
     end
 
-    def conversion_with_scalings(new_unit)
+    def conversion_with_scalings!(new_unit)
       @value = (((self.value + self.unit.scaling) * self.unit.factor) / new_unit.factor) - new_unit.scaling
       @unit = new_unit
       return self
@@ -150,7 +150,7 @@ module Quantify
     #
     #   Unit.kilowatt_hour.to :second           #=> 'kilowatt second'
     #
-    def convert_compound_unit_to_non_equivalent_unit(new_unit)
+    def convert_compound_unit_to_non_equivalent_unit!(new_unit)
       self.unit.base_units.select do |base|
         base.unit.is_alternative_for? new_unit
       end.inject(self) do |quantity,base|
@@ -162,18 +162,18 @@ module Quantify
     # Converts a quantity to the equivalent quantity using only SI units
     def to_si
       if self.unit.is_compound_unit?
-        convert_compound_unit_to_si
+        Quantity.new(value,unit).convert_compound_unit_to_si!
       else
         self.to(unit.si_unit)
       end
     end
 
-    def convert_compound_unit_to_si
+    def convert_compound_unit_to_si!
       until self.unit.is_si_unit? do
         unit = self.unit.base_units.find do |base|
           !base.unit.is_si_unit?
         end.unit
-        self.convert_compound_unit_to_non_equivalent_unit(unit.si_unit)
+        self.convert_compound_unit_to_non_equivalent_unit!(unit.si_unit)
       end
       return self
     end
@@ -288,7 +288,7 @@ module Quantify
       rounded_quantity.round! decimal_places
     end
 
-    # Enables neat shorthand for reciprocal of quantity, e.g.
+    # Enables shorthand for reciprocal of quantity, e.g.
     #
     #   quantity = 2.m
     #

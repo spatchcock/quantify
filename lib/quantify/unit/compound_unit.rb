@@ -176,7 +176,7 @@ module Quantify
       end
 
       def equivalent_known_unit
-        Unit.units.find {|unit| unit == self and not unit.is_compound_unit? }
+        Unit.units.find {|unit| self == unit and not unit.is_compound_unit? }
       end
 
       def or_equivalent &block
@@ -235,7 +235,7 @@ module Quantify
 
       # Derive a symbol for the unit based on the symbols of the base units
       # 
-      # Get the units in order first so that the denominator values (i.e. those
+      # Get the units in order first so that the denominator values (those
       # with negative powers) follow the numerators
       #
       # Symbol format use unit symbols, with numerator symbols followed by

@@ -23,6 +23,12 @@ class String
   def word_count
     words.size
   end
+
+  def to_quantity
+    Quantify::Quantity.parse self
+  end
+
+  alias :to_q :to_quantity
    
 end
 

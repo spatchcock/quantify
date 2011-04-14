@@ -237,10 +237,7 @@ module Quantify
     # quantity described by self
     #
     # If no argument is given, the array holds instances of Unit::Base (or
-    # subclasses) which represent each unit. Alternatively o      #
-      # Iterate through all base units looking for a single instance of a non-SI
-      # unit. Coumpound units are only SI if they are entirely composed of SI
-      # unitsnly the names or
+    # subclasses) which represent each unit. Alternatively only the names or
     # symbols of each unit can be returned by providing the appropriate unit
     # attribute as a symbolized argument, e.g.
     #

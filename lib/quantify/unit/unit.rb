@@ -154,8 +154,8 @@ module Quantify
       numerator, per, denominator = string.split(/(\/|per)/)
       units += Unit.parse_numerator_units(numerator)
       units += Unit.parse_denominator_units(denominator) unless denominator.nil?
-      if units.size == 1 and units.first.is_a? Unit::Base
-        return units.first
+      if units.size == 1 and units.first.index == 1
+        return units.first.unit
       else
         return Unit::Compound.new(*units)
       end
@@ -163,7 +163,8 @@ module Quantify
     
     def self.parse_unit_and_index(string)
       string.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
-      ($2.nil? or $2.empty?) ? Unit.match($1.to_s) : CompoundBaseUnit.new($1.to_s, $2.to_i)
+      index = ($2.nil? or $2.empty? ? 1 : $2.to_i)
+      CompoundBaseUnit.new($1.to_s, index)
     end
 
     def self.parse_numerator_units(string)
