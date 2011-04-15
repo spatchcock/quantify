@@ -188,6 +188,8 @@ describe Unit do
     it "should recognize already loaded units" do
       Unit.m.loaded?.should == true
       Unit.ft.loaded?.should == true
+      Unit.kilometre.loaded?.should == false
+      Unit.m.with_prefix(:kilo).load
       Unit.kilometre.loaded?.should == true
       (Unit.m/Unit.K).loaded?.should == false
       Unit.m.with_prefix(:pico).loaded?.should == false

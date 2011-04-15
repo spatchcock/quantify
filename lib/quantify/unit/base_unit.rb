@@ -14,6 +14,17 @@ module Quantify
         unit.load
       end
 
+      def self.load_with_prefixes(units,prefixes)
+        units.each do |unit|
+          unit = Unit.for(unit)
+          unit = Unit.g if unit.name == 'kilogram'
+          prefixes.each do |prefix|
+            prefixed_unit = unit.with_prefix(prefix)
+            prefixed_unit.load unless prefixed_unit.name == 'kilogram'
+          end
+        end
+      end
+
       # Define a new unit in terms of an already instantiated compound unit. This
       # unit becomes a representation of the compound - without explicitly holding
       # the base units, e.g.

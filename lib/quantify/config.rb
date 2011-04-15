@@ -179,6 +179,8 @@ Unit::SI.configure do
   load :name => 'kilogram', :physical_quantity => :mass, :symbol => 'kg', :label => 'kg'
   load :name => 'gram', :physical_quantity => 'mass', :factor => 1e-3, :symbol => 'g', :label => 'g'
 
+  # Define units on the base of unit operations
+  #
   define(Unit.m**2).load
 
   define(Unit.m**3).load
@@ -194,20 +196,8 @@ Unit::SI.configure do
     unit.label = 'centiradian'
   end
 
-  # Or ... add required prefixes on a multiple basis
-  #
-  # Should write some class methods for making mass specification of SI units 
-  # and prefixes easier
-  #
-  [:kilo,:mega,:giga,:tera].map do |prefix|
-    Unit.si_units.map do |unit|
-      unit.with_prefix(prefix) unless unit.name == 'kilogram' 
-    end
-  end.flatten.compact.each {|unit| unit.load }
-
-  [:mega,:giga,:tera].map do |prefix|
-    Unit.g.with_prefix(prefix).load
-  end
+  # Add required prefixes on a multiple basis
+  # load_with_prefixes(Unit.si_units,[:kilo,:mega,:giga,:tera])
 
 end
 
@@ -393,7 +383,7 @@ Unit::Compound.configure do
 
 
   # electricity emissions factor
-  (Unit.kg/Unit.kWh).load
+  # (Unit.kg/Unit.kWh).load
 
   # reciprocal/inverse units, e.g. inverse length
   (1/Unit.centimetre).load do |unit|

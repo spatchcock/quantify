@@ -224,7 +224,7 @@ module Quantify
       end
       return units if include_multiples
       units.select do |unit|
-        unit.is_benchmark_unit?
+        unit.is_benchmark_unit? or unit.name == 'gram'
       end
     end
 
