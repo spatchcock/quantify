@@ -197,7 +197,7 @@ Unit::SI.configure do
   end
 
   # Add required prefixes on a multiple basis
-  # load_with_prefixes(Unit.si_units,[:kilo,:mega,:giga,:tera])
+  #load_with_prefixes([:metre,:gram,:second],[:kilo,:mega,:giga,:tera])
 
 end
 
@@ -374,16 +374,7 @@ Unit::Compound.configure do
   # These don't actually need to be generated within this container, but it's
   # tidy
 
-  # kilowatt hour
-  #
-  # This commented out here and defined as a NonSI unit since AMEE uses the
-  # technically incorrect symbol kWh (i.e. no space or middot between kW and h)
-  #
   # (Unit.kW * Unit.h).load
-
-
-  # electricity emissions factor
-  # (Unit.kg/Unit.kWh).load
 
   # reciprocal/inverse units, e.g. inverse length
   (1/Unit.centimetre).load do |unit|

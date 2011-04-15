@@ -50,22 +50,7 @@ module Quantify
       end
       new_unit = (unit / other_unit)
       value = 1/new_unit.factor
-      Quantity.new value, new_unit
-    end
-
-    # Provides syntactic sugar for accessing units via the #for method.
-    # Specify:
-    #
-    #  Unit.degree_celsius
-    #
-    # rather than Unit.for :degree_celsius
-    #
-    def self.method_missing(method, *args, &block)
-      if unit = self.for(method)
-        return unit
-      else
-        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
-      end
+      Quantity.new(value, new_unit)
     end
 
     # Retrieve an object representing the specified unit.
@@ -104,44 +89,6 @@ module Quantify
       raise InvalidArgumentError, "Unit not known: #{name_symbol_or_label}"
     end
 
-    def self.match(name_symbol_or_label)
-      return name_symbol_or_label.deep_clone if name_symbol_or_label.is_a? Unit::Base
-      Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
-      Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
-      Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
-    end
-
-    def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
-      Unit.match_known_unit(attribute, string_or_symbol) or
-        Unit.match_prefixed_variant(attribute, string_or_symbol)
-    end
-
-    def self.match_known_unit(attribute, string_or_symbol)
-      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      unit = @units.find { |unit| unit.send(attribute) == string_or_symbol }
-      return unit.deep_clone rescue nil
-    end
-
-    def self.match_prefixed_variant(attribute, string_or_symbol)
-      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      if string_or_symbol =~ /\A(#{Prefix.si_prefixes.map(&attribute).join("|")})(#{Unit.si_units.map(&attribute).join("|")})\z/ or
-          string_or_symbol =~ /\A(#{Prefix.non_si_prefixes.map(&attribute).join("|")})(#{Unit.non_si_units.map(&attribute).join("|")})\z/
-        return Unit.for($2).with_prefix($1).deep_clone
-      end
-      return nil
-    end
-
-    # Standardizes query strings or symbols into canonical form for unit names,
-    # symbols and labels
-    #
-    def self.format_unit_attribute(attribute, string_or_symbol)
-      string_or_symbol = case attribute
-        when :symbol then string_or_symbol.standardize
-        when :name then string_or_symbol.standardize.singularize.downcase
-        else string_or_symbol.to_s
-      end
-    end
-
     # Parse complex strings into unit.
     #
     def self.parse(string)
@@ -158,6 +105,46 @@ module Quantify
         return units.first.unit
       else
         return Unit::Compound.new(*units)
+      end
+    end
+
+    def self.match(name_symbol_or_label)
+      return name_symbol_or_label.deep_clone if name_symbol_or_label.is_a? Unit::Base
+      Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
+      Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
+      Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
+    end
+
+    protected
+
+    def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
+      Unit.match_known_unit(attribute, string_or_symbol) or
+        Unit.match_prefixed_variant(attribute, string_or_symbol)
+    end
+
+    def self.match_known_unit(attribute, string_or_symbol)
+      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+      unit = @units.find { |unit| unit.send(attribute) == string_or_symbol }
+      return unit.deep_clone rescue nil
+    end
+
+    def self.match_prefixed_variant(attribute, string_or_symbol)
+      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+      if string_or_symbol =~ /\A(#{Prefix.si_prefixes.map(&attribute).join("|")})(#{Unit.si_non_prefixed_units.map(&attribute).join("|")})\z/ or
+          string_or_symbol =~ /\A(#{Prefix.non_si_prefixes.map(&attribute).join("|")})(#{Unit.non_si_non_prefixed_units.map(&attribute).join("|")})\z/
+        return Unit.for($2).with_prefix($1).deep_clone
+      end
+      return nil
+    end
+
+    # Standardizes query strings or symbols into canonical form for unit names,
+    # symbols and labels
+    #
+    def self.format_unit_attribute(attribute, string_or_symbol)
+      string_or_symbol = case attribute
+        when :symbol then string_or_symbol.standardize
+        when :name then string_or_symbol.standardize.singularize.downcase
+        else string_or_symbol.to_s
       end
     end
     
@@ -183,6 +170,20 @@ module Quantify
       end
     end
 
+    # This can be replicated by method missing approach, but explicit method provided
+    # given importance in #match (and #for) methods regexen
+    #
+    def self.si_non_prefixed_units
+      @units.select {|unit| unit.is_si_unit? and not unit.is_prefixed_unit? }
+    end
+
+    # This can be replicated by method missing approach, but explicit method provided
+    # given importance in #match (and #for) methods regexen
+    #
+    def self.non_si_non_prefixed_units
+      @units.select {|unit| unit.is_non_si_unit? and not unit.is_prefixed_unit? }
+    end
+
     def self.multi_word_unit_names
       @units.map(&:name).compact.select {|name| name.word_count > 1 }
     end
@@ -194,118 +195,32 @@ module Quantify
     def self.multi_word_unit_symbols
       @units.map(&:symbol).compact.select {|symbol| symbol.word_count > 1 }
     end
-    
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-
-    # The following represent some of the various useful ways in which the known
-    # system of units might want to be searched and retrieved.
+    # Provides syntactic sugar for accessing units via the #for method.
+    # Specify:
     #
-    # These can probably be tidied up using some dynamic method building at some
-    # stage.
+    #  Unit.degree_celsius
     #
-
-
-    # Returns an array containing objects representing all known SI units. By
-    # default, only the standard (non-prefixed) units are returned - e.g. m, s,
-    # J, N, W...
+    # rather than Unit.for :degree_celsius
     #
-    # If <true> is passed as an argument all multiples and divisors are returned
-    # - e.g. cm, dm, m, km, Mm,... J, kJ, MJ, GJ,... W, kW, MW,...
-    #
-    def self.si_units(include_multiples=false)
-      units = @units.select do |unit|
-        if block_given?
-          unit.is_si_unit? and
-          yield(unit)
+    def self.method_missing(method, *args, &block)
+      if method.to_s =~ /((si|non_si|compound)_)?(non_(prefixed)_)?((base|derived|benchmark)_)?units(_by_(name|symbol|label))?/
+        if $2 or $4 or $6
+          conditions = []
+          conditions << "unit.is_#{$2}_unit?" if $2
+          conditions << "!unit.is_prefixed_unit?" if $4
+          conditions << "unit.is_#{$6}_unit?" if $6
+          units = Unit.units.select { |unit| instance_eval(conditions.join(" and ")) }
         else
-          unit.is_si_unit?
+          units = Unit.units
         end
+        return_format = ( $8 ? $8.to_sym : nil )
+        units.map(&return_format)
+      elsif unit = self.for(method)
+        return unit
+      else
+        super
       end
-      return units if include_multiples
-      units.select do |unit|
-        unit.is_benchmark_unit? or unit.name == 'gram'
-      end
-    end
-
-    # Just the SI base units (metre, second, kelvin)
-    def self.si_base_units(include_multiples=false)
-      self.si_units(include_multiples) { |unit| unit.is_base_unit? }
-    end
-
-    # Just the SI derived units (joule, newton, watt, etc.)
-    def self.si_derived_units(include_multiples=false)
-      self.si_units(include_multiples) { |unit| unit.is_derived_unit? }
-    end
-
-    # Returns an array containing objects representing all known non-SI units
-    def self.non_si_units
-      @units.select { |unit| unit.is_non_si_unit? }
-    end
-
-    # Returns an array containing objects representing all known compound units
-    def self.compound_units
-      @units.select { |unit| unit.is_compound_unit? }
-    end
-
-    # Returns an array containing the names of all known units
-    def self.names
-      @units.map { |unit| unit.name }
-    end
-
-    # Returns an array containing the names of all known SI units
-    def self.si_names
-      si_units.map { |unit| unit.name }
-    end
-
-    # Returns an array containing the names of all known non-SI units
-    def self.non_si_names
-      non_si_units.map { |unit| unit.name }
-    end
-
-    # Returns an array containing the names of all known compound units
-    def self.compound_unit_names
-      compound_units.map { |unit| unit.name }
-    end
-
-    # Returns an array containing the symbols of all known units
-    def self.symbols
-      @units.map { |unit| unit.symbol }
-    end
-
-    # Returns an array containing the symbols of all known SI units
-    def self.si_symbols
-      si_units.map { |unit| unit.symbol }
-    end
-
-    # Returns an array containing the symbols of all known non-SI units
-    def self.non_si_symbols
-      non_si_units.map { |unit| unit.symbol }
-    end
-
-    # Returns an array containing the symbols of all known compound units
-    def self.compound_unit_symbols
-      compound_units.map { |unit| unit.symbol }
-    end
-
-    # Returns an array containing the JScience labels of all known units
-    def self.labels
-      @units.map { |unit| unit.label }
-    end
-
-    # Returns an array containing the JScience labels of all known SI units
-    def self.si_labels
-      si_units.map { |unit| unit.label }
-    end
-
-    # Returns an array containing the JScience labels of all known non-SI units
-    def self.non_si_labels
-      non_si_units.map { |unit| unit.label }
-    end
-
-    # Returns an array containing the JScience labels of all known compound units
-    def self.compound_unit_labels
-      compound_units.map { |unit| unit.label }
     end
 
   end

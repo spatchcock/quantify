@@ -6,7 +6,7 @@ describe Unit do
   describe "unit retrieval" do
 
     it "symbols list should include" do
-      list = Unit.symbols
+      list = Unit.units_by_symbol
       #list.should include 'η'
       list.should include 'g'
       list.should include 'kg'
@@ -20,18 +20,18 @@ describe Unit do
     end
 
     it "symbols list should not include these" do
-      Unit.symbols.should_not include 'zz'
+      Unit.units_by_symbol.should_not include 'zz'
     end
 
     it "si symbols list should include" do
-      list = Unit.si_symbols
+      list = Unit.si_units_by_symbol
       #list.should include 'η'
       list.should include 'kg'
       list.should include 'K'
     end
 
     it "si symbols list should not include" do
-      list = Unit.si_symbols
+      list = Unit.si_units_by_symbol
       list.should_not include '°C'
       list.should_not include 'yd'
       list.should_not include 'ly'
@@ -41,7 +41,7 @@ describe Unit do
     end
 
     it "non si symbols list should include" do
-      list = Unit.non_si_symbols
+      list = Unit.non_si_units_by_symbol
       list.should include '°C'
       list.should include 'yd'
       list.should include 'ly'
@@ -51,7 +51,7 @@ describe Unit do
     end
 
     it "non si symbols list should not include" do
-      list = Unit.non_si_symbols
+      list = Unit.non_si_units_by_symbol
       list.should_not include 'η'
       list.should_not include 'g'
       list.should_not include 'kg'
@@ -207,6 +207,31 @@ describe Unit do
       unit.class.should == Quantify::Unit::Base
     end
 
+    it "should mass load units with prefixes" do
+      Unit::SI.load_with_prefixes([:metre,:gram,:second],[:kilo,:mega,:giga,:tera])
+      Unit.kilometre.loaded?.should == true
+      Unit.Gigametre.loaded?.should == true
+      Unit.kilogram.loaded?.should == true
+      Unit.teragram.loaded?.should == true
+      Unit.kilosecond.loaded?.should == true
+      Unit.nanometre.loaded?.should == false
+    end
+
+    it "should mass load unit with prefixes" do
+      Unit::SI.load_with_prefixes(:metre,[:kilo,:mega,:giga,:tera])
+      Unit.kilometre.loaded?.should == true
+      Unit.Gigametre.loaded?.should == true
+      Unit.nanometre.loaded?.should == false
+    end
+
+    it "should mass load units with prefix" do
+      Unit::SI.load_with_prefixes([:metre,:gram,:second],:giga)
+      Unit.Gigametre.loaded?.should == true
+      Unit.gigagram.loaded?.should == true
+      Unit.gigasecond.loaded?.should == true
+      Unit.nanometre.loaded?.should == false
+    end
+
   end
 
   describe "unit initialization" do
@@ -214,8 +239,8 @@ describe Unit do
     it "should load self into module variable with instance method" do
       unit = Unit::Base.new :physical_quantity => :mass, :name => 'megalump', :symbol => 'Mlp'
       unit.load
-      Unit.symbols.should include 'Mlp'
-      Unit.names.should include 'megalump'
+      Unit.units_by_symbol.should include 'Mlp'
+      Unit.units_by_name.should include 'megalump'
     end
 
     it "should create unit" do
@@ -233,7 +258,7 @@ describe Unit do
 
     it "should load unit into module array with class method" do
       unit = Unit::NonSI.load :name => 'a name', :physical_quantity => :energy, :factor => 10
-      Unit.non_si_names.should include 'a name'
+      Unit.non_si_units_by_name.should include 'a name'
     end
     
     it "should derive compound unit correctly" do

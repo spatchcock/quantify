@@ -15,12 +15,11 @@ module Quantify
       end
 
       def self.load_with_prefixes(units,prefixes)
-        units.each do |unit|
+        [units].flatten.each do |unit|
           unit = Unit.for(unit)
-          unit = Unit.g if unit.name == 'kilogram'
-          prefixes.each do |prefix|
-            prefixed_unit = unit.with_prefix(prefix)
-            prefixed_unit.load unless prefixed_unit.name == 'kilogram'
+          [prefixes].flatten.each do |prefix|
+            prefixed_unit = unit.with_prefix(prefix) rescue unit
+            prefixed_unit.load unless prefixed_unit.loaded?
           end
         end
       end
@@ -336,26 +335,13 @@ module Quantify
         self.dimensions.si_unit
       end
 
-      #def multiplier(factor)
-      #  self.deep_clone.operate do |unit|
-      #    unit.name = "#{factor} " + unit.name
-      #    unit.symbol = "#{factor} " + unit.symbol
-      #    unit.label = "#{factor} " + unit.label
-      #    unit.factor *= factor
-      #  end
-      #end
-
       # Multiply two units together. This results in the generation of a compound
       # unit.
       #
       def multiply(other)
         options = []
         self.instance_of?(Unit::Compound) ? options += self.base_units : options << self
-        if other.is_a? Unit::Base or other.is_a? Unit::Compound
-          other.instance_of?(Unit::Compound) ? options += other.base_units : options << other
-        elsif other.is_a? Numeric
-          options << unit_multiplier(other)
-        end
+        other.instance_of?(Unit::Compound) ? options += other.base_units : options << other
         Unit::Compound.new(*options)
       end
 
