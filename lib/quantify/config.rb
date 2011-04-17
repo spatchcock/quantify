@@ -182,11 +182,8 @@ Unit::SI.configure do
   # Define units on the base of unit operations
   #
   define(Unit.m**2).load
-
   define(Unit.m**3).load
-
   define(Unit.m/Unit.s).load
-
   define(Unit.m/(Unit.s**2)).load
   
   # add required prefixes individually

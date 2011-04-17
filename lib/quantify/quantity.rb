@@ -135,7 +135,9 @@ module Quantify
     # equivalent dimensions, i.e. direct alternatives for one another
     def convert_to_equivalent_unit!(new_unit)
       old_unit = unit
-      self.multiply!(Unit.ratio new_unit, old_unit).cancel_base_units!(old_unit)
+      self.multiply!(Unit.ratio new_unit, old_unit)
+      old_unit = old_unit.base_units.map { |base| base.unit }  if old_unit.is_compound_unit?
+      self.cancel_base_units!(*old_unit)
     end
 
     def conversion_with_scalings!(new_unit)

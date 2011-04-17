@@ -240,5 +240,11 @@ describe Quantity do
     "65 kilometres per hour".to_q.unit.class.should == Unit::Compound
     "65 kilometre per hour".to_q.unit.class.should == Unit::Compound
   end
+
+  it "should cancel by base units of original compound unit if necessary" do
+    quantity = Quantity.new(20, Unit.psi).to(Unit.inches_of_mercury)
+    quantity.unit.base_units.size.should == 1
+    quantity.to_s.should == "40.7204127435789 inHg"
+  end
 end
 
