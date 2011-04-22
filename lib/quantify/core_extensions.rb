@@ -1,3 +1,6 @@
+
+Object.extend Quantify::ExtendedMethods
+
 class String
 
   def standardize
@@ -39,7 +42,6 @@ class Symbol
   end
   
 end
-
 
 class Numeric
 

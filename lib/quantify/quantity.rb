@@ -132,12 +132,15 @@ module Quantify
     end
 
     # Conversion where both units (including compound units) are of precisely
-    # equivalent dimensions, i.e. direct alternatives for one another
+    # equivalent dimensions, i.e. direct alternatives for one another. Where
+    # previous unit is a compound unit, new unit must be cancelled by all original
+    # base units
+    #
     def convert_to_equivalent_unit!(new_unit)
       old_unit = unit
       self.multiply!(Unit.ratio new_unit, old_unit)
-      old_unit = old_unit.base_units.map { |base| base.unit }  if old_unit.is_compound_unit?
-      self.cancel_base_units!(*old_unit)
+      old_base_units = old_unit.base_units.map { |base| base.unit } if old_unit.is_compound_unit?
+      self.cancel_base_units!(*old_base_units || old_unit)
     end
 
     def conversion_with_scalings!(new_unit)
@@ -204,7 +207,7 @@ module Quantify
         @value = value.send(operator,other)
         return self
       elsif other.kind_of? Quantity
-        @unit = unit.send(operator,other.unit).or_equivalent &Quantify.prevailing_unit_rules
+        @unit = unit.send(operator,other.unit).or_equivalent
         @value = value.send(operator,other.value)
         return self
       else

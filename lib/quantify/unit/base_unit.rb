@@ -14,7 +14,15 @@ module Quantify
         unit.load
       end
 
-      def self.load_with_prefixes(units,prefixes)
+      def self.construct_and_load(unit,&block)
+        self.construct(unit,&block).load
+      end
+
+      # Mass load prefixed units. First argument is a single or array of units.
+      # Second argument is a single or array of prefixes. All specfied units will
+      # be loaded with all specified prefixes.
+      #
+      def self.prefix_and_load(prefixes,units)
         [units].flatten.each do |unit|
           unit = Unit.for(unit)
           [prefixes].flatten.each do |prefix|
@@ -34,8 +42,8 @@ module Quantify
       #     unit.name = "metres cubed"
       #   end.name                                       #=> "metres cubed"
       #
-      def self.define(compound_unit,&block)
-        new_unit = self.new compound_unit.to_hash
+      def self.construct(unit,&block)
+        new_unit = self.new unit.to_hash
         yield new_unit if block_given?
         return new_unit
       end
@@ -52,11 +60,12 @@ module Quantify
       #  end
       #
       def self.configure &block
-        self.class_eval &block if block
+        class_eval &block if block
       end
-
+      
       attr_accessor :name, :symbol, :label
       attr_accessor :dimensions, :factor
+      attr_accessor :acts_as_alternative_unit, :acts_as_equivalent_unit
 
       # Create a new Unit::Base instance.
       #
@@ -104,22 +113,11 @@ module Quantify
           @factor = options[:factor].nil? ? 1.0 : options[:factor].to_f
           @symbol = options[:symbol].nil? ? nil : options[:symbol].standardize
           @label = options[:label].nil? ? nil : options[:label].to_s
+          @acts_as_alternative_unit = true
+          @acts_as_equivalent_unit = false
         end
         yield self if block_given?
         valid?
-      end
-
-      def valid?
-        return true if valid_name? and valid_dimensions?
-        raise InvalidArgumentError, "Unit definition must include a name and physical quantity"
-      end
-
-      def valid_name?
-        @name.is_a? String and not @name.empty?
-      end
-
-      def valid_dimensions?
-        @dimensions.is_a? Dimensions
       end
 
       # Permits a block to be used, operating on self. This is useful for modifying
@@ -149,9 +147,29 @@ module Quantify
         Quantify::Unit.units << self if valid?
       end
 
+      # Remove from system of known units.
+      def unload
+        Unit.unload(self.label)
+      end
+
       # check if an object with the same label already exists
       def loaded?
         Unit.units.any? { |unit| self.has_same_identity_as? unit }
+      end
+
+      def make_canonical
+        unload
+        load
+      end
+
+      def acts_as_alternative_unit=(value)
+        @acts_as_alternative_unit = (value == (true||false) ? value : false)
+        make_canonical
+      end
+
+      def acts_as_equivalent_unit=(value)
+        @acts_as_equivalent_unit = (value == (true||false) ? value : false)
+        make_canonical
       end
 
       # Returns the scaling factor for the unit with repsect to its SI alternative.
@@ -182,38 +200,8 @@ module Quantify
       def pluralized_name
         self.name.pluralize
       end
-
-      # Returns an array representing the valid prefixes for the unit described 
-      # by self
-      #
-      # If no argument is given, the array holds instances of Prefix::Base (or
-      # subclasses; SI, NonSI...). Alternatively only the names or symbols of each
-      # prefix can be returned by providing the appropriate prefix attribute as a
-      # symbolized argument, e.g.
-      #
-      #   Unit.m.valid_prefixes                 #=> [ #<Quantify::Prefix: .. >,
-      #                                               #<Quantify::Prefix: .. >,
-      #                                               ... ]
-      #
-      #   Unit.m.valid_prefixes :name           #=> [ "deca", "hecto", "kilo", 
-      #                                               "mega", "giga", "tera"
-      #                                               ... ]    
-      #
-      #   Unit.m.valid_prefixes :symbol         #=> [ "da", "h", "k", "M", "G",
-      #                                               "T", "P" ... ]
-      #
-      def valid_prefixes(by=nil)
-        return nil if self.is_compound_unit?
-        Prefix.prefixes.select do |prefix|
-          if self.is_si_unit?
-            prefix.is_si_prefix?
-          elsif self.is_non_si_unit?
-            prefix.is_non_si_prefix?
-          end
-        end.map(&by)
-      end
-
-      # Determine if the unit represents one of the base quantities
+      
+       # Determine if the unit represents one of the base quantities
       def is_base_unit?
         Dimensions::BASE_QUANTITIES.map(&:standardize).include? self.measures
       end
@@ -311,7 +299,7 @@ module Quantify
       def is_alternative_for?(other)
         other.dimensions == self.dimensions
       end
-
+      
       # List the alternative units for self, i.e. the other units which share
       # the same dimensions.
       #
@@ -324,7 +312,7 @@ module Quantify
       #
       def alternatives(by=nil)
         self.dimensions.units(nil).reject do |unit|
-          unit.is_same_as? self
+          unit.is_same_as? self or not unit.acts_as_alternative_unit
         end.map(&by)
       end
 
@@ -333,6 +321,47 @@ module Quantify
       #
       def si_unit
         self.dimensions.si_unit
+      end
+
+      def valid?
+        return true if valid_descriptors? and valid_dimensions?
+        raise InvalidArgumentError, "Unit definition must include a name, a symbol, a label and physical quantity"
+      end
+
+      def valid_descriptors?
+        [:name, :symbol, :label].each.all? do |attr|
+          attribute = send(attr)
+          attribute.is_a? String and not attribute.empty?
+        end
+      end
+
+      def valid_dimensions?
+        @dimensions.is_a? Dimensions
+      end
+
+      # Returns an array representing the valid prefixes for the unit described 
+      # by self
+      #
+      # If no argument is given, the array holds instances of Prefix::Base (or
+      # subclasses; SI, NonSI...). Alternatively only the names or symbols of each
+      # prefix can be returned by providing the appropriate prefix attribute as a
+      # symbolized argument, e.g.
+      #
+      #   Unit.m.valid_prefixes                 #=> [ #<Quantify::Prefix: .. >,
+      #                                               #<Quantify::Prefix: .. >,
+      #                                               ... ]
+      #
+      #   Unit.m.valid_prefixes :name           #=> [ "deca", "hecto", "kilo", 
+      #                                               "mega", "giga", "tera"
+      #                                               ... ]    
+      #
+      #   Unit.m.valid_prefixes :symbol         #=> [ "da", "h", "k", "M", "G",
+      #                                               "T", "P" ... ]
+      #
+      def valid_prefixes(by=nil)
+        return nil if self.is_compound_unit?
+        return Unit::Prefix.si_prefixes.map(&by) if is_si_unit?
+        return Unit::Prefix.non_si_prefixes.map(&by) if is_non_si_unit?
       end
 
       # Multiply two units together. This results in the generation of a compound
@@ -386,15 +415,15 @@ module Quantify
         return new_unit
       end
 
-      alias :times :multiply
-      alias :* :multiply
-      alias :/ :divide
-      alias :** :pow
-
       # Return new unit representing the reciprocal of self, i.e. 1/self
       def reciprocalize
         Unit.unity / self
       end
+
+      alias :times :multiply
+      alias :* :multiply
+      alias :/ :divide
+      alias :** :pow
 
       # Apply a prefix to self. Returns new unit according to the prefixed version
       # of self, complete with modified name, symbol, factor, etc..
@@ -404,7 +433,7 @@ module Quantify
           raise InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
         end
         
-        prefix = Prefix.for(name_or_symbol) unless name_or_symbol.is_a? Prefix
+        prefix = Unit::Prefix.for(name_or_symbol) unless name_or_symbol.is_a? Unit::Prefix
 
         unless self.valid_prefixes(:name).include? prefix.name
           raise InvalidArgumentError, "Prefix '#{prefix.name}' not valid for unit: #{self.name}"
@@ -420,6 +449,12 @@ module Quantify
           self.class.new(new_unit_options)
         else
           raise InvalidArgumentError, "Prefix unit is not known: #{prefix}"
+        end
+      end
+
+      def with_prefixes(*prefixes)
+        [prefixes].map do |prefix|
+          self.with_prefix(prefix)
         end
       end
 

@@ -3,6 +3,8 @@
 module Quantify
   module Unit
 
+    extend ExtendedMethods
+
     # The Unit module contains functionality for defining and handling
     # representations of physical units.
     #
@@ -23,12 +25,24 @@ module Quantify
       attr_reader :units
     end
 
+    def self.configure &block
+      self.class_eval &block if block
+    end
+
     # Instance variable containing system of known units
     @units = []
 
     # Load a new unit into they system of known units
     def self.load(unit)
       @units << unit if unit.is_a? Unit::Base
+    end
+
+    # Remove a unit from the system of known units
+    def self.unload(*unloaded_units)
+      [unloaded_units].flatten.each do |unloaded_unit|
+        unloaded_unit = Unit.for(unloaded_unit)
+        @units.delete_if { |unit| unit.label == unloaded_unit.label }
+      end
     end
 
     # Returns an instance of the class Quantity which represents the ratio of two
@@ -119,7 +133,7 @@ module Quantify
 
     def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
       Unit.match_known_unit(attribute, string_or_symbol) or
-        Unit.match_prefixed_variant(attribute, string_or_symbol)
+      Unit.match_prefixed_variant(attribute, string_or_symbol)
     end
 
     def self.match_known_unit(attribute, string_or_symbol)
@@ -130,8 +144,8 @@ module Quantify
 
     def self.match_prefixed_variant(attribute, string_or_symbol)
       string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      if string_or_symbol =~ /\A(#{Prefix.si_prefixes.map(&attribute).join("|")})(#{Unit.si_non_prefixed_units.map(&attribute).join("|")})\z/ or
-          string_or_symbol =~ /\A(#{Prefix.non_si_prefixes.map(&attribute).join("|")})(#{Unit.non_si_non_prefixed_units.map(&attribute).join("|")})\z/
+      if string_or_symbol =~ /\A(#{Unit::Prefix.si_prefixes.map(&attribute).join("|")})(#{Unit.si_non_prefixed_units.map(&attribute).join("|")})\z/ or
+         string_or_symbol =~ /\A(#{Unit::Prefix.non_si_prefixes.map(&attribute).join("|")})(#{Unit.non_si_non_prefixed_units.map(&attribute).join("|")})\z/
         return Unit.for($2).with_prefix($1).deep_clone
       end
       return nil
@@ -194,33 +208,6 @@ module Quantify
 
     def self.multi_word_unit_symbols
       @units.map(&:symbol).compact.select {|symbol| symbol.word_count > 1 }
-    end
-
-    # Provides syntactic sugar for accessing units via the #for method.
-    # Specify:
-    #
-    #  Unit.degree_celsius
-    #
-    # rather than Unit.for :degree_celsius
-    #
-    def self.method_missing(method, *args, &block)
-      if method.to_s =~ /((si|non_si|compound)_)?(non_(prefixed)_)?((base|derived|benchmark)_)?units(_by_(name|symbol|label))?/
-        if $2 or $4 or $6
-          conditions = []
-          conditions << "unit.is_#{$2}_unit?" if $2
-          conditions << "!unit.is_prefixed_unit?" if $4
-          conditions << "unit.is_#{$6}_unit?" if $6
-          units = Unit.units.select { |unit| instance_eval(conditions.join(" and ")) }
-        else
-          units = Unit.units
-        end
-        return_format = ( $8 ? $8.to_sym : nil )
-        units.map(&return_format)
-      elsif unit = self.for(method)
-        return unit
-      else
-        super
-      end
     end
 
   end

@@ -202,13 +202,13 @@ describe Quantity do
 
   it "should convert compound units to SI correctly" do
     pressure = Quantity.new 100, (Unit.pound_force_per_square_inch)
-    pressure.to_si.round.to_s(:name).should == "689476 newtons per square metre"
+    pressure.to_si.round.to_s(:name).should == "689476 pascals"
   end
 
   it "should return equivalent unit according to specification" do
     (50.square_metres/10.m).to_s.should == "5.0 m"
     (1.kg*20.m*2.m/4.s/5.s).to_s(:name).should == '2.0 joules'
-    (80.kg/2.m/4.s/5.s).to_s(:name).should_not == '2.0 pascals'
+    (80.kg/2.m/4.s/5.s).to_s(:name).should == '2.0 pascals'
   end
 
   it "should raise a quantity to a power correctly" do
@@ -244,7 +244,7 @@ describe Quantity do
   it "should cancel by base units of original compound unit if necessary" do
     quantity = Quantity.new(20, Unit.psi).to(Unit.inches_of_mercury)
     quantity.unit.base_units.size.should == 1
-    quantity.to_s.should == "40.7204127435789 inHg"
+    quantity.to_s.should == "40.720412743579 inHg"
   end
 end
 

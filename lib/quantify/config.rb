@@ -7,10 +7,12 @@ include Quantify
 #  * prefixes,
 #  * units.
 #
+# A basic collection of
 
 Dimensions.configure do
 
   # Load the standard, widely-recognised physical quantities.
+
   # Base quantities
   load :physical_quantity => 'mass', :mass => 1
   load :physical_quantity => 'length', :length => 1
@@ -24,8 +26,7 @@ Dimensions.configure do
   load :physical_quantity => 'item', :item => 1
   load :physical_quantity => 'dimensionless'
 
-  # Derived quantities, i.e. combinations of 1 or more base quantities and
-  # powers thereof.
+  # Derived quantities
   load :physical_quantity => 'acceleration', :length => 1, :time => -2
   load :physical_quantity => 'area', :length => 2
   load :physical_quantity => 'action', :mass => 1, :length => 2, :time => -1
@@ -81,9 +82,8 @@ Dimensions.configure do
 
 end
 
-Prefix::SI.configure do
+Unit::Prefix::SI.configure do
 
-  # SI prefixes
   load :name => 'deca', :symbol => 'da', :factor => 1e1
   load :name => 'hecto', :symbol => 'h', :factor => 1e2
   load :name => 'kilo', :symbol => 'k', :factor => 1e3
@@ -107,9 +107,9 @@ Prefix::SI.configure do
 
 end
 
-Prefix::NonSI.configure do
+Unit::Prefix::NonSI.configure do
 
-  # This prefix is used to represent 1 million British Thermal Units. It
+  # These prefixes are used to represent 1 million British Thermal Units. It
   # derives from the 'M' prefix which is used to represent 1 thousand (and is
   # presumably based on Roman numerals). The latter prefix is not defined here
   # since it conflicts directly with the SI prefix for 1 million (mega; M).
@@ -121,6 +121,13 @@ Prefix::NonSI.configure do
 
 end
 
+Unit::Base.configure do
+
+  load :name => 'unity', :physical_quantity => 'dimensionless', :symbol => '1', :label => '1'
+  load :name => 'percent', :physical_quantity => 'dimensionless', :symbol => '%', :label => '%'
+
+end
+
 Unit::SI.configure do
 
   # Load SI units.
@@ -128,12 +135,12 @@ Unit::SI.configure do
   # Conversion factors between units are specified relative to the standard -
   # SI - units and therefore these implicitly represent a factor of 1.
   #
-  # This is initialized by default in the Unit class and therefore does not
-  # need to be declared here.
+  # This is initialized by default in the Unit::Base class and therefore does not
+  # need to be declared here. SI units therefore require only their physical quantity
+  # to be specified.
   #
-  # SI units therefore require only their physical quantity to be specified.
   load :name => 'ampere', :physical_quantity => 'electric_current', :symbol => 'A', :label => 'A'
-  # load :name => 'amagat', :physical_quantity => 'number_density', :symbol => 'η'
+  load :name => 'amagat', :physical_quantity => 'number_density', :symbol => 'η', :label => 'η'
   load :name => 'bit', :physical_quantity => 'information', :symbol => 'bit', :label => 'bit'
   load :name => 'bequerel', :physical_quantity => 'radioactivity', :symbol => 'Bq', :label => 'Bq'
   load :name => 'candela', :physical_quantity => 'luminous_intensity', :symbol => 'cd', :label => 'cd'
@@ -171,30 +178,58 @@ Unit::SI.configure do
   # All mass unit factors are nevertheless specified relative to the SI unit
   # (kilogram), in consistency with all other unit types
   #
-  # Kilogram could be defined explcitly here, but given the multiple prefix
-  # initialization below (which includes kilogram), the individual assignment for
-  # kilogram is commented out here (trying to assign a prefix to a unit which
-  # already contains a prefix throws an error)
-  #
   load :name => 'kilogram', :physical_quantity => :mass, :symbol => 'kg', :label => 'kg'
-  load :name => 'gram', :physical_quantity => 'mass', :factor => 1e-3, :symbol => 'g', :label => 'g'
+  load :name => 'gram', :physical_quantity => :mass, :factor => 1e-3, :symbol => 'g', :label => 'g'
 
-  # Define units on the base of unit operations
-  #
-  define(Unit.m**2).load
-  define(Unit.m**3).load
-  define(Unit.m/Unit.s).load
-  define(Unit.m/(Unit.s**2)).load
-  
-  # add required prefixes individually
-  Unit.micrometre.load
+  # Define units on the basis of unit operations
 
-  Unit.centiradian.load do |unit|
+  construct_and_load metre**2
+  construct_and_load metre**3
+  construct_and_load(metre/second)
+  construct_and_load(metre/second**2)
+
+  construct_and_load(1/centimetre) do |unit|
+    unit.name = 'inverse centimetre'
+  end
+
+  construct_and_load(centimetre/second**2) do |unit|
+    unit.name = 'galileo'
+    unit.symbol = 'Gal'
+    unit.label = 'galileo'
+  end
+
+  # add required prefixed unit individually
+
+  kilometre.load
+
+  micrometre.load do |unit|
+    unit.name = 'micron'
+  end
+
+  centiradian.load do |unit|
     unit.label = 'centiradian'
   end
 
-  # Add required prefixes on a multiple basis
-  #load_with_prefixes([:metre,:gram,:second],[:kilo,:mega,:giga,:tera])
+  # Add required prefixes on a multiple basis.
+  # prefix_and_load(:kilo,:metre)
+  # prefix_and_load([:kilo,:mega,:giga,:tera],[:metre,:gram,:second])
+
+  # Declare unit which are to act as equivalent units, prevailing over equivalent
+  # compound units
+  
+  si_base_units.each { |unit| unit.acts_as_equivalent_unit = true }
+
+  cubic_metre.acts_as_equivalent_unit = true
+
+  joule.acts_as_equivalent_unit = true
+
+  newton.acts_as_equivalent_unit = true
+
+  watt.acts_as_equivalent_unit = true
+
+  pascal.acts_as_equivalent_unit = true
+
+  square_metre.acts_as_equivalent_unit = true
 
 end
 
@@ -203,29 +238,48 @@ Unit::NonSI.configure do
   # Non-SI units. These units are measures of quantities which do not conform
   # to the SI system. They are therefore represent by a conversion factor which
   # is defined relative to the corresponding SI unit for that quantity.
-  #
-  # load :name => 'acre', :physical_quantity => 'area', :factor => 4046.8564224
-  # load :name => 'abampere', :physical_quantity => 'electric current', :factor => 10.0, :symbol => 'abA'
-  # load :name => 'abcoloumb', :physical_quantity => 'electric charge', :factor => 10.0, :symbol => 'abC'
-  # load :name => 'abfarad', :physical_quantity => 'electrical capacitance', :factor => 1e9
-  # load :name => 'abhenry', :physical_quantity => 'inductance', :factor => 1e-9
-  # load :name => 'abhmo', :physical_quantity => 'electric conductance', :factor => 1e9
-  # load :name => 'abohm', :physical_quantity => 'electric resistance', :factor => 1e-9
-  # load :name => 'abvolt', :physical_quantity => 'electric potential_difference', :factor => 10e-9, :symbol => 'abV'
+
+  # Common non SI units
+  load :name => 'bar', :physical_quantity => 'pressure', :factor => 100e3, :symbol => 'bar', :label => 'bar'
+  load :name => 'atmosphere', :physical_quantity => 'pressure', :factor => 101.325e3, :symbol => 'atm', :label => 'atm'
+  load :name => 'calorie', :physical_quantity => 'energy', :factor => 4.1868, :symbol => 'cal', :label => 'cal'
+  load :name => 'curie', :physical_quantity => 'radioactivity', :factor => 37.0e9, :symbol => 'Ci', :label => 'Ci'
+  load :name => 'day', :physical_quantity => 'time', :factor => 86.4e3, :symbol => 'd', :label => 'd'
+  load :name => 'degree celsius', :physical_quantity => 'temperature', :scaling => 273.15, :symbol => '°C', :label => '°C'
+  load :name => 'degree farenheit', :physical_quantity => 'temperature', :factor => 5.0/9.0, :scaling => 459.67, :symbol => '°F', :label => '°F'
+  load :name => 'foot', :physical_quantity => 'length', :factor => 0.3048, :symbol => 'ft', :label => 'ft'
+  load :name => 'uk gallon', :physical_quantity => 'volume', :factor => 4.546092, :symbol => 'gal', :label => 'gal_uk'
+  load :name => 'us liquid gallon', :physical_quantity => 'volume', :factor => 3.785412, :symbol => 'gal', :label => 'gal'
+  load :name => 'us dry gallon', :physical_quantity => 'volume', :factor => 0.00440488377086, :symbol => 'gal', :label => 'gallon_dry_us'
+  load :name => 'hectare', :physical_quantity => 'area', :factor => 10e3, :symbol => 'ha', :label => 'ha'
+  load :name => 'hour', :physical_quantity => 'time', :factor => 3.6e3, :symbol => 'h', :label => 'h'
+  load :name => 'inch', :physical_quantity => 'length', :factor => 25.4e-3, :symbol => 'in', :label => 'in'
+  load :name => 'litre', :physical_quantity => 'volume', :factor => 1e-3, :symbol => 'L', :label => 'L'
+  load :name => 'minute', :physical_quantity => 'time', :factor => 60.0, :symbol => 'min', :label => 'min'
+  load :name => 'mile', :physical_quantity => 'length', :factor => 1.609344e3, :symbol => 'mi', :label => 'mi'
+  load :name => 'month', :physical_quantity => 'time', :factor => 2.551444e6, :symbol => 'month', :label => 'month'
+  load :name => 'ounce', :physical_quantity => 'mass', :factor => 28.34952e-3, :symbol => 'oz', :label => 'oz'
+  load :name => 'pound', :physical_quantity => 'mass', :factor => 0.45359237, :symbol => 'lb', :label => 'lb'
+  load :name => 'stone', :physical_quantity => 'mass', :factor => 6.350293, :symbol => 'st', :label => 'st'
+  load :name => 'short ton', :physical_quantity => 'mass', :factor => 907.1847, :symbol => 'ton', :label => 'ton_us'
+  load :name => 'long ton', :physical_quantity => 'mass', :factor => 1.016047, :symbol => 'ton', :label => 'ton_uk'
+  load :name => 'tonne', :physical_quantity => 'mass', :factor => 1000.0, :symbol => 't', :label => 't'
+  load :name => 'week', :physical_quantity => 'time', :factor => 604800, :symbol => 'wk', :label => 'week'
+  load :name => 'yard', :physical_quantity => 'length', :factor => 0.9144, :symbol => 'yd', :label => 'yd'
+  load :name => 'year', :physical_quantity => 'time', :factor => 31557600, :symbol => 'yr', :label => 'year'
+
+  load :name => 'acre', :physical_quantity => 'area', :factor => 4046.8564224, :symbol => 'acre', :label => 'acre'
   load :name => 'angstrom', :physical_quantity => 'length', :factor => 100e-12, :symbol => 'Å', :label => 'Å'
   load :name => 'arcminute', :physical_quantity => 'plane angle', :factor => Math::PI/10800, :symbol => '′', :label => '′'
   load :name => 'arcsecond', :physical_quantity => 'plane angle', :factor => Math::PI/648000, :symbol => '″', :label => '″'
   load :name => 'are', :physical_quantity => 'area', :factor => 100.0, :symbol => 'a', :label => 'a'
   load :name => 'astronomical unit', :physical_quantity => 'length', :factor => 149.5979e9, :symbol => 'AU', :label => 'ua'
-  load :name => 'atmosphere', :physical_quantity => 'pressure', :factor => 101.325e3, :symbol => 'atm', :label => 'atm'
-  load :name => 'bar', :physical_quantity => 'pressure', :factor => 100e3, :symbol => 'bar', :label => 'bar'
-  # load :name => 'barn', :physical_quantity => 'area', :factor => 100e-30, :symbol => 'b'
-  # load :name => 'baromil', :physical_quantity => 'length', :factor => 750.1e-6
-  # load :name => 'petroleum barrel', :physical_quantity => 'volume', :factor => 158.9873e-3, :symbol => 'bbl'
-  # load :name => 'uk barrel', :physical_quantity => 'volume', :factor => 163.6592e-3, :symbol => 'bl (Imp)'
-  # load :name => 'us dry barrel', :physical_quantity => 'volume', :factor => 115.6271e-3, :symbol => 'bl (US)'
-  # load :name => 'us liquid barrel', :physical_quantity => 'volume', :factor => 119.2405e-3, :symbol => 'fl bl (US)'
-  # load :name => 'biot', :physical_quantity => 'electric current', :factor => 10.0, :symbol => 'Bi'
+  load :name => 'barn', :physical_quantity => 'area', :factor => 100e-30, :symbol => 'b', :label => 'b'
+  load :name => 'petroleum barrel', :physical_quantity => 'volume', :factor => 158.9873e-3, :symbol => 'bbl', :label => 'bbl'
+  load :name => 'uk barrel', :physical_quantity => 'volume', :factor => 163.6592e-3, :symbol => 'bl (Imp)', :label => 'bbl_imp'
+  load :name => 'us dry barrel', :physical_quantity => 'volume', :factor => 115.6271e-3, :symbol => 'bl (US)', :label => 'bbl_dry_us'
+  load :name => 'us liquid barrel', :physical_quantity => 'volume', :factor => 119.2405e-3, :symbol => 'fl bl (US)', :label => 'bbl_fl_us'
+  load :name => 'biot', :physical_quantity => 'electric current', :factor => 10.0, :symbol => 'Bi', :label => 'Bi'
   load :name => 'british thermal unit (59 °F)', :physical_quantity => 'energy', :factor => 1054.804, :symbol => 'BTU', :label => 'BTU_FiftyNineF'
   # The IT (International [Steam] Table) defined BTU is apparently the most widely used so is given the basic name here
   load :name => 'british thermal unit', :physical_quantity => 'energy', :factor => 1055.05585262, :symbol => 'BTU', :label => 'BTU_IT'
@@ -235,169 +289,98 @@ Unit::NonSI.configure do
   load :name => 'british thermal unit (60 °F)', :physical_quantity => 'energy', :factor => 1054.68, :symbol => 'BTU', :label => 'BTU_SixtyF'
   load :name => 'british thermal unit (63 °F)', :physical_quantity => 'energy', :factor => 1054.6, :symbol => 'BTU', :label => 'BTU_SixtyThreeF'
   load :name => 'british thermal unit (thermochemical)', :physical_quantity => 'energy', :factor => 1054.35026444, :symbol => 'BTU', :label => 'BTU_Thermochemical'
-  # load :name => 'bushel_uk', :physical_quantity => 'volume', :factor => 36.36872e-3, :symbol => 'bu (Imp)'
-  # load :name => 'bushel_us', :physical_quantity => 'volume', :factor => 35.23907e-3, :symbol => 'bu (US lvl)'
-  # load :name => 'butt', :physical_quantity => 'volume', :factor => 477.3394e-3
+  load :name => 'bushel uk', :physical_quantity => 'volume', :factor => 36.36872e-3, :symbol => 'bu (Imp)', :label => 'bu_imp'
+  load :name => 'bushel us', :physical_quantity => 'volume', :factor => 35.23907e-3, :symbol => 'bu (US lvl)', :label => 'bu_us'
   load :name => 'byte', :physical_quantity => 'information', :factor => 8, :symbol => 'byte', :label => 'byte'
-  # load :name => 'cable', :physical_quantity => 'length', :factor => 219.456
-  # load :name => 'calorie', :physical_quantity => 'energy', :factor => 4.1868, :symbol => 'cal'
-  # load :name => 'candle power', :physical_quantity => 'luminous flux', :factor => 4*Math::PI, :symbol => 'cp'
-  # load :name => 'carat', :physical_quantity => 'mass', :factor => 200e-6, :symbol => 'kt'
-  # load :name => 'celsius heat unit', :physical_quantity => 'energy', :factor => 1.0899101e3, :symbol => 'CHU'
-  # load :name => 'centimetre of mercury', :physical_quantity => 'pressure', :factor => 1.333222e3, :symbol => 'cmHg'
-  # load :name => 'centimetre of water', :physical_quantity => 'pressure', :factor => 98.060616, :symbol => 'cmH2O'
-  # load :name => 'chain', :physical_quantity => 'length', :factor => 20.1168, :symbol => 'ch'
-  # load :name => 'us cup', :physical_quantity => 'volume', :factor => 236.5882e-6, :symbol => 'c (US)'
-  load :name => 'curie', :physical_quantity => 'radioactivity', :factor => 37.0e9, :symbol => 'Ci', :label => 'Ci'
-  load :name => 'day', :physical_quantity => 'time', :factor => 86.4e3, :symbol => 'd', :label => 'd'
+  load :name => 'candle power', :physical_quantity => 'luminous flux', :factor => 4*Math::PI, :symbol => 'cp', :label => 'cp'
+  load :name => 'carat', :physical_quantity => 'mass', :factor => 200e-6, :symbol => 'kt', :label => 'kt'
+  load :name => 'celsius heat unit', :physical_quantity => 'energy', :factor => 1.0899101e3, :symbol => 'CHU', :label => 'CHU'
+  load :name => 'centimetre of mercury', :physical_quantity => 'pressure', :factor => 1.333222e3, :symbol => 'cmHg', :label => 'cmHg'
+  load :name => 'centimetre of water', :physical_quantity => 'pressure', :factor => 98.060616, :symbol => 'cmH2O', :label => 'cmH2O'
+  load :name => 'chain', :physical_quantity => 'length', :factor => 20.1168, :symbol => 'ch', :label => 'ch'
+  load :name => 'us cup', :physical_quantity => 'volume', :factor => 236.5882e-6, :symbol => 'c (US)', :label => 'c_us'
   load :name => 'sidereal day', :physical_quantity => 'time', :factor => 86.16409053e3, :symbol => 'd', :label => 'day_sidereal'
   load :name => 'degree', :physical_quantity => 'plane angle', :factor => Math::PI/180.0, :symbol => '°', :label => '°'
-  load :name => 'degree celsius', :physical_quantity => 'temperature', :scaling => 273.15, :symbol => '°C', :label => '°C'
-  load :name => 'degree farenheit', :physical_quantity => 'temperature', :factor => 5.0/9.0, :scaling => 459.67, :symbol => '°F', :label => '°F'
   load :name => 'degree rankine', :physical_quantity => 'temperature', :factor => 5.0/9.0, :symbol => '°R', :label => '°R'
-  # load :name => 'dram', :physical_quantity => 'length', :factor => 1.771845e-3, :symbol => 'dr av'
+  load :name => 'dram', :physical_quantity => 'length', :factor => 1.771845e-3, :symbol => 'dram', :label => 'dram'
   load :name => 'dyne', :physical_quantity => 'force', :factor => 10e-6, :symbol => 'dyn', :label => 'dyn'
-  # load :name => 'dyne centimetre', :physical_quantity => 'energy', :factor => 100e-9, :symbol => 'dyn cm'
+  load :name => 'dyne centimetre', :physical_quantity => 'energy', :factor => 100e-9, :symbol => 'dyn cm', :label => 'dyn_cm'
   load :name => 'electron mass', :physical_quantity => 'mass', :factor => 9.10938188e-31, :symbol => 'me', :label => 'me'
   load :name => 'electron volt', :physical_quantity => 'energy', :factor => 160.218e-21, :symbol => 'eV', :label => 'eV'
   load :name => 'erg', :physical_quantity => 'energy', :factor => 100.0e-9, :symbol => 'erg', :label => 'erg'
-  # load :name => 'ell', :physical_quantity => 'length', :factor => 1.143, :symbol => 'ell'
+  load :name => 'ell', :physical_quantity => 'length', :factor => 1.143, :symbol => 'ell', :label => 'ell'
   load :name => 'faraday', :physical_quantity => 'electric charge', :factor => 96.4853e3, :symbol => 'F', :label => 'Fd'
-  # load :name => 'fathom', :physical_quantity => 'length', :factor => 1.828804, :symbol => 'fm'
-  # load :name => 'fermi', :physical_quantity => 'length', :factor => 1e-15, :symbol => 'fm'
+  load :name => 'fathom', :physical_quantity => 'length', :factor => 1.828804, :symbol => 'ftm', :label => 'ftm'
+  load :name => 'fermi', :physical_quantity => 'length', :factor => 1e-15, :symbol => 'fm', :label => 'fm'
   load :name => 'uk fluid ounce', :physical_quantity => 'volume', :factor => 28.41308e-6, :symbol => 'fl oz', :label => 'oz_fl_uk'
   load :name => 'us fluid ounce', :physical_quantity => 'volume', :factor => 29.57353e-6, :symbol => 'fl oz', :label => 'oz_fl'
-  load :name => 'foot', :physical_quantity => 'length', :factor => 0.3048, :symbol => 'ft', :label => 'ft'
   load :name => 'us survey foot', :physical_quantity => 'length', :factor => 304.8e-3, :symbol => 'ft', :label => 'foot_survey_us'
   load :name => 'franklin', :physical_quantity => 'electric charge', :factor => 3.3356e-10, :symbol => 'Fr', :label => 'Fr'
-  # load :name => 'foot of water', :physical_quantity => 'pressure', :factor => 2.988887e3, :symbol => 'ftH2O'
-  # load :name => 'footcandle', :physical_quantity => :illuminance, :factor => 10.76391, :symbol => 'fc'
-  # load :name => 'furlong', :physical_quantity => :length, :factor => 201.168, :symbol => 'fur'
-  load :name => 'uk gallon', :physical_quantity => 'volume', :factor => 4.546092, :symbol => 'gal', :label => 'gal_uk'
-  load :name => 'us liquid gallon', :physical_quantity => 'volume', :factor => 3.785412, :symbol => 'gal', :label => 'gal'
-  load :name => 'us dry gallon', :physical_quantity => 'volume', :factor => 0.00440488377086, :symbol => 'gal', :label => 'gallon_dry_us'
-  # load :name => 'gamma', :physical_quantity => 'magnetic flux density', :factor => 1e-9, :symbol => 'γ'
+  load :name => 'foot of water', :physical_quantity => 'pressure', :factor => 2.988887e3, :symbol => 'ftH2O', :label => 'ftH2O'
+  load :name => 'footcandle', :physical_quantity => :illuminance, :factor => 10.76391, :symbol => 'fc', :label => 'fc'
+  load :name => 'furlong', :physical_quantity => :length, :factor => 201.168, :symbol => 'fur', :label => 'fur'
+  load :name => 'gamma', :physical_quantity => 'magnetic flux density', :factor => 1e-9, :symbol => 'γ', :label => 'γ'
   load :name => 'gauss', :physical_quantity => 'magnetic flux density', :factor => 100e-6, :symbol => 'G', :label => 'G'
-  # load :name => 'uk gill', :physical_quantity => 'volume', :factor => 142.0654e-6, :symbol => 'gi'
-  # load :name => 'us gill', :physical_quantity => 'volume', :factor => 118.2941e-6, :symbol => 'gi'
+  load :name => 'uk gill', :physical_quantity => 'volume', :factor => 142.0654e-6, :symbol => 'gi', :label => 'gi_uk'
+  load :name => 'us gill', :physical_quantity => 'volume', :factor => 118.2941e-6, :symbol => 'gi', :label => 'gi_us'
   load :name => 'grad', :physical_quantity => 'plane_angle', :factor => Math::PI/200.0, :symbol => 'grad', :label => 'grade'
-  # load :name => 'grain', :physical_quantity => 'mass', :factor => 64.79891e-6, :symbol => 'gr'
-  # load :name => 'hartree', :physical_quantity => 'energy', :factor => 4.359748e-18, :symbol => 'Eh'
-  load :name => 'hectare', :physical_quantity => 'area', :factor => 10e3, :symbol => 'ha', :label => 'ha'
-  # load :name => 'hogshead', :physical_quantity => 'volume', :factor => 238.6697e-3, :symbol => 'hhd'
-  # load :name => 'boiler horsepower', :physical_quantity => 'power', :factor => 9.80950e3, :symbol => 'bhp'
-  # load :name => 'electric horsepower', :physical_quantity => 'power', :factor => 746.0, :symbol => 'hp'
+  load :name => 'grain', :physical_quantity => 'mass', :factor => 64.79891e-6, :symbol => 'gr', :label => 'gr'
+  load :name => 'hartree', :physical_quantity => 'energy', :factor => 4.359748e-18, :symbol => 'Eh', :label => 'Eh'
+  load :name => 'hogshead', :physical_quantity => 'volume', :factor => 238.6697e-3, :symbol => 'hhd', :label => 'hhd'
+  load :name => 'boiler horsepower', :physical_quantity => 'power', :factor => 9.80950e3, :symbol => 'bhp', :label => 'bhp'
+  load :name => 'electric horsepower', :physical_quantity => 'power', :factor => 746.0, :symbol => 'hp', :label => 'hp_elec'
   load :name => 'metric horsepower', :physical_quantity => 'power', :factor => 735.4988, :symbol => 'hp', :label => 'hp'
-  # load :name => 'uk horsepower', :physical_quantity => 'power', :factor => 745.6999, :symbol => 'hp'
-  load :name => 'hour', :physical_quantity => 'time', :factor => 3.6e3, :symbol => 'h', :label => 'h'
-  # load :name => 'hundredweight long', :physical_quantity => 'mass', :factor => 50.802345, :symbol => 'cwt'
-  # load :name => 'hundredweight short', :physical_quantity => 'mass', :factor => 45.359237, :symbol => 'cwt'
-  load :name => 'inch', :physical_quantity => 'length', :factor => 25.4e-3, :symbol => 'in', :label => 'in'
+  load :name => 'uk horsepower', :physical_quantity => 'power', :factor => 745.6999, :symbol => 'hp', :label => 'hp_uk'
+  load :name => 'hundredweight long', :physical_quantity => 'mass', :factor => 50.802345, :symbol => 'cwt', :label => 'cwt_long'
+  load :name => 'hundredweight short', :physical_quantity => 'mass', :factor => 45.359237, :symbol => 'cwt', :label => 'cwt_short'
   load :name => 'inch of mercury', :physical_quantity => 'pressure', :factor => 3.386389e3, :symbol => 'inHg', :label => 'inHg'
-  # load :name => 'inch of water', :physical_quantity => 'pressure', :factor => 249.0740, :symbol => 'inH2O'
-  # load :name => 'kilocalorie', :physical_quantity => 'energy', :factor => 4.1868e3, :symbol => 'kcal'
-  load :name => 'kilowatt hour', :physical_quantity => 'energy', :factor => 3.6e6, :symbol => 'kW h', :label => 'kWh'
+  load :name => 'inch of water', :physical_quantity => 'pressure', :factor => 249.0740, :symbol => 'inH2O', :label => 'inH2O'
+  load :name => 'kilocalorie', :physical_quantity => 'energy', :factor => 4.1868e3, :symbol => 'kcal', :label => 'kcal'
   load :name => 'kilogram force', :physical_quantity => 'force', :factor => 9.80665, :symbol => 'kgf', :label => 'kgf'
   load :name => 'knot', :physical_quantity => 'velocity', :factor => 514.4444e-3, :symbol => 'kn', :label => 'kn'
   load :name => 'lambert', :physical_quantity => 'illuminance', :factor => 1e4, :symbol => 'La', :label => 'La'
-  # load :name => 'nautical league', :physical_quantity => 'length', :factor => 5.556e3, :symbol => 'nl'
-  # load :name => 'statute league', :physical_quantity => 'length', :factor => 4.828032e3, :symbol => 'lea'
+  load :name => 'nautical league', :physical_quantity => 'length', :factor => 5.556e3, :symbol => 'nl', :label => 'nl'
+  load :name => 'statute league', :physical_quantity => 'length', :factor => 4.828032e3, :symbol => 'lea', :label => 'lea'
   load :name => 'light year', :physical_quantity => 'length', :factor => 9.46073e15, :symbol => 'ly', :label => 'ly'
-  # load :name => 'line', :physical_quantity => 'length', :factor => 2.116667e-3, :symbol => 'ln'
-  # load :name => 'link', :physical_quantity => 'length', :factor => 201.168e-3, :symbol => 'lnk'
-  load :name => 'litre', :physical_quantity => 'volume', :factor => 1e-3, :symbol => 'L', :label => 'L'
+  load :name => 'line', :physical_quantity => 'length', :factor => 2.116667e-3, :symbol => 'ln', :label => 'ln'
+  load :name => 'link', :physical_quantity => 'length', :factor => 201.168e-3, :symbol => 'lnk', :label => 'lnk'
   load :name => 'maxwell', :physical_quantity => 'magnetic flux', :factor => 10e-9, :symbol => 'Mx', :label => 'Mx'
-  # load :name => 'micron', :physical_quantity => 'length', :factor => 1e-6, :symbol => 'μm'
-  load :name => 'minute', :physical_quantity => 'time', :factor => 60.0, :symbol => 'min', :label => 'min'
-  load :name => 'mile', :physical_quantity => 'length', :factor => 1.609344e3, :symbol => 'mi', :label => 'mi'
   load :name => 'nautical mile', :physical_quantity => 'length', :factor => 1.852e3, :symbol => 'nmi', :label => 'nmi'
-  # load :name => 'millibar', :physical_quantity => 'pressure', :factor => 100, :symbol => 'mbar'
+  load :name => 'millibar', :physical_quantity => 'pressure', :factor => 100, :symbol => 'mbar', :label => 'mbar'
   load :name => 'millimetre of mercury', :physical_quantity => 'pressure', :factor => 1.333222e2, :symbol => 'mmHg', :label => 'mmHg'
-  load :name => 'month', :physical_quantity => 'time', :factor => 2.551444e6, :symbol => 'month', :label => 'month'
-  load :name => 'ounce', :physical_quantity => 'mass', :factor => 28.34952e-3, :symbol => 'oz', :label => 'oz'
   load :name => 'point', :physical_quantity => 'length', :factor => 351.4598e-6, :symbol => 'pt', :label => 'pt'
-  load :name => 'pound', :physical_quantity => 'mass', :factor => 0.45359237, :symbol => 'lb', :label => 'lb'
   load :name => 'parsec', :physical_quantity => 'length', :factor => 30.85678e15, :symbol => 'pc', :label => 'pc'
-  # load :name => 'pennyweight', :physical_quantity => 'mass', :factor => 1.555174e-3, :symbol => 'dwt'
-  # load :name => 'poncelot', :physical_quantity => 'power', :factor => 980.665, :symbol => 'p'
-  # load :name => 'poundal', :physical_quantity => 'force', :factor => 138.255, :symbol => 'pdl'
+  load :name => 'pennyweight', :physical_quantity => 'mass', :factor => 1.555174e-3, :symbol => 'dwt', :label => 'dwt'
+  load :name => 'poncelot', :physical_quantity => 'power', :factor => 980.665, :symbol => 'p', :label => 'p'
+  load :name => 'poundal', :physical_quantity => 'force', :factor => 138.255, :symbol => 'pdl', :label => 'pdl'
   load :name => 'pound force', :physical_quantity => 'force', :factor => 4.448222, :symbol => 'lbf', :label => 'lbf'
-  # load :name => 'quad', :physical_quantity => 'energy', :factor => 1.055056e18, :symbol => 'quad'
+  load :name => 'quad', :physical_quantity => 'energy', :factor => 1.055056e18, :symbol => 'quad', :label => 'quad'
   load :name => 'rad', :physical_quantity => 'radiation absorbed dose', :factor => 0.01, :symbol => 'rad', :label => 'rd'
   load :name => 'revolution', :physical_quantity => 'plane angle', :factor => 2*Math::PI, :symbol => 'rev', :label => 'rev'
-  # load :name => 'reyn', :physical_quantity => 'dynamic viscosity', :factor => 689.5e3, :symbol => 'reyn'
+  load :name => 'reyn', :physical_quantity => 'dynamic viscosity', :factor => 689.5e3, :symbol => 'reyn', :label => 'reyn'
   load :name => 'rem', :physical_quantity => 'radiation_dose_equivalent', :factor => 0.01, :symbol => 'rem', :label => 'rem'
-  # load :name => 'rood', :physical_quantity => 'area', :factor => 1.011714e3, :symbol => 'rood'
+  load :name => 'rood', :physical_quantity => 'area', :factor => 1.011714e3, :symbol => 'rood', :label => 'rood'
   load :name => 'rutherford', :physical_quantity => 'radioactivity', :factor => 1e6, :symbol => 'rd', :label => 'Rd'
-  # load :name => 'rydberg', :physical_quantity => 'energy', :factor => 2.179874e-18, :symbol => 'Ry'
-  load :name => 'sphere', :physical_quantity => 'solid angle', :factor => 4*Math::PI, :label => 'sphere'
-  # load :name => 'sthene', :physical_quantity => 'force', :factor => 1e3, :symbol => 'sn'
-  # load :name => 'stokes', :physical_quantity => 'kinematic viscosity', :factor => 100e-6, :symbol => 'St'
-  load :name => 'stone', :physical_quantity => 'mass', :factor => 6.350293, :symbol => 'st', :label => 'st'
-  # load :name => 'therm', :physical_quantity => 'energy', :factor => 105.506e6, :symbol => 'thm'
-  # load :name => 'thermie', :physical_quantity => 'energy', :factor => 4.185407e6, :symbol => 'th'
-  load :name => 'short ton', :physical_quantity => 'mass', :factor => 907.1847, :symbol => 'ton', :label => 'ton_us'
-  load :name => 'long ton', :physical_quantity => 'mass', :factor => 1.016047, :symbol => 'ton', :label => 'ton_uk'
-  load :name => 'tonne', :physical_quantity => 'mass', :factor => 1000.0, :symbol => 't', :label => 't'
+  load :name => 'rydberg', :physical_quantity => 'energy', :factor => 2.179874e-18, :symbol => 'Ry', :label => 'Ry'
+  load :name => 'sphere', :physical_quantity => 'solid angle', :factor => 4*Math::PI, :symbol => 'sphere', :label => 'sphere'
+  load :name => 'sthene', :physical_quantity => 'force', :factor => 1e3, :symbol => 'sn', :label => 'sn'
+  load :name => 'stokes', :physical_quantity => 'kinematic viscosity', :factor => 100e-6, :symbol => 'St', :label => 'St'
+  load :name => 'therm', :physical_quantity => 'energy', :factor => 105.506e6, :symbol => 'thm', :label => 'thm'
+  load :name => 'thermie', :physical_quantity => 'energy', :factor => 4.185407e6, :symbol => 'th', :label => 'th'
   load :name => 'unified atomic mass', :physical_quantity => 'mass', :factor => 1.66054e-27, :symbol => 'u', :label => 'u'
-  load :name => 'week', :physical_quantity => 'time', :factor => 604800, :label => 'week'
-  load :name => 'yard', :physical_quantity => 'length', :factor => 0.9144, :symbol => 'yd', :label => 'yd'
-  load :name => 'year', :physical_quantity => 'time', :factor => 31557600, :symbol => 'yr', :label => 'year'
   load :name => 'sidereal year', :physical_quantity => 'time', :factor => 31558823.803728, :symbol => 'yr', :label => 'year_sidereal'
-  # load :name => 'tog', :physical_quantity => 'thermal resistance', :factor => 0.1, :symbol => 'tog'
-  # load :name => 'clo', :physical_quantity => 'thermal resistance', :factor => 0.155, :symbol => 'clo'
+  load :name => 'tog', :physical_quantity => 'thermal resistance', :factor => 0.1, :symbol => 'tog', :label => 'tog'
+  load :name => 'clo', :physical_quantity => 'thermal resistance', :factor => 0.155, :symbol => 'clo', :label => 'clo'
 
-
-end
-
-Unit::Base.configure do
-
-  # Define a unit representing the quantity 1.
-  # This can be used to define reciprocal units using division, i.e.
-  #
-  #   kg^-1   is equivalent to   1/kg   or   <unity>/<kg>
-  #
-  load :name => 'unity', :physical_quantity => 'dimensionless', :symbol => '1'
-
-  load :name => 'percent', :physical_quantity => 'dimensionless', :symbol => '%'
-
-end
-
-Unit::Compound.configure do
-
-  # Define compound units on the base of the product or quotient of two or more
-  # known units.
-  #
-  # These don't actually need to be generated within this container, but it's
-  # tidy
-
-  # (Unit.kW * Unit.h).load
-
-  # reciprocal/inverse units, e.g. inverse length
-  (1/Unit.centimetre).load do |unit|
-    unit.name = 'inverse centimetre'
+  construct_and_load(kW*h) do |unit|
+    unit.symbol = 'kWh'
+    unit.label = 'kWh'
   end
 
-  # pounds per square inch
-  (Unit.pound_force/(Unit.in**2)).load do |unit|
+  construct_and_load(pound_force/(inch**2)) do |unit|
     unit.symbol = 'psi'
   end
 
-  (Unit.cm/Unit.s/Unit.s).load do |unit|
-    unit.name = 'galileo'
-    unit.symbol = 'Gal'
-    unit.label = 'galileo'
-  end
-
-end
-
-Quantify.configure do
-
-  describe_prevailing_unit_rules do |unit,equivalent_unit|
-    equivalent_unit.is_base_unit? or
-    equivalent_unit.name == 'joule' or
-    equivalent_unit.name == 'newton' or
-    equivalent_unit.name == 'watt'
-  end
+  non_si_base_units.each { |unit| unit.acts_as_equivalent_unit = true }
 
 end

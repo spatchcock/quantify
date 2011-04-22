@@ -201,7 +201,7 @@ describe Dimensions do
     units.class.should == Array
     units.include?('J').should == true
     units.include?('ft').should == false
-    units.include?('kW h').should == true
+    units.include?('kWh').should == true
   end
 
   it "should return appropriate associated units" do

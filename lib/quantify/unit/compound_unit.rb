@@ -72,7 +72,7 @@ module Quantify
         end
       end
 
-      attr_reader :base_units
+      attr_reader :base_units, :acts_as_equivalent_unit
 
       # Initialize a compound unit by providing an array containing a represenation
       # of each base unit.
@@ -100,36 +100,44 @@ module Quantify
             raise InvalidArgumentError, "#{unit} does not represent a valid base unit"
           end
         end
-        consolidate_base_units!
+        @acts_as_alternative_unit = true
+        @acts_as_equivalent_unit = false
+        consolidate_numerator_and_denominator_units!
       end
 
-      def initialize_attributes
-        @dimensions = derive_dimensions
-        @name = derive_name
-        @symbol = derive_symbol
-        @factor = derive_factor
-        @label = derive_label
+
+      # Returns an array containing only the base units which have positive indices
+      def numerator_units
+        @base_units.select { |base| base.is_numerator? }
       end
 
-      # Consolidate base units. By default, base units are 'partially' consolidated,
-      # i.e. numerator and denomiator are consolidated separately. This means that
-      # two instances of the same unit should not occur in the numerator OR denominator
-      # (rather they are combined and the index changed accordingly), but similar
-      # units are not cancelled across the numerator and denominators.
+      # Returns an array containing only the base units which have negative indices
+      def denominator_units
+        @base_units.select { |base| base.is_denominator? }
+      end
+
+      # Convenient accessor method for pluralized names
+      def pluralized_name
+        derive_name :plural
+      end
+
+      # Determine is a unit object represents an SI named unit.
       #
-      # If :full is passed as an argument, a full consolidation is performed, i.e.
-      # consolidation across numerator and denominator. This is equivalent to a
-      # partial consolidation AND a cancelling of units (i.e. #cancel_base_units!)
+      def is_si_unit?
+        @base_units.all? { |base| base.is_si_unit? }
+      end
+
+      def is_non_si_unit?
+        @base_units.any? { |base| base.is_non_si_unit? }
+      end
+
+      # Consolidate base units. A 'full' consolidation is performed, i.e.
+      # consolidation across numerator and denominator. This is equivalent to the
+      # automatic partial consolidation AND a cancelling of units (i.e.
+      # #cancel_base_units!)
       #
-      def consolidate_base_units!(scope=:partial)
-        if scope == :full
-          @base_units = Compound.consolidate_base_units(@base_units)
-        else
-          new_base_units = []
-          new_base_units += Compound.consolidate_base_units(numerator_units)
-          new_base_units += Compound.consolidate_base_units(denominator_units)
-          @base_units = new_base_units
-        end
+      def consolidate_base_units!
+        @base_units = Compound.consolidate_base_units(@base_units)
         initialize_attributes
         return self
       end
@@ -162,7 +170,7 @@ module Quantify
             denominator_unit.index += cancel_value
           end
         end
-        consolidate_base_units!
+        consolidate_numerator_and_denominator_units!
       end
 
       def rationalize_base_units!(scope=:partial,*units)
@@ -172,25 +180,47 @@ module Quantify
           Compound.rationalize_base_units(numerator_units,units)
           Compound.rationalize_base_units(denominator_units,units)
         end
-        consolidate_base_units!
+        consolidate_numerator_and_denominator_units!
       end
 
       def equivalent_known_unit
-        Unit.units.find {|unit| self == unit and not unit.is_compound_unit? }
+        Unit.units.find do |unit|
+          self == unit and
+          not unit.is_compound_unit?
+        end
       end
 
       def or_equivalent &block
         equivalent_unit = equivalent_known_unit
-        if equivalent_unit
-          if block_given?
-            if yield(self,equivalent_unit)
-              return equivalent_unit
-            else
-              return self
-            end
-          end
+        if equivalent_unit and equivalent_unit.acts_as_equivalent_unit
           return equivalent_unit
+        else
+          return self
         end
+      end
+
+      protected
+
+      def initialize_attributes
+        @dimensions = derive_dimensions
+        @name = derive_name
+        @symbol = derive_symbol
+        @factor = derive_factor
+        @label = derive_label
+      end
+
+      # Partially consolidate base units, i.e. numerator and denomiator are
+      # consolidated separately. This means that two instances of the same unit
+      # should not occur in the numerator OR denominator (rather they are combined
+      # and the index changed accordingly), but similar units are not cancelled
+      # across the numerator and denominators.
+      #
+      def consolidate_numerator_and_denominator_units!
+        new_base_units = []
+        new_base_units += Compound.consolidate_base_units(numerator_units)
+        new_base_units += Compound.consolidate_base_units(denominator_units)
+        @base_units = new_base_units
+        initialize_attributes
         return self
       end
 
@@ -284,31 +314,6 @@ module Quantify
         @base_units.inject(1) do |factor,base|
           factor * base.factor
         end
-      end
-
-      # Returns an array containing only the base units which have positive indices
-      def numerator_units
-        @base_units.select { |base| base.is_numerator? }
-      end
-
-      # Returns an array containing only the base units which have negative indices
-      def denominator_units
-        @base_units.select { |base| base.is_denominator? }
-      end
-
-      # Convenient accessor method for pluralized names
-      def pluralized_name
-        derive_name :plural
-      end
-
-      # Determine is a unit object represents an SI named unit.
-      #
-      def is_si_unit?
-        @base_units.all? { |base| base.is_si_unit? }
-      end
-
-      def is_non_si_unit?
-        @base_units.any? { |base| base.is_non_si_unit? }
       end
 
     end

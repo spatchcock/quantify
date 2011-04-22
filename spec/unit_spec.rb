@@ -7,7 +7,7 @@ describe Unit do
 
     it "symbols list should include" do
       list = Unit.units_by_symbol
-      #list.should include 'η'
+      list.should include 'η'
       list.should include 'g'
       list.should include 'kg'
       list.should include '°C'
@@ -16,7 +16,7 @@ describe Unit do
       list.should include 'ly'
       list.should include 'AU'
       list.should include 'lb'
-      #list.should include 'eV'
+      list.should include 'eV'
     end
 
     it "symbols list should not include these" do
@@ -25,7 +25,7 @@ describe Unit do
 
     it "si symbols list should include" do
       list = Unit.si_units_by_symbol
-      #list.should include 'η'
+      list.should include 'η'
       list.should include 'kg'
       list.should include 'K'
     end
@@ -126,7 +126,7 @@ describe Unit do
       end
 
       it "should raise error when parsing on unknown units" do
-        lambda{unit = Unit.parse "kg b^2"}.should raise_error
+        lambda{unit = Unit.parse "kg z^2"}.should raise_error
       end
     
     end
@@ -135,6 +135,7 @@ describe Unit do
       unit = Unit::Base.new do |unit|
         unit.name = 'megapanda'
         unit.symbol = 'Mpd'
+        unit.label = 'Mpd'
         unit.dimensions = Dimensions.dimensionless
       end
       unit.class.should == Quantify::Unit::Base
@@ -188,8 +189,6 @@ describe Unit do
     it "should recognize already loaded units" do
       Unit.m.loaded?.should == true
       Unit.ft.loaded?.should == true
-      Unit.kilometre.loaded?.should == false
-      Unit.m.with_prefix(:kilo).load
       Unit.kilometre.loaded?.should == true
       (Unit.m/Unit.K).loaded?.should == false
       Unit.m.with_prefix(:pico).loaded?.should == false
@@ -198,17 +197,17 @@ describe Unit do
     end
 
     it "should allow dimensions to be specified with :physical_quantity key" do
-      unit = Unit::Base.new :physical_quantity => :mass, :name => 'gigapile'
+      unit = Unit::Base.new :physical_quantity => :mass, :name => 'gigapile', :symbol => 'Gpl', :label => 'Gpl'
       unit.class.should == Quantify::Unit::Base
     end
 
     it "should allow dimensions to be specified with :dimensions key" do
-      unit = Unit::Base.new :dimensions => :mass, :name => 'gigapile'
+      unit = Unit::Base.new :dimensions => :mass, :name => 'gigapile', :symbol => 'Gpl', :label => 'Gpl'
       unit.class.should == Quantify::Unit::Base
     end
 
     it "should mass load units with prefixes" do
-      Unit::SI.load_with_prefixes([:metre,:gram,:second],[:kilo,:mega,:giga,:tera])
+      Unit::SI.prefix_and_load([:kilo,:mega,:giga,:tera],[:metre,:gram,:second])
       Unit.kilometre.loaded?.should == true
       Unit.Gigametre.loaded?.should == true
       Unit.kilogram.loaded?.should == true
@@ -218,18 +217,70 @@ describe Unit do
     end
 
     it "should mass load unit with prefixes" do
-      Unit::SI.load_with_prefixes(:metre,[:kilo,:mega,:giga,:tera])
+      Unit::SI.prefix_and_load([:kilo,:mega,:giga,:tera],:metre)
       Unit.kilometre.loaded?.should == true
       Unit.Gigametre.loaded?.should == true
       Unit.nanometre.loaded?.should == false
     end
 
     it "should mass load units with prefix" do
-      Unit::SI.load_with_prefixes([:metre,:gram,:second],:giga)
+      Unit::SI.prefix_and_load(:giga,[:metre,:gram,:second])
       Unit.Gigametre.loaded?.should == true
       Unit.gigagram.loaded?.should == true
       Unit.gigasecond.loaded?.should == true
       Unit.nanometre.loaded?.should == false
+    end
+
+    it "should mass load units with prefix using objects as arguments" do
+      Unit::SI.prefix_and_load(Unit::Prefix.giga,[Unit.metre,Unit.gram,Unit.second])
+      Unit.Gigametre.loaded?.should == true
+      Unit.gigagram.loaded?.should == true
+      Unit.gigasecond.loaded?.should == true
+      Unit.nanometre.loaded?.should == false
+    end
+
+    it "should unload unit with class method and symbol" do
+      Unit.nanometre.load
+      Unit.nanometre.loaded?.should == true
+      Unit.unload(:nanometre)
+      Unit.nanometre.loaded?.should == false
+    end
+
+    it "should unload unit with class method and object" do
+      Unit.nanometre.load
+      Unit.nanometre.loaded?.should == true
+      Unit.unload(Unit.nanometre)
+      Unit.nanometre.loaded?.should == false
+    end
+
+    it "should unload unit with instance method" do
+      Unit.nanometre.load
+      Unit.nanometre.loaded?.should == true
+      unit = Unit.nanometre
+      unit.unload
+      Unit.nanometre.loaded?.should == false
+    end
+
+    it "should unload multiple units with class method" do
+      Unit.nanometre.load
+      Unit.picometre.load
+      Unit.nanometre.loaded?.should == true
+      Unit.picometre.loaded?.should == true
+      Unit.unload(:nanometre,:picometre)
+      Unit.nanometre.loaded?.should == false
+      Unit.picometre.loaded?.should == false
+    end
+
+    it "should make new unit configuration canonical" do
+      unit = Unit.psi
+      unit.name.should == 'pound force per square inch'
+      unit.operate {|unit| unit.name = 'PSI'}
+      unit.name.should == 'PSI'
+      Unit.psi.name.should == 'pound force per square inch'
+      unit.make_canonical
+      Unit.psi.name.should == 'PSI'
+      unit.operate {|unit| unit.name = 'pound force per square inch'}
+      unit.make_canonical
     end
 
   end
@@ -237,14 +288,14 @@ describe Unit do
   describe "unit initialization" do
 
     it "should load self into module variable with instance method" do
-      unit = Unit::Base.new :physical_quantity => :mass, :name => 'megalump', :symbol => 'Mlp'
+      unit = Unit::Base.new :physical_quantity => :mass, :name => 'megalump', :symbol => 'Mlp', :label => 'Mlp'
       unit.load
       Unit.units_by_symbol.should include 'Mlp'
       Unit.units_by_name.should include 'megalump'
     end
 
     it "should create unit" do
-      unit = Unit::NonSI.new :name => 'a name', :physical_quantity => :energy, :factor => 10
+      unit = Unit::NonSI.new :name => 'a name', :physical_quantity => :energy, :factor => 10, :symbol => 'anm', :label => 'a_name'
       unit.class.should == Unit::NonSI
     end
 
@@ -257,7 +308,7 @@ describe Unit do
     end
 
     it "should load unit into module array with class method" do
-      unit = Unit::NonSI.load :name => 'a name', :physical_quantity => :energy, :factor => 10
+      unit = Unit::NonSI.load :name => 'a name', :physical_quantity => :energy, :factor => 10, :symbol => 'anm', :label => 'a_name'
       Unit.non_si_units_by_name.should include 'a name'
     end
     
@@ -327,10 +378,10 @@ describe Unit do
       unit.is_si_unit?.should_not == true
     end
 
-    #it "should recognise dram as non SI" do
-    #  unit = Unit.dram
-    #  unit.is_si_unit?.should_not == true
-    #end
+    it "should recognise dram as non SI" do
+      unit = Unit.dram
+      unit.is_si_unit?.should_not == true
+    end
 
     it "should recognise BTU as non SI" do
       unit = Unit.british_thermal_unit
@@ -508,6 +559,27 @@ describe Unit do
       Unit.pounds_force_per_square_inch.si_unit.name.should == 'pascal'
     end
 
+    it "should not return alternative if feature disabled" do
+      alt = Unit.kg.alternatives
+      alt.class.should == Array
+      alt[0].is_a?(Unit::Base).should == true
+      alt.any?{|unit| unit == Unit.g }.should == true
+
+      Unit.g.acts_as_alternative_unit = false
+
+      alt = Unit.kg.alternatives
+      alt.class.should == Array
+      alt[0].is_a?(Unit::Base).should == true
+      alt.any?{|unit| unit == Unit.g }.should == false
+
+      Unit.g.acts_as_alternative_unit = true
+
+      alt = Unit.kg.alternatives
+      alt.class.should == Array
+      alt[0].is_a?(Unit::Base).should == true
+      alt.any?{|unit| unit == Unit.g }.should == true
+    end
+
   end
 
   describe "operating on units" do
@@ -593,189 +665,6 @@ describe Unit do
     
     it "trying to add invalid prefix should raise error" do
       lambda{Unit.ft.with_prefix(:kilo)}.should raise_error
-    end
-
-  end
-
-  describe "compound unit naming algorithms" do
-
-    it "should return pluralised unit name" do
-      Unit.m.pluralized_name.should == 'metres'
-      Unit.ft.pluralized_name.should == 'feet'
-      Unit.lux.pluralized_name.should == 'lux'
-      Unit.kg.pluralized_name.should == 'kilograms'
-      #Unit.nautical_league.pluralized_name.should == 'nautical leagues'
-      #Unit.centimetre_of_water.pluralized_name.should == 'centimetres of water'
-      (Unit.t*Unit.km).pluralized_name.should == 'tonne kilometres'
-      (Unit.t*Unit.km/Unit.year).pluralized_name.should == 'tonne kilometres per year'
-      (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).or_equivalent.pluralized_name.should == 'joules'
-    end
-
-    it "should create unit with dynamic method and pluralized name" do
-      Unit.feet.symbol.should == 'ft'
-      Unit.gigagrams.name.should == 'gigagram'
-      (Unit.kilograms/(Unit.tonne*Unit.km)).pluralized_name.should == 'kilograms per tonne kilometre'
-      (Unit.kilograms/(Unit.megagrams*Unit.km)).pluralized_name.should == 'kilograms per megagram kilometre'
-    end
-
-    it "squared unit should be called that" do
-      (Unit.m**2).name.should == "square metre"
-    end
-
-    it "cubed unit should be called that" do
-      (Unit.s**3).name.should == "cubic second"
-    end
-
-    it "raised unit should be called that" do
-      (Unit.kg**4).name.should == "kilogram to the 4th power"
-    end
-
-    it "should derive correct label for compound unit" do
-      unit = (Unit.kg/(Unit.t*Unit.km))
-      unit.label.should == "kg/t·km"
-    end
-
-    it "should derive correct label for compound unit" do
-      unit = 1/Unit.m
-      unit.label.should == "m^-1"
-    end
-
-    it "should derive correct label for compound unit" do
-      unit = Unit.MJ*(Unit.m**3)/(Unit.kg**2)
-      unit.label.should == "MJ·m^3/kg^2"
-    end
-
-  end
-
-  describe "specific compound unit operations" do
-
-    it "should find equivalent unit for compound unit" do
-      (Unit.m*Unit.m).equivalent_known_unit.name.should == 'square metre'
-      (Unit.km*Unit.lb).equivalent_known_unit.should == nil
-    end
-
-    it "should return equivalent unit if appropriate" do
-      (Unit.m*Unit.m).or_equivalent.name.should == 'square metre'
-      (Unit.km*Unit.lb).or_equivalent.name.should == 'kilometre pound'
-      (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).or_equivalent.name.should == 'joule'
-    end
-
-    it "should consolidate across all base units" do
-      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m^2 s kg s^-1 m^-3"
-      unit.base_units.size.should == 5
-      unit.consolidate_base_units!(:full)
-      unit.symbol.should == "kg m^-1"
-      unit.base_units.size.should == 2
-    end
-
-    it "should cancel base units with one argument which is a symbol" do
-      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m^2 s kg s^-1 m^-3"
-      unit.base_units.size.should == 5
-      unit.cancel_base_units! :m
-      unit.symbol.should == "s kg m^-1 s^-1"
-      unit.base_units.size.should == 4
-    end
-
-    it "should cancel base units with multiple arguments including unit objects and strings" do
-      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m^2 s kg s^-1 m^-3"
-      unit.base_units.size.should == 5
-      unit.cancel_base_units! Unit.m, 's'
-      unit.symbol.should == "kg m^-1"
-      unit.base_units.size.should == 2
-    end
-
-    it "should refuse to cancel by a compound unit" do
-      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      lambda{unit.cancel_base_units!(Unit.m**2)}.should raise_error
-    end
-
-    it "should initialize compound unit with one CompoundBaseUnit" do
-      base = Unit::CompoundBaseUnit.new Unit.h, -1
-      compound_unit = Unit::Compound.new base
-      compound_unit.symbol.should == "h^-1"
-    end
-
-    it "should initialize compound unit with multiple CompoundBaseUnits" do
-      base1 = Unit::CompoundBaseUnit.new Unit.h, -1
-      base2 = Unit::CompoundBaseUnit.new Unit.mi
-      compound_unit = Unit::Compound.new base1, base2
-      compound_unit.symbol.should == "mi h^-1"
-    end
-
-    it "should initialize compound unit with multiple individual units" do
-      base1 = Unit.kW
-      base2 = Unit.h
-      compound_unit = Unit::Compound.new base1, base2
-      compound_unit.symbol.should == "kW h"
-    end
-
-    it "should initialize compound unit with array splat of multiple individual units" do
-      base1 = Unit.kW
-      base2 = Unit.h
-      array = [base1,base2]
-      compound_unit = Unit::Compound.new *array
-      compound_unit.symbol.should == "kW h"
-    end
-
-    it "should initialize compound unit with one sub-array" do
-      base1 = [Unit.h, -1]
-      compound_unit = Unit::Compound.new base1
-      compound_unit.symbol.should == "h^-1"
-    end
-
-    it "should initialize compound unit with multiple sub-arrays" do
-      base1 = [Unit.h, -1]
-      base2 = [Unit.m, 2]
-      compound_unit = Unit::Compound.new base1, base2
-      compound_unit.symbol.should == "m^2 h^-1"
-    end
-
-    it "should initialize compound unit with variable arguments" do
-      base1 = Unit.kg
-      base2 = Unit::CompoundBaseUnit.new Unit.m, 2
-      base3 = [Unit.s, -2]
-      compound_unit = Unit::Compound.new base1, base2, base3
-      compound_unit.measures.should == "energy"
-    end
-
-    it "should initialize compound unit with variable arguments in splat array" do
-      base1 = Unit.kg
-      base2 = Unit::CompoundBaseUnit.new Unit.m, 2
-      base3 = [Unit.s, -2]
-      array = [base1,base2,base3]
-      compound_unit = Unit::Compound.new *array
-      compound_unit.measures.should == "energy"
-    end
-
-    it "should throw error is base unit is a compound unit" do
-      base1 = Unit.kg*Unit.m
-      base2 = Unit::CompoundBaseUnit.new Unit.m, 2
-      base3 = [Unit.s, -2]
-      array = [base1,base2,base3]
-      lambda{compound_unit = Unit::Compound.new *array}.should raise_error
-    end
-
-    it "should throw error is base unit is a compound unit" do
-      base1 = Unit.kg
-      base2 = Unit::CompoundBaseUnit.new Unit.m, 2
-      base3 = [Unit.kg*Unit.m, -2]
-      array = [base1,base2,base3]
-      lambda{compound_unit = Unit::Compound.new *array}.should raise_error
-    end
-
-    it "should throw error is base unit array too big" do
-      base1 = Unit.kg
-      base2 = Unit::CompoundBaseUnit.new Unit.m, 2
-      base3 = [Unit.kg, -2, "something else"]
-      array = [base1,base2,base3]
-      lambda{compound_unit = Unit::Compound.new *array}.should raise_error
-    end
-
-    it "should not allow comound unit to be used to initialize CompoundBaseUnit" do
-      lambda{Unit::CompoundBaseUnit.new((Unit.m*Unit.m), 2)}.should raise_error
     end
 
   end

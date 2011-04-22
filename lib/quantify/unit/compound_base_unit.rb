@@ -11,7 +11,6 @@ module Quantify
       # structures which hold base units within compound units
       #
 
-
       attr_accessor :unit, :index
 
       def initialize(unit,index=1)

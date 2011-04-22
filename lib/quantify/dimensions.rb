@@ -290,8 +290,8 @@ module Quantify
     # or symbols of each unit can be returned by providing the appropriate unit
     # attribute as a symbolized argument, e.g.
     #
-    #   Dimensions.energy.si_base_units       #=> [ #<Quantify::Dimensions: .. >,
-    #                                               #<Quantify::Dimensions: .. >,
+    #   Dimensions.energy.si_base_units       #=> [ #<Quantify::Unit: .. >,
+    #                                               #<Quantify::Unit: .. >,
     #                                               ... ]
     #
     #   Dimensions.energy.si_base_units :name
@@ -306,7 +306,7 @@ module Quantify
       self.to_hash.map do |dimension,index|
         Unit.si_base_units.select do |unit|
           unit.measures == dimension.standardize
-        end.first ** index
+        end.first.deep_clone ** index
       end.map(&by)
     end
 
