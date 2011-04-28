@@ -3,6 +3,8 @@ module Quantify
   module Unit
     class Base
 
+      extend ExtendedMethods
+
       # Base unit class, providing most of the functionality which is inherited
       # by SI and NonSI unit classes.
 
@@ -15,7 +17,7 @@ module Quantify
       end
 
       def self.construct_and_load(unit,&block)
-        self.construct(unit,&block).load
+        self.construct(unit, &block).load
       end
 
       # Mass load prefixed units. First argument is a single or array of units.
@@ -215,7 +217,7 @@ module Quantify
 
       # Determine if the unit is a prefixed unit
       def is_prefixed_unit?
-        return true if valid_prefixes and
+        return true if valid_prefixes.size > 0 and
           self.name =~ /\A(#{valid_prefixes.map(&:name).join("|")})/
         return false
       end
@@ -329,7 +331,7 @@ module Quantify
       end
 
       def valid_descriptors?
-        [:name, :symbol, :label].each.all? do |attr|
+        [:name, :symbol, :label].all? do |attr|
           attribute = send(attr)
           attribute.is_a? String and not attribute.empty?
         end
@@ -359,7 +361,7 @@ module Quantify
       #                                               "T", "P" ... ]
       #
       def valid_prefixes(by=nil)
-        return nil if self.is_compound_unit?
+        return empty_array = [] if self.is_compound_unit?
         return Unit::Prefix.si_prefixes.map(&by) if is_si_unit?
         return Unit::Prefix.non_si_prefixes.map(&by) if is_non_si_unit?
       end
@@ -403,14 +405,10 @@ module Quantify
         original_unit = self.deep_clone
         if power > 0
           new_unit = self.deep_clone
-          (power - 1).times do
-            new_unit *= original_unit
-          end
+          (power - 1).times { new_unit *= original_unit }
         elsif power < 0
           new_unit = reciprocalize
-          ((power.abs) - 1).times do
-            new_unit /= original_unit
-          end
+          ((power.abs) - 1).times { new_unit /= original_unit }
         end
         return new_unit
       end
@@ -433,11 +431,7 @@ module Quantify
           raise InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
         end
         
-        prefix = Unit::Prefix.for(name_or_symbol) unless name_or_symbol.is_a? Unit::Prefix
-
-        unless self.valid_prefixes(:name).include? prefix.name
-          raise InvalidArgumentError, "Prefix '#{prefix.name}' not valid for unit: #{self.name}"
-        end
+        prefix = Unit::Prefix.for(name_or_symbol,valid_prefixes)
 
         unless prefix.nil?
           new_unit_options = {}
@@ -453,9 +447,7 @@ module Quantify
       end
 
       def with_prefixes(*prefixes)
-        [prefixes].map do |prefix|
-          self.with_prefix(prefix)
-        end
+        [prefixes].map { |prefix| self.with_prefix(prefix) }
       end
 
       # Return a hash representation of self containing each unit attribute (i.e
@@ -513,14 +505,13 @@ module Quantify
       #
       def method_missing(method, *args, &block)
         if method.to_s =~ /(to_)(.*)/ and prefix = Prefix.for($2.to_sym)
-          self.with_prefix prefix
+          return self.with_prefix prefix
         elsif method.to_s =~ /(alternatives_by_)(.*)/ and self.respond_to? $2.to_sym
-          self.alternatives $2.to_sym
+          return self.alternatives $2.to_sym
         elsif method.to_s =~ /(valid_prefixes_by_)(.*)/ and Prefix::Base.instance_methods.include? $2.to_s
-          self.valid_prefixes $2.to_sym
-        else
-          super
+          return self.valid_prefixes $2.to_sym
         end
+        super
       end
 
     end

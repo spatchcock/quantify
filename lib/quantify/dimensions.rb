@@ -80,6 +80,14 @@ module Quantify
       end
     end
 
+    # Remove a dimension from the system of known dimensions
+    def self.unload(*unloaded_dimensions)
+      [unloaded_dimensions].flatten.each do |unloaded_dimension|
+        unloaded_dimension = Dimensions.for(unloaded_dimensions)
+        @@dimensions.delete_if { |unit| unit.physical_quantity == unloaded_dimension.physical_quantity }
+      end
+    end
+
     # Returns an array containing the names/descriptions of all known (loaded)
     # physical quantities, e.g.:
     #
@@ -107,6 +115,7 @@ module Quantify
     # #method_missing class method (below)
     #
     def self.for(name)
+      return name if name.is_a? Dimensions
       if name.is_a? String or name.is_a? Symbol
         if quantity = @@dimensions.find do |quantity|
             quantity.physical_quantity == name.standardize.downcase
@@ -192,6 +201,8 @@ module Quantify
     def load
       if describe and not loaded?
         @@dimensions << self
+      elsif describe
+        raise InvalidDimensionError, "A dimension instance with the same physical quantity already exists"
       else
         raise InvalidDimensionError, "Cannot load dimensions without physical quantity description"
       end
@@ -199,6 +210,11 @@ module Quantify
 
     def loaded?
       Dimensions.dimensions.any? { |quantity| self.has_same_identity_as? quantity }
+    end
+
+    # Remove from system of known units.
+    def unload
+      Dimensions.unload(self.physical_quantity)
     end
 
     def has_same_identity_as?(other)
@@ -251,9 +267,7 @@ module Quantify
     #   Dimensions.length.units :symbol     #=> [ 'm', 'ft', 'yd', ... ]
     #
     def units(by=nil)
-      Unit.units.select do |unit|
-        unit.dimensions == self
-      end.map(&by)
+      Unit.units.select { |unit| unit.dimensions == self }.map(&by)
     end
 
     # Returns the SI unit for the physical quantity described by self.
@@ -502,9 +516,7 @@ module Quantify
     # Make object represent a dimensionless quantity.
     def make_dimensionless
       self.physical_quantity = 'dimensionless'
-      base_quantities.each do |var|
-        remove_instance_variable(var)
-      end
+      base_quantities.each { |var| remove_instance_variable(var) }
     end
 
   end

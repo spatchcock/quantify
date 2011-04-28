@@ -11,14 +11,21 @@ module Quantify
         @prefixes << prefix if prefix.is_a? Quantify::Unit::Prefix::Base
       end
 
+      def self.unload(*unloaded_prefixes)
+        [unloaded_prefixes].flatten.each do |unloaded_prefix|
+          unloaded_prefix = Prefix.for(unloaded_prefix)
+          @prefixes.delete_if { |unit| unit.label == unloaded_prefix.label }
+        end
+      end
+
       def self.prefixes
         @prefixes
       end    
 
-      def self.for(name_or_symbol)
+      def self.for(name_or_symbol,collection=nil)
         return name_or_symbol.clone if name_or_symbol.is_a? Quantify::Unit::Prefix::Base
         if name_or_symbol.is_a? String or name_or_symbol.is_a? Symbol
-          if prefix = @prefixes.find do |prefix|
+          if prefix = (collection.nil? ? @prefixes : collection).find do |prefix|
              prefix.name == name_or_symbol.standardize.downcase or
              prefix.symbol == name_or_symbol.standardize
             end

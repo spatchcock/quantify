@@ -1,6 +1,4 @@
 
-Object.extend Quantify::ExtendedMethods
-
 class String
 
   def standardize

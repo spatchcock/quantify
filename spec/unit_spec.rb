@@ -85,13 +85,25 @@ describe Unit do
       Unit.Gg.name.should == 'gigagram'
       Unit.cm.factor.should == 0.01
       Unit.TJ.name.should == 'terajoule'
+      Unit::Prefix::NonSI.load(:name => 'million ', :symbol => 'MM', :factor => 1e6)
       Unit.MMBTU.name.should == 'million british thermal unit (59 °f)'
+      Unit::Prefix.unload :MM
     end
 
     it "dynamic unit retrieval with symbol and invalid prefix should raise error" do
       lambda{Unit.MMm}.should raise_error
       lambda{Unit.Gft}.should raise_error
       lambda{Unit.centimetre.with_prefix :kilo}.should raise_error
+    end
+
+    it "explicit get should raise nil if not known" do
+      Unit.for(:MMm).should be_nil
+      Unit.for(:andrew).should be_nil
+      Unit.for(nil).should be_nil
+    end
+
+    it "empty string should return nil" do
+      Unit.for("").should be_nil
     end
     
     describe "parsing unit string" do
@@ -313,7 +325,9 @@ describe Unit do
     end
     
     it "should derive compound unit correctly" do
+      Unit::Prefix::NonSI.load(:name => 'million ', :symbol => 'MM', :factor => 1e6)
       (Unit.MW_h/Unit.MMBTU).factor.should be_close 3.41295634070405, 0.00000001
+      Unit::Prefix.unload :MM
     end
 
   end
@@ -384,7 +398,7 @@ describe Unit do
     end
 
     it "should recognise BTU as non SI" do
-      unit = Unit.british_thermal_unit
+      unit = Unit.BTU
       unit.is_si_unit?.should_not == true
     end
 

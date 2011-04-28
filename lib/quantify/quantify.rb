@@ -32,14 +32,6 @@ module Quantify
         super
       end
     end
-
-    def const_missing(const)
-      if unit = Quantify::Unit.for(const.to_s)
-        return unit
-      else
-        super
-      end
-    end
     
   end
 end

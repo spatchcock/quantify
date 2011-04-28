@@ -90,6 +90,8 @@ module Quantify
     #
     def self.for(name_symbol_label_or_object)
       return name_symbol_label_or_object.deep_clone if name_symbol_label_or_object.is_a? Unit::Base
+      return nil if name_symbol_label_or_object.nil? or
+        ( name_symbol_label_or_object.is_a?(String) and name_symbol_label_or_object.empty? )
       name_symbol_or_label = name_symbol_label_or_object
       unless name_symbol_or_label.is_a? String or name_symbol_or_label.is_a? Symbol
         raise InvalidArgumentError, "Argument must be a Symbol or String"
@@ -100,7 +102,8 @@ module Quantify
       if unit = Unit.parse(name_symbol_or_label)
         return unit
       end
-      raise InvalidArgumentError, "Unit not known: #{name_symbol_or_label}"
+    rescue InvalidUnitError
+      return nil
     end
 
     # Parse complex strings into unit.
