@@ -83,10 +83,8 @@ module Quantify
         @unit.dimensions.physical_quantity
       end
 
-      def deep_clone
-        new = self.clone
-        new.instance_variable_set("@unit", unit.deep_clone)
-        return new
+      def initialize_copy(source)
+        instance_variable_set("@unit", unit.clone)
       end
     end
   end

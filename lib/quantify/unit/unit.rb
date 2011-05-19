@@ -89,7 +89,7 @@ module Quantify
     # based on the initialized Unit for :metre and Prefix :centi.
     #
     def self.for(name_symbol_label_or_object)
-      return name_symbol_label_or_object.deep_clone if name_symbol_label_or_object.is_a? Unit::Base
+      return name_symbol_label_or_object.clone if name_symbol_label_or_object.is_a? Unit::Base
       return nil if name_symbol_label_or_object.nil? or
         ( name_symbol_label_or_object.is_a?(String) and name_symbol_label_or_object.empty? )
       name_symbol_or_label = name_symbol_label_or_object
@@ -126,7 +126,7 @@ module Quantify
     end
 
     def self.match(name_symbol_or_label)
-      return name_symbol_or_label.deep_clone if name_symbol_or_label.is_a? Unit::Base
+      return name_symbol_or_label.clone if name_symbol_or_label.is_a? Unit::Base
       Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
       Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
       Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
@@ -142,14 +142,14 @@ module Quantify
     def self.match_known_unit(attribute, string_or_symbol)
       string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
       unit = @units.find { |unit| unit.send(attribute) == string_or_symbol }
-      return unit.deep_clone rescue nil
+      return unit.clone rescue nil
     end
 
     def self.match_prefixed_variant(attribute, string_or_symbol)
       string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
       if string_or_symbol =~ /\A(#{Unit::Prefix.si_prefixes.map(&attribute).join("|")})(#{Unit.si_non_prefixed_units.map(&attribute).join("|")})\z/ or
          string_or_symbol =~ /\A(#{Unit::Prefix.non_si_prefixes.map(&attribute).join("|")})(#{Unit.non_si_non_prefixed_units.map(&attribute).join("|")})\z/
-        return Unit.for($2).with_prefix($1).deep_clone
+        return Unit.for($2).with_prefix($1).clone
       end
       return nil
     end

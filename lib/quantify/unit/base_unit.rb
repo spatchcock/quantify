@@ -402,9 +402,9 @@ module Quantify
       #
       def pow(power)
         return nil if power == 0
-        original_unit = self.deep_clone
+        original_unit = self.clone
         if power > 0
-          new_unit = self.deep_clone
+          new_unit = self.clone
           (power - 1).times { new_unit *= original_unit }
         elsif power < 0
           new_unit = reciprocalize
@@ -484,13 +484,12 @@ module Quantify
       # (self.clone makes only a shallow copy, i.e. clones attributes but not
       # referenced objects)
       #
-      def deep_clone
-        new = self.clone
-        new.instance_variable_set("@dimensions", self.dimensions.clone)
+      def initialize_copy(source)
+        super
+        instance_variable_set("@dimensions", dimensions.clone)
         if self.is_compound_unit?
-          new.instance_variable_set("@base_units", self.base_units.map {|base| base.deep_clone })
+          instance_variable_set("@base_units", base_units.map {|base| base.clone })
         end
-        return new
       end
 
       # Provides syntactic sugar for several methods. E.g.

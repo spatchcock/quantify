@@ -320,7 +320,7 @@ module Quantify
       self.to_hash.map do |dimension,index|
         Unit.si_base_units.select do |unit|
           unit.measures == dimension.standardize
-        end.first.deep_clone ** index
+        end.first.clone ** index
       end.map(&by)
     end
 
