@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "quantify"
-  s.version = "0.0.6"
+  s.version = "1.0.0"
   s.date = "2011-03-03"
   s.authors = ["Andrew Berkeley"]
   s.email = "andrew.berkeley.is@googlemail.com"
