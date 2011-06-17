@@ -76,7 +76,7 @@ module Quantify
       if options[:physical_quantity]
         @@dimensions << Dimensions.new(options)
       else
-        raise InvalidDimensionError, "Cannot load dimensions without physical quantity description"
+        raise Exceptions::InvalidDimensionError, "Cannot load dimensions without physical quantity description"
       end
     end
 
@@ -122,10 +122,10 @@ module Quantify
           end
           return quantity.clone
         else
-          raise InvalidArgumentError, "Physical quantity not known: #{name}"
+          raise Exceptions::InvalidArgumentError, "Physical quantity not known: #{name}"
         end
       else
-        raise InvalidArgumentError, "Argument must be a Symbol or String"
+        raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
       end
     end
 
@@ -202,9 +202,9 @@ module Quantify
       if describe and not loaded?
         @@dimensions << self
       elsif describe
-        raise InvalidDimensionError, "A dimension instance with the same physical quantity already exists"
+        raise Exceptions::InvalidDimensionError, "A dimension instance with the same physical quantity already exists"
       else
-        raise InvalidDimensionError, "Cannot load dimensions without physical quantity description"
+        raise Exceptions::InvalidDimensionError, "Cannot load dimensions without physical quantity description"
       end
     end
 
@@ -497,7 +497,7 @@ module Quantify
       options.each_pair do |base_quantity,index|
         base_quantity = base_quantity.to_s.downcase.to_sym
         unless index.is_a? Integer and BASE_QUANTITIES.include? base_quantity
-          raise InvalidDimensionError, "An invalid base quantity was specified (#{base_quantity})"
+          raise Exceptions::InvalidDimensionError, "An invalid base quantity was specified (#{base_quantity})"
         end
         variable = "@#{base_quantity}"
         if self.instance_variable_defined?(variable)

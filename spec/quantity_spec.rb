@@ -246,5 +246,20 @@ describe Quantity do
     quantity.unit.base_units.size.should == 1
     quantity.to_s.should == "40.720412743579 inHg"
   end
+
+  it "should rationalize units and return new quantity" do
+    quantity = 12.yards*36.feet
+    quantity.to_s.should eql "432.0 yd ft"
+    new_quantity=quantity.rationalize_units
+    quantity.to_s.should eql "432.0 yd ft"
+    new_quantity.to_s.should eql "144.0 yd^2"
+  end
+
+  it "should rationalize units and modify value in place" do
+    quantity = 12.yards*36.feet
+    quantity.to_s.should eql "432.0 yd ft"
+    quantity.rationalize_units!
+    quantity.to_s.should eql  "144.0 yd^2"
+  end
 end
 

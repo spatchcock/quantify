@@ -34,7 +34,7 @@ module Quantify
             return nil
           end
         else
-          raise InvalidArgumentError, "Argument must be a Symbol or String"
+          raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
         end
       end
 

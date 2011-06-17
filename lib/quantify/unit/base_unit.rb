@@ -110,7 +110,7 @@ module Quantify
           elsif options[:dimensions].is_a? String or options[:dimensions].is_a? Symbol
             @dimensions = Dimensions.for options[:dimensions]
           else
-            raise InvalidArgumentError, "Unknown physical_quantity specified"
+            raise Exceptions::InvalidArgumentError, "Unknown physical_quantity specified"
           end
           @factor = options[:factor].nil? ? 1.0 : options[:factor].to_f
           @symbol = options[:symbol].nil? ? nil : options[:symbol].standardize
@@ -145,7 +145,7 @@ module Quantify
       #
       def load
         yield self if block_given?
-        raise InvalidArgumentError, "A unit with the same label: #{self.name}) already exists" if loaded?
+        raise Exceptions::InvalidArgumentError, "A unit with the same label: #{self.name}) already exists" if loaded?
         Quantify::Unit.units << self if valid?
       end
 
@@ -327,7 +327,7 @@ module Quantify
 
       def valid?
         return true if valid_descriptors? and valid_dimensions?
-        raise InvalidArgumentError, "Unit definition must include a name, a symbol, a label and physical quantity"
+        raise Exceptions::InvalidArgumentError, "Unit definition must include a name, a symbol, a label and physical quantity"
       end
 
       def valid_descriptors?
@@ -428,7 +428,7 @@ module Quantify
       #
       def with_prefix(name_or_symbol)
         if self.name =~ /\A(#{valid_prefixes(:name).join("|")})/
-          raise InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
+          raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
         end
         
         prefix = Unit::Prefix.for(name_or_symbol,valid_prefixes)
@@ -442,7 +442,7 @@ module Quantify
           new_unit_options[:physical_quantity] = self.dimensions
           self.class.new(new_unit_options)
         else
-          raise InvalidArgumentError, "Prefix unit is not known: #{prefix}"
+          raise Exceptions::InvalidArgumentError, "Prefix unit is not known: #{prefix}"
         end
       end
 
@@ -472,7 +472,7 @@ module Quantify
         if object.kind_of? Numeric and object == 1
           return Unit.unity, self
         else
-          raise InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
+          raise Exceptions::InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
         end
       end
       

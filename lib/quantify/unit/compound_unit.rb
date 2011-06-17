@@ -32,7 +32,7 @@ module Quantify
       # base units or just a subset - the numerator or denominator units.
       #
       def self.consolidate_base_units(base_units)
-        raise InvalidArgumentError, "Must provide an array of base units" unless base_units.is_a? Array
+        raise Exceptions::InvalidArgumentError, "Must provide an array of base units" unless base_units.is_a? Array
 
         new_base_units = []
 
@@ -97,7 +97,7 @@ module Quantify
               not unit.first.is_a? Compound and unit.size == 2
             @base_units << CompoundBaseUnit.new(unit.first,unit.last)
           else
-            raise InvalidArgumentError, "#{unit} does not represent a valid base unit"
+            raise Exceptions::InvalidArgumentError, "#{unit} does not represent a valid base unit"
           end
         end
         @acts_as_alternative_unit = true
@@ -158,7 +158,7 @@ module Quantify
       #
       def cancel_base_units!(*units)
         units.each do |unit|
-          raise InvalidArgumentError, "Cannot cancel by a compound unit" if unit.is_a? Unit::Compound
+          raise Exceptions::InvalidArgumentError, "Cannot cancel by a compound unit" if unit.is_a? Unit::Compound
           unit = Unit.for unit unless unit.is_a? Unit::Base
 
           numerator_unit = numerator_units.find { |base| unit == base.unit }
@@ -175,10 +175,10 @@ module Quantify
 
       def rationalize_base_units!(scope=:partial,*units)
         if scope == :full
-          Compound.rationalize_base_units(@base_units,units)
+          Compound.rationalize_base_units(@base_units,*units)
         else
-          Compound.rationalize_base_units(numerator_units,units)
-          Compound.rationalize_base_units(denominator_units,units)
+          Compound.rationalize_base_units(numerator_units,*units)
+          Compound.rationalize_base_units(denominator_units,*units)
         end
         consolidate_numerator_and_denominator_units!
       end

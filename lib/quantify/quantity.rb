@@ -47,10 +47,10 @@ module Quantify
       if quantity = /\A([\d\s.,]+)(\D+.*)\z/.match(string)
         Quantity.new($1.strip, $2)
       else
-        raise Quantify::QuantityParseError, "Cannot parse string into value and unit"
+        raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
       end
-    rescue Quantify::InvalidArgumentError
-      raise Quantify::QuantityParseError, "Cannot parse string into value and unit"
+    rescue Quantify::Exceptions::InvalidArgumentError
+      raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
     end
 
     def self.configure &block
@@ -195,10 +195,10 @@ module Quantify
           @value = value.send operator, other.value
           return self
         else
-          raise Quantify::InvalidObjectError "Cannot add or subtract Quantities with different dimensions"
+          raise Quantify::Exceptions::InvalidObjectError "Cannot add or subtract Quantities with different dimensions"
         end
       else
-        raise Quantify::InvalidObjectError "Cannot add or subtract non-Quantity objects"
+        raise Quantify::Exceptions::InvalidObjectError "Cannot add or subtract non-Quantity objects"
       end
     end
 
@@ -211,12 +211,12 @@ module Quantify
         @value = value.send(operator,other.value)
         return self
       else
-        raise Quantify::InvalidArgumentError "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"
+        raise Quantify::Exceptions::InvalidArgumentError "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"
       end
     end
 
     def pow!(power)
-      raise InvalidArgumentError, "Argument must be an integer" unless power.is_a? Integer
+      raise Exceptions::InvalidArgumentError, "Argument must be an integer" unless power.is_a? Integer
       @value = value ** power
       @unit = unit ** power
       return self
@@ -267,7 +267,14 @@ module Quantify
 
     def rationalize_units
       return self unless unit.is_a? Unit::Compound
-      self.to unit.rationalize_base_units
+      self.to unit.clone.rationalize_base_units!
+    end
+
+    def rationalize_units!
+      rationalized_quantity = self.rationalize_units
+      @value = rationalized_quantity.value
+      @unit = rationalized_quantity.unit
+      return self
     end
 
     def cancel_base_units!(*units)
@@ -303,7 +310,7 @@ module Quantify
       if object.kind_of? Numeric
         return Quantity.new(object, Unit.unity), self
       else
-        raise InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
+        raise Exceptions::InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
       end
     end
 
@@ -317,7 +324,7 @@ module Quantify
       if method.to_s =~ /(to_)(.*)/
         to($2)
       else
-        raise NoMethodError, "Undefined method '#{method}' for #{self}:#{self.class}"
+        super
       end
     end
 

@@ -156,7 +156,7 @@ describe Unit do
       compound_unit.measures.should == "energy"
     end
 
-    it "should throw error is base unit is a compound unit" do
+    it "should throw error if base unit is a compound unit" do
       base1 = Unit.kg*Unit.m
       base2 = Unit::CompoundBaseUnit.new Unit.m, 2
       base3 = [Unit.s, -2]
@@ -182,6 +182,23 @@ describe Unit do
 
     it "should not allow comound unit to be used to initialize CompoundBaseUnit" do
       lambda{Unit::CompoundBaseUnit.new((Unit.m*Unit.m), 2)}.should raise_error
+    end
+
+
+    it "should rationalize base units with automatically" do
+      unit = Unit.yard*Unit.foot
+      unit.rationalize_base_units!.label.should eql 'yd^2'
+      unit = Unit.metre*Unit.centimetre/Unit.inch
+      unit.rationalize_base_units!(:full).label.should eql 'm^2/m'
+      unit.consolidate_base_units!.label.should eql 'm'
+    end
+
+    it "should rationalize base units with specified unit" do
+      unit = Unit.yard*Unit.foot
+      unit.rationalize_base_units!(:partial,:yd).label.should eql 'yd^2'
+      unit = Unit.metre*Unit.centimetre/Unit.inch
+      unit.rationalize_base_units!(:full,:m).label.should eql 'm^2/m'
+      unit.consolidate_base_units!.label.should eql 'm'
     end
 
   end

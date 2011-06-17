@@ -60,7 +60,7 @@ module Quantify
       unit = Unit.for unit
       other_unit = Unit.for other_unit
       unless unit.is_alternative_for? other_unit
-        raise InvalidUnitError, "Units do not represent the same physical quantity"
+        raise Exceptions::InvalidUnitError, "Units do not represent the same physical quantity"
       end
       new_unit = (unit / other_unit)
       value = 1/new_unit.factor
@@ -94,7 +94,7 @@ module Quantify
         ( name_symbol_label_or_object.is_a?(String) and name_symbol_label_or_object.empty? )
       name_symbol_or_label = name_symbol_label_or_object
       unless name_symbol_or_label.is_a? String or name_symbol_or_label.is_a? Symbol
-        raise InvalidArgumentError, "Argument must be a Symbol or String"
+        raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
       end
       if unit = Unit.match(name_symbol_or_label)
         return unit
@@ -102,7 +102,7 @@ module Quantify
       if unit = Unit.parse(name_symbol_or_label)
         return unit
       end
-    rescue InvalidUnitError
+    rescue Exceptions::InvalidUnitError
       return nil
     end
 
@@ -111,7 +111,7 @@ module Quantify
     def self.parse(string)
       string = string.standardize
       if string.scan(/(\/|per)/).size > 1
-        raise InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
+        raise Exceptions::InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
       end
 
       units = []
