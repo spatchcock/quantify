@@ -318,7 +318,7 @@ module Quantify
     #
     def si_base_units(by=nil)
       self.to_hash.map do |dimension,index|
-        Unit.si_base_units.select do |unit|
+        Unit.base_quantity_si_units.select do |unit|
           unit.measures == dimension.standardize
         end.first.clone ** index
       end.map(&by)
@@ -383,6 +383,8 @@ module Quantify
     def multiply(other)
       Dimensions.new(self.to_hash).multiply! other
     end
+    alias :times :multiply
+    alias :* :multiply
 
     # Similar to #multiply! but performs a division of self by the specified
     # Dimensions object.
@@ -399,6 +401,7 @@ module Quantify
     def divide(other)
       Dimensions.new(self.to_hash).divide! other
     end
+    alias :/ :divide
 
     # Raises self to the power provided. As with multiply and divide, the
     # #get_description method is invoked to attempt to find a suitable
@@ -422,6 +425,7 @@ module Quantify
     def pow(power)
       Dimensions.new(self.to_hash).pow!(power)
     end
+    alias :** :pow
 
     # Inverts self, returning a representation of 1/self. This is equivalent to
     # raising to the power -1. The #get_description method is invoked to attempt
@@ -442,11 +446,6 @@ module Quantify
     def reciprocalize
       Dimensions.new(self.to_hash).reciprocalize!
     end
-
-    alias :times :multiply
-    alias :* :multiply
-    alias :/ :divide
-    alias :** :pow
 
     protected
 

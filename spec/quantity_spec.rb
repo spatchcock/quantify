@@ -201,6 +201,11 @@ describe Quantity do
   end
 
   it "should convert compound units to SI correctly" do
+    speed = Quantity.new 100, (Unit.km/Unit.h)
+    speed.to_si.to_s(:name).should == "27.7777777777778 metres per second"
+  end
+
+  it "should convert compound units to SI correctly" do
     pressure = Quantity.new 100, (Unit.pound_force_per_square_inch)
     pressure.to_si.round.to_s(:name).should == "689476 pascals"
   end
@@ -260,6 +265,70 @@ describe Quantity do
     quantity.to_s.should eql "432.0 yd ft"
     quantity.rationalize_units!
     quantity.to_s.should eql  "144.0 yd^2"
+  end
+
+  it "should be greater than" do
+    (20.ft > 1.m).should be_true
+  end
+
+  it "should be greater than" do
+    (20.ft > 7.m).should be_false
+  end
+
+  it "should be less than" do
+    (20.ft/1.h < 8.yd/60.min).should be_true
+  end
+
+  it "should be equal" do
+    (1.yd == 3.ft).should be_true
+  end
+
+  it "should be between with same units" do
+    (25.ft.between? 1.ft,30.ft).should be_true
+  end
+
+  it "should be between even with different units" do
+    (25.ft.between? 1.ft,10.m).should be_true
+  end
+
+  it "comparison with non quantity should raise error" do
+    lambda{20.ft > 3}.should raise_error
+  end
+
+  it "comparison with non compatible quantity should raise error" do
+    lambda{20.ft > 4.K}.should raise_error
+  end
+
+  it "should be range" do
+    (2.ft..20.ft).should be_a Range
+  end
+
+  it "should return between value from range" do
+    (2.ft..20.ft).include?(3.ft).should be_true
+  end
+
+  it "should return between value from range with different units" do
+    (2.ft..4.m).include?(200.cm).should be_true
+    (1.ly..1.parsec).include?(2.ly).should be_true
+    (1.ly..1.parsec).include?(2.in).should be_false
+  end
+
+  it "should return between value from range using === operator" do
+    (3.ft === (2.ft..20.ft)).should be_true
+  end
+
+  it "should return between value from range with different units using === operator" do
+    (200.cm === (2.ft..4.m)).should be_true
+    (2.ly === (1.ly..1.parsec)).should be_true
+    (2.in === (1.ly..1.parsec)).should be_false
+  end
+
+  it "range comparison with non compatible quantity should raise error" do
+    lambda{20.ft === (1.ft..3.K)}.should raise_error
+  end
+
+  it "range comparison with non quantity should raise error" do
+    lambda{20.ft === (1.ft..3)}.should raise_error
   end
 end
 

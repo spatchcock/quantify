@@ -131,6 +131,10 @@ module Quantify
         @base_units.any? { |base| base.is_non_si_unit? }
       end
 
+      def is_base_quantity_si_unit?
+        @base_units.all? { |base| base.is_base_quantity_si_unit? }
+      end
+
       # Consolidate base units. A 'full' consolidation is performed, i.e.
       # consolidation across numerator and denominator. This is equivalent to the
       # automatic partial consolidation AND a cancelling of units (i.e.

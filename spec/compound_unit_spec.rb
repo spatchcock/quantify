@@ -200,6 +200,6 @@ describe Unit do
       unit.rationalize_base_units!(:full,:m).label.should eql 'm^2/m'
       unit.consolidate_base_units!.label.should eql 'm'
     end
-
+    
   end
 end

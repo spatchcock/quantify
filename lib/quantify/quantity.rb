@@ -3,6 +3,8 @@
 module Quantify
   class Quantity
 
+    include Comparable
+
     # The quantity class represents quantities. Quantities are represented by a
     # numeric value - of class Numeric - and a unit - of class Unit::Base.
     #
@@ -174,9 +176,9 @@ module Quantify
     end
 
     def convert_compound_unit_to_si!
-      until self.unit.is_si_unit? do
+      until self.unit.is_base_quantity_si_unit? do
         unit = self.unit.base_units.find do |base|
-          !base.unit.is_si_unit?
+          !base.is_base_quantity_si_unit?
         end.unit
         self.convert_compound_unit_to_non_equivalent_unit!(unit.si_unit)
       end
@@ -241,28 +243,27 @@ module Quantify
     def add(other)
       Quantity.new(value,unit).add!(other)
     end
+    alias :+ :add
 
     def subtract(other)
       Quantity.new(value,unit).subtract!(other)
     end
+    alias :- :subtract
 
     def multiply(other)
       Quantity.new(value,unit).multiply!(other)
     end
+    alias :times :multiply
+    alias :* :multiply
 
     def divide(other)
       Quantity.new(value,unit).divide!(other)
     end
+    alias :/ :divide
 
     def pow(power)
       Quantity.new(value,unit).pow!(power)
     end
-
-    alias :times :multiply
-    alias :* :multiply
-    alias :+ :add
-    alias :- :subtract
-    alias :/ :divide
     alias :** :pow
 
     def rationalize_units
@@ -298,6 +299,18 @@ module Quantify
     def round(decimal_places=0)
       rounded_quantity = Quantity.new @value, @unit
       rounded_quantity.round! decimal_places
+    end
+
+    def <=>(other)
+      raise Exceptions::InvalidArgumentError unless other.is_a? Quantity
+      raise Exceptions::InvalidArgumentError unless other.unit.is_alternative_for?(unit)
+      other = other.to unit
+      value.to_f <=> other.value.to_f
+    end
+
+    def ===(range)
+      raise Exceptions::InvalidArgumentError unless range.is_a? Range
+      range.include? self
     end
 
     # Enables shorthand for reciprocal of quantity, e.g.

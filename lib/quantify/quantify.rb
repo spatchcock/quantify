@@ -4,6 +4,8 @@ module Quantify
     self.module_eval &block if block
   end
 
+
+
   module ExtendedMethods
 
     # Provides syntactic sugar for accessing units via the #for method.

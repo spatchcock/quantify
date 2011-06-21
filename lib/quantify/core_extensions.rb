@@ -56,7 +56,7 @@ class Numeric
     if unit = Unit.for(method.to_s)
       Quantify::Quantity.new self, unit
     else
-      raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
+      super
     end
   end
 

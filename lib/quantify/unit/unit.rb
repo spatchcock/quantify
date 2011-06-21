@@ -187,6 +187,14 @@ module Quantify
       end
     end
 
+    # This returns the suite of units which represents THE SI units for each of
+    # the base dimensions, i.e. metre, kilogram, second, etc. but not prefixed
+    # versions of the same unit
+    #
+    def base_quantity_si_units
+      @units.select {|unit| unit.is_base_quantity_si_unit? }
+    end
+
     # This can be replicated by method missing approach, but explicit method provided
     # given importance in #match (and #for) methods regexen
     #

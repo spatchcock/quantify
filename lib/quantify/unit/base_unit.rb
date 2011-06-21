@@ -203,9 +203,19 @@ module Quantify
         self.name.pluralize
       end
       
-       # Determine if the unit represents one of the base quantities
+      # Determine if the unit represents one of the base quantities, length,
+      # mass, time, temperature, etc.
+      #
       def is_base_unit?
         Dimensions::BASE_QUANTITIES.map(&:standardize).include? self.measures
+      end
+
+      # Determine if the unit is THE canonical SI unit for a base quantity (length,
+      # mass, time, etc.). This method ignores prefixed versions of SI base units,
+      # returning true only for metre, kilogram, second, Kelvin, etc.
+      #
+      def is_base_quantity_si_unit?
+        is_si_unit? and is_base_unit? and is_benchmark_unit?
       end
 
       # Determine is the unit is a derived unit - that is, a unit made up of more
@@ -225,7 +235,8 @@ module Quantify
       # Determine if the unit is one of the units against which all other units
       # of the same physical quantity are defined. These units are almost entirely
       # equivalent to the non-prefixed, SI units, but the one exception is the
-      # kilogram, making this method necessary.
+      # kilogram, which is an oddity in being THE canonical SI unit for mass, yet
+      # containing a prefix. This oddity makes this method useful/necessary.
       #
       def is_benchmark_unit?
         self.factor == 1.0
@@ -277,7 +288,7 @@ module Quantify
           self.send(attr) == other.send(attr)
         end
       end
-
+      
       alias :== :is_same_as?
 
       # Check if unit has the identity as another, i.e. the same label. This is

@@ -67,20 +67,21 @@ module Quantify
         @index < 0
       end
 
-      def is_si_unit?
-        @unit.is_si_unit?
+      # The following methods refer only to the unit of the CompoundBaseUnit
+      # object, rather than the unit *together with its index*
+
+      Unit_Methods = [ :base_quantity_si_unit, :base_unit, :benchmark_unit, :si_unit,
+                       :non_si_unit, :prefixed_unit, :derived_unit ]
+  
+      Unit_Methods.each do |method|
+        method = "is_#{method.to_s}?"
+        define_method(method) do
+          @unit.send method.to_sym
+        end
       end
 
-      def is_non_si_unit?
-        @unit.is_non_si_unit?
-      end
-
-      # Physical quantity represented by self. This refers only to the unit, rather
-      # than the unit together with the index. Is used to match base units with
-      # similar units of same physical quantity
-      #
       def measures
-        @unit.dimensions.physical_quantity
+        @unit.measures
       end
 
       def initialize_copy(source)
