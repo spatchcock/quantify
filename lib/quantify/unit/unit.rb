@@ -191,7 +191,7 @@ module Quantify
     # the base dimensions, i.e. metre, kilogram, second, etc. but not prefixed
     # versions of the same unit
     #
-    def base_quantity_si_units
+    def self.base_quantity_si_units
       @units.select {|unit| unit.is_base_quantity_si_unit? }
     end
 

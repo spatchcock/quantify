@@ -11,9 +11,8 @@ module Quantify
       # Create a new instance of self (i.e. Base or an inherited class) and load
       # into the system of known units. See initialize for details of options
       #
-      def self.load(options)
-        unit = self.new(options)
-        unit.load
+      def self.load(options=nil,&block)
+        self.new(options,&block).load
       end
 
       def self.construct_and_load(unit,&block)
@@ -50,8 +49,8 @@ module Quantify
         return new_unit
       end
 
-      # Syntactic sugar for defining the known units, enabling the required
-      # associated units to be loaded at runtime, e.g.
+      # Syntactic sugar for defining the units known to the system, enabling the
+      # required associated units to be loaded at runtime, e.g.
       #
       #  Unit::[Base|SI|NonSI].configure do |config|
       #
@@ -65,9 +64,9 @@ module Quantify
         class_eval &block if block
       end
       
-      attr_accessor :name, :symbol, :label
-      attr_accessor :dimensions, :factor
-      attr_accessor :acts_as_alternative_unit, :acts_as_equivalent_unit
+      attr_accessor :name, :symbol, :label, :factor
+      attr_reader :dimensions
+      attr_reader :acts_as_alternative_unit, :acts_as_equivalent_unit
 
       # Create a new Unit::Base instance.
       #
@@ -101,52 +100,69 @@ module Quantify
       # representation in the Dimensions class. This dimensions attribute is to
       # provide much of the unit functionality
       #
-      def initialize(options=nil)
+      def initialize(options=nil)    
+        @acts_as_alternative_unit = true
+        @acts_as_equivalent_unit = false
+        @factor = 1.0
+        @symbol = nil
+        @label = nil
         if options.is_a? Hash
+          self.dimensions = options[:dimensions] || options[:physical_quantity]
           @name = options[:name].standardize.singularize.downcase
-          options[:dimensions] = options[:dimensions] || options[:physical_quantity]
-          if options[:dimensions].is_a? Dimensions
-            @dimensions = options[:dimensions]
-          elsif options[:dimensions].is_a? String or options[:dimensions].is_a? Symbol
-            @dimensions = Dimensions.for options[:dimensions]
-          else
-            raise Exceptions::InvalidArgumentError, "Unknown physical_quantity specified"
-          end
-          @factor = options[:factor].nil? ? 1.0 : options[:factor].to_f
-          @symbol = options[:symbol].nil? ? nil : options[:symbol].standardize
-          @label = options[:label].nil? ? nil : options[:label].to_s
-          @acts_as_alternative_unit = true
-          @acts_as_equivalent_unit = false
+          @factor = options[:factor].to_f if options[:factor]
+          @symbol = options[:symbol].standardize if options[:symbol]
+          @label = options[:label].to_s if options[:label]
         end
         yield self if block_given?
         valid?
       end
+
+      def dimensions=(dimensions)
+        if dimensions.is_a? Dimensions
+          @dimensions = dimensions
+        elsif dimensions.is_a? String or dimensions.is_a? Symbol
+          @dimensions = Dimensions.for dimensions
+        else
+          raise Exceptions::InvalidArgumentError, "Unknown physical_quantity specified"
+        end
+      end
+      alias :physical_quantity= :dimensions=
 
       # Permits a block to be used, operating on self. This is useful for modifying
       # the attributes of an already instantiated unit, especially when defining
       # units on the basis of operation on existing units for adding specific
       # (rather than derived) names or symbols, e.g.
       #
-      #   (Unit.pound_force/(Unit.in**2)).operate do |unit|
+      #   (Unit.pound_force/(Unit.in**2)).configure do |unit|
       #     unit.symbol = 'psi'
       #     unit.label = 'psi'
       #     unit.name = 'pound per square inch'
       #   end
       #
-      def operate
+      def configure
         yield self if block_given?
         return self if valid?
       end
 
+      # Similar to #configure but makes the new unit configuration the canonical
+      # unit for self.label
+      #
+      def configure_as_canonical &block
+        unload if loaded?
+        configure &block if block_given?
+        make_canonical
+      end
+
       # Load an initialized Unit into the system of known units.
       #
-      # If a block is given, the unit can be operated on prior to loading, in a
-      # similar to way to the #operate method.
+      # If a block is given, the unit can be configured prior to loading, in a
+      # similar to way to the #configure method.
       #
       def load
         yield self if block_given?
         raise Exceptions::InvalidArgumentError, "A unit with the same label: #{self.name}) already exists" if loaded?
         Quantify::Unit.units << self if valid?
+        return self
       end
 
       # Remove from system of known units.
@@ -159,8 +175,16 @@ module Quantify
         Unit.units.any? { |unit| self.has_same_identity_as? unit }
       end
 
+      # Make self the canonical representation of the unit defined by self#label
       def make_canonical
-        unload
+        unload if loaded?
+        load
+      end
+
+      # Set the canonical unit label - the unique unit identifier - to a new value
+      def canonical_label=(new_label)
+        unload if loaded?
+        self.label = new_label
         load
       end
 
@@ -386,6 +410,8 @@ module Quantify
         other.instance_of?(Unit::Compound) ? options += other.base_units : options << other
         Unit::Compound.new(*options)
       end
+      alias :times :multiply
+      alias :* :multiply
 
       # Divide one unit by another. This results in the generation of a compound
       # unit.
@@ -404,6 +430,7 @@ module Quantify
         end
         Unit::Compound.new(*options)
       end
+      alias :/ :divide
 
       # Raise a unit to a power. This results in the generation of a compound
       # unit, e.g. m^3.
@@ -423,16 +450,12 @@ module Quantify
         end
         return new_unit
       end
+      alias :** :pow
 
       # Return new unit representing the reciprocal of self, i.e. 1/self
       def reciprocalize
         Unit.unity / self
       end
-
-      alias :times :multiply
-      alias :* :multiply
-      alias :/ :divide
-      alias :** :pow
 
       # Apply a prefix to self. Returns new unit according to the prefixed version
       # of self, complete with modified name, symbol, factor, etc..

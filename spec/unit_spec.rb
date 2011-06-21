@@ -168,16 +168,16 @@ describe Unit do
       end}.should raise_error
     end
 
-    it "should modify unit attributes with block and #operate" do
-      unit = (Unit.kg/Unit.kWh).operate do |u|
+    it "should modify unit attributes with block and #configure" do
+      unit = (Unit.kg/Unit.kWh).configure do |u|
         u.name = 'electricity emissions factor'
       end
       unit.class.should == Quantify::Unit::Compound
       unit.name = 'electricity emissions factor'
     end
 
-    it "should raise error with block and #operate which removes name" do
-      lambda{(Unit.kg/Unit.kWh).operate do |u|
+    it "should raise error with block and #configure which removes name" do
+      lambda{(Unit.kg/Unit.kWh).configure do |u|
         u.name = ""
       end}.should raise_error
     end
@@ -286,13 +286,63 @@ describe Unit do
     it "should make new unit configuration canonical" do
       unit = Unit.psi
       unit.name.should == 'pound force per square inch'
-      unit.operate {|unit| unit.name = 'PSI'}
+      unit.configure {|unit| unit.name = 'PSI'}
       unit.name.should == 'PSI'
       Unit.psi.name.should == 'pound force per square inch'
       unit.make_canonical
       Unit.psi.name.should == 'PSI'
-      unit.operate {|unit| unit.name = 'pound force per square inch'}
+      unit.configure {|unit| unit.name = 'pound force per square inch'}
       unit.make_canonical
+    end
+
+    it "should change the label of canonical unit representation" do
+      unit = Unit.cubic_metre
+      unit.label.should eql "m^3"
+      unit.canonical_label = "m3"
+      unit.label.should eql "m3"
+      Unit.cubic_metre.label.should eql "m3"
+    end
+
+    it "should configure on canonical unit" do
+      unit = Unit.kg.configure_as_canonical do |unit|
+        unit.name = 'killogram'
+      end
+      unit.name.should eql 'killogram'
+      unit.symbol.should eql 'kg'
+      Unit.kg.name.should eql 'killogram'
+      (Unit.killogram).should be_a Unit::Base
+
+      unit = Unit.kg.configure_as_canonical do |unit|
+        unit.name = 'kilogram'
+      end
+    end
+
+    it "should configure on canonical unit even if changing label" do
+      unit = Unit.barn.configure_as_canonical do |unit|
+        unit.label = 'BARN'
+      end
+      unit.label.should eql 'BARN'
+      unit.symbol.should eql 'b'
+      Unit.barn.label.should eql 'BARN'
+      (Unit.BARN).should be_a Unit::Base
+
+      unit = Unit.barn.configure_as_canonical do |unit|
+        unit.label = 'b'
+      end
+    end
+
+    it "should configure on canonical unit even if changing label using canonical_label=" do
+      unit = Unit.barn.configure_as_canonical do |unit|
+        unit.canonical_label = 'BARN'
+      end
+      unit.label.should eql 'BARN'
+      unit.symbol.should eql 'b'
+      Unit.barn.label.should eql 'BARN'
+      (Unit.BARN).should be_a Unit::Base
+
+      unit = Unit.barn.configure_as_canonical do |unit|
+        unit.label = 'b'
+      end
     end
 
   end
@@ -322,6 +372,33 @@ describe Unit do
     it "should load unit into module array with class method" do
       unit = Unit::NonSI.load :name => 'a name', :physical_quantity => :energy, :factor => 10, :symbol => 'anm', :label => 'a_name'
       Unit.non_si_units_by_name.should include 'a name'
+      Unit.unload(unit)
+    end
+
+    it "should load unit into module array with class method and block" do
+      Unit::NonSI.load do |unit|
+        unit.name = 'a name'
+        unit.physical_quantity = :energy
+        unit.factor = 10
+        unit.symbol = 'anm'
+        unit.label = 'a_name'
+      end
+      Unit.non_si_units_by_name.should include 'a name'
+      Unit.a_name.measures.should eql 'energy'
+      Unit.unload('a_name')
+    end
+
+    it "should load unit into module array with class method and block and #dimensions method" do
+      Unit::NonSI.load do |unit|
+        unit.name = 'a name'
+        unit.dimensions = :energy
+        unit.factor = 10
+        unit.symbol = 'anm'
+        unit.label = 'a_name'
+      end
+      Unit.non_si_units_by_name.should include 'a name'
+      Unit.a_name.measures.should eql 'energy'
+      Unit.unload('a_name')
     end
     
     it "should derive compound unit correctly" do

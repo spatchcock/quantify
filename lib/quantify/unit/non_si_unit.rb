@@ -10,8 +10,11 @@ module Quantify
       # These are required in order to perform conversion, e.g. kelvin => celsius
       # and therefore become and additional attribute to NonSI units
       #
-      def initialize(options)
-        @scaling = options[:scaling].nil? ? 0.0 : options.delete(:scaling).to_f
+      def initialize(options=nil)
+        @scaling = 0.0
+        if options.is_a? Hash and options[:scaling]
+          @scaling = options.delete(:scaling).to_f
+        end
         super(options)
       end
 
