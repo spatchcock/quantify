@@ -10,16 +10,16 @@ module Quantify
           end
         end
 
-        def self.configure &block
-          self.class_eval &block if block
+        def self.configure(&block)
+          self.class_eval(&block) if block
         end
 
         attr_reader :name, :symbol, :factor
 
         def initialize(options)
-          @symbol = options[:symbol].standardize
+          @symbol = options[:symbol].remove_underscores
           @factor = options[:factor].to_f
-          @name = options[:name].standardize.downcase
+          @name = options[:name].remove_underscores.downcase
         end
 
         def is_si_prefix?
@@ -27,7 +27,7 @@ module Quantify
         end
 
         def is_non_si_prefix?
-          self.is_a? NonSI
+          self.is_a?(NonSI)
         end
 
         def label

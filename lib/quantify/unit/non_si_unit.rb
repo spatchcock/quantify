@@ -12,7 +12,7 @@ module Quantify
       #
       def initialize(options=nil)
         @scaling = 0.0
-        if options.is_a? Hash and options[:scaling]
+        if options.is_a?(Hash) && options[:scaling]
           @scaling = options.delete(:scaling).to_f
         end
         super(options)

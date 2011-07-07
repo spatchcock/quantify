@@ -1,4 +1,3 @@
-#! usr/bin/ruby
 
 module Quantify
 
@@ -52,7 +51,7 @@ module Quantify
     #
     def self.base_dimensions
       @@dimensions.select do |dimensions|
-        BASE_QUANTITIES.map(&:standardize).include? dimensions.describe
+        BASE_QUANTITIES.map {|q| q.remove_underscores}.include?(dimensions.describe)
       end
     end
 
@@ -83,8 +82,8 @@ module Quantify
     # Remove a dimension from the system of known dimensions
     def self.unload(*unloaded_dimensions)
       [unloaded_dimensions].flatten.each do |unloaded_dimension|
-        unloaded_dimension = Dimensions.for(unloaded_dimensions)
-        @@dimensions.delete_if { |unit| unit.physical_quantity == unloaded_dimension.physical_quantity }
+        unloaded_dimension = Dimensions.for(unloaded_dimension)
+        @@dimensions.delete_if { |dimension| dimension.has_same_identity_as? unloaded_dimension }
       end
     end
 
@@ -97,7 +96,7 @@ module Quantify
     #                                               ... ]
     #
     def self.physical_quantities
-      @@dimensions.map(&:physical_quantity)
+      @@dimensions.map {|dimension| dimension.physical_quantity }
     end
 
     # Retrieve a known quantity - returns a Dimensions instance, which is a
@@ -116,10 +115,9 @@ module Quantify
     #
     def self.for(name)
       return name if name.is_a? Dimensions
-      if name.is_a? String or name.is_a? Symbol
-        if quantity = @@dimensions.find do |quantity|
-            quantity.physical_quantity == name.standardize.downcase
-          end
+      if (name.is_a?(String) || name.is_a?(Symbol))
+        name = name.remove_underscores.downcase
+        if quantity = @@dimensions.find { |quantity| quantity.physical_quantity == name }
           return quantity.clone
         else
           raise Exceptions::InvalidArgumentError, "Physical quantity not known: #{name}"
@@ -141,8 +139,8 @@ module Quantify
     #
     #  end
     #
-    def self.configure &block
-        self.class_eval &block if block
+    def self.configure(&block)
+        self.class_eval(&block) if block
     end
 
     # Provides a shorthand for retrieving known quantities, e.g.:
@@ -185,7 +183,7 @@ module Quantify
     #
     def initialize(options={})
       if options.has_key?(:physical_quantity)
-        @physical_quantity = options.delete(:physical_quantity).standardize.downcase
+        @physical_quantity = options.delete(:physical_quantity).remove_underscores.downcase
       end
       enumerate_base_quantities(options)
       describe
@@ -199,7 +197,7 @@ module Quantify
     # description of the physical quantity represented.
     #
     def load
-      if describe and not loaded?
+      if describe && !loaded?
         @@dimensions << self
       elsif describe
         raise Exceptions::InvalidDimensionError, "A dimension instance with the same physical quantity already exists"
@@ -218,7 +216,7 @@ module Quantify
     end
 
     def has_same_identity_as?(other)
-      self.physical_quantity == other.physical_quantity and not self.physical_quantity.nil?
+      @physical_quantity == other.physical_quantity && !@physical_quantity.nil?
     end
 
     # Return a description of what physical quantity self represents. If no
@@ -246,7 +244,7 @@ module Quantify
     #
     def get_description
       similar = @@dimensions.find { |quantity| quantity == self }
-      @physical_quantity = ( similar.nil? ? nil : similar.physical_quantity )
+      @physical_quantity = similar.nil? ? nil : similar.physical_quantity
     end
 
     # Returns an array containing the known units which represent the physical
@@ -287,8 +285,8 @@ module Quantify
     #                                            #=> 'metre squared per second'
     #
     def si_unit
-      return Unit.steridian if self.describe == 'solid angle'
-      return Unit.radian if self.describe == 'plane angle' 
+      return Unit.steridian if describe == 'solid angle'
+      return Unit.radian if describe == 'plane angle' 
       return si_base_units.inject(Unit.unity) do |compound,unit|
         compound * unit
       end.or_equivalent
@@ -319,7 +317,7 @@ module Quantify
     def si_base_units(by=nil)
       self.to_hash.map do |dimension,index|
         Unit.base_quantity_si_units.select do |unit|
-          unit.measures == dimension.standardize
+          unit.measures == dimension.remove_underscores
         end.first.clone ** index
       end.map(&by)
     end
@@ -346,7 +344,7 @@ module Quantify
     # Returns true if self represents one of the base quantities (i.e. length,
     # mass, time, etc.)
     def is_base?
-      base_quantities.size == 1 and
+      base_quantities.size == 1 &&
         self.instance_variable_get(base_quantities.first) == 1 ? true : false
     end
 
@@ -495,7 +493,7 @@ module Quantify
     def enumerate_base_quantities(options)
       options.each_pair do |base_quantity,index|
         base_quantity = base_quantity.to_s.downcase.to_sym
-        unless index.is_a? Integer and BASE_QUANTITIES.include? base_quantity
+        unless index.is_a?(Integer) && BASE_QUANTITIES.include?(base_quantity)
           raise Exceptions::InvalidDimensionError, "An invalid base quantity was specified (#{base_quantity})"
         end
         variable = "@#{base_quantity}"
@@ -514,7 +512,7 @@ module Quantify
 
     # Make object represent a dimensionless quantity.
     def make_dimensionless
-      self.physical_quantity = 'dimensionless'
+      @physical_quantity = 'dimensionless'
       base_quantities.each { |var| remove_instance_variable(var) }
     end
 

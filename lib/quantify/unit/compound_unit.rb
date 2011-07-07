@@ -41,7 +41,7 @@ module Quantify
           next if new_base.unit.is_dimensionless?
 
           new_base.index = base_units.select do |other_base|
-            new_base.unit == other_base.unit
+            new_base.unit.is_equivalent_to? other_base.unit
           end.inject(new_base.index) do |index,other_base|
             base_units.delete other_base
             index += other_base.index
@@ -57,8 +57,8 @@ module Quantify
       #
       # This is a class method which takes an arbitrary array of base units as an
       # argument. This means that consolidation can be performed on either all
-      # base units or just a subset - the numerator or denominator units.
-      #''
+      # base units or just a subset - e.g. the numerator or denominator units.
+      #
       # The units to use for particular physical dimension can be specified
       # following the inital argument. If no unit is specified for a physical
       # quantity which is represented in the array of base units, then the first
@@ -93,8 +93,8 @@ module Quantify
             @base_units << unit
           elsif unit.is_a? Unit::Base
             @base_units << CompoundBaseUnit.new(unit)
-          elsif unit.is_a? Array and unit.first.is_a? Unit::Base and
-              not unit.first.is_a? Compound and unit.size == 2
+          elsif unit.is_a?(Array) && unit.first.is_a?(Unit::Base) &&
+              !unit.first.is_a?(Compound) && unit.size == 2
             @base_units << CompoundBaseUnit.new(unit.first,unit.last)
           else
             raise Exceptions::InvalidArgumentError, "#{unit} does not represent a valid base unit"
@@ -165,10 +165,10 @@ module Quantify
           raise Exceptions::InvalidArgumentError, "Cannot cancel by a compound unit" if unit.is_a? Unit::Compound
           unit = Unit.for unit unless unit.is_a? Unit::Base
 
-          numerator_unit = numerator_units.find { |base| unit == base.unit }
-          denominator_unit = denominator_units.find { |base| unit == base.unit }
+          numerator_unit = numerator_units.find { |base| unit.is_equivalent_to? base.unit }
+          denominator_unit = denominator_units.find { |base| unit.is_equivalent_to? base.unit }
 
-          if numerator_unit and denominator_unit
+          if numerator_unit && denominator_unit
             cancel_value = [numerator_unit.index,denominator_unit.index].min.abs
             numerator_unit.index -= cancel_value
             denominator_unit.index += cancel_value
@@ -177,6 +177,20 @@ module Quantify
         consolidate_numerator_and_denominator_units!
       end
 
+      # Make the base units of self use consistent units for each physical quantity
+      # represented. For example, lb/kg => kg/kg.
+      #
+      # By default, units are rationalized within the the numerator and denominator
+      # respectively. That is, different units representing the same physical
+      # quantity may appear across the numerator and denominator, but not within
+      # each. To fully rationalize the base units of self, pass in the symbol
+      # :full as a first argument. Otherwise :partial is passed as the default.
+      #
+      # The units to use for particular physical dimension can be specified
+      # following the inital argument. If no unit is specified for a physical
+      # quantity which is represented in the array of base units, then the first
+      # unit found for that physical quantity is used as the canonical one.
+      #
       def rationalize_base_units!(scope=:partial,*units)
         if scope == :full
           Compound.rationalize_base_units(@base_units,*units)
@@ -187,16 +201,26 @@ module Quantify
         consolidate_numerator_and_denominator_units!
       end
 
+      # Return a known unit which is equivalent to self in terms of its physical
+      # quantity (dimensions), factor and scaling attributes (i.e. representing the
+      # precise same physical unit but perhaps with different identifiers), e.g.
+      #
+      #   ((Unit.kg*(Unit.m**"))/(Unit.s**2)).equivalent_known_unit.name
+      #
+      #                                #=> "joule"
+      #
       def equivalent_known_unit
         Unit.units.find do |unit|
-          self == unit and
-          not unit.is_compound_unit?
+          self.is_equivalent_to?(unit) && !unit.is_compound_unit?
         end
       end
 
-      def or_equivalent &block
+      # Returns an equivalent known unit (via #equivalent_known_unit) if it exists.
+      # Otherwise, returns false.
+      #
+      def or_equivalent
         equivalent_unit = equivalent_known_unit
-        if equivalent_unit and equivalent_unit.acts_as_equivalent_unit
+        if equivalent_unit && equivalent_unit.acts_as_equivalent_unit
           return equivalent_unit
         else
           return self
@@ -206,11 +230,11 @@ module Quantify
       protected
 
       def initialize_attributes
-        @dimensions = derive_dimensions
-        @name = derive_name
-        @symbol = derive_symbol
-        @factor = derive_factor
-        @label = derive_label
+        self.dimensions = derive_dimensions
+        self.name = derive_name
+        self.symbol = derive_symbol
+        self.factor = derive_factor
+        self.label = derive_label
       end
 
       # Partially consolidate base units, i.e. numerator and denomiator are
@@ -304,7 +328,7 @@ module Quantify
           format = ( unit_label.empty? ? :label : :reciprocalized_label )
           unit_label << "/" unless unit_label.empty?
           denominator_units.inject(unit_label) do |label,base|
-            label << "·" unless unit_label.empty? or unit_label =~ /\/\z/
+            label << "·" unless unit_label.empty? || unit_label =~ /\/\z/
             label << base.send(format)
           end
         end

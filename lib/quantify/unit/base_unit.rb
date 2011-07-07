@@ -45,7 +45,7 @@ module Quantify
       #
       def self.construct(unit,&block)
         new_unit = self.new unit.to_hash
-        yield new_unit if block_given?
+        block.call(new_unit) if block_given?
         return new_unit
       end
 
@@ -64,8 +64,7 @@ module Quantify
         class_eval &block if block
       end
       
-      attr_accessor :name, :symbol, :label, :factor
-      attr_reader :dimensions
+      attr_reader :name, :symbol, :label, :factor, :dimensions
       attr_reader :acts_as_alternative_unit, :acts_as_equivalent_unit
 
       # Create a new Unit::Base instance.
@@ -100,33 +99,87 @@ module Quantify
       # representation in the Dimensions class. This dimensions attribute is to
       # provide much of the unit functionality
       #
-      def initialize(options=nil)    
+      def initialize(options=nil,&block)
         @acts_as_alternative_unit = true
         @acts_as_equivalent_unit = false
-        @factor = 1.0
-        @symbol = nil
-        @label = nil
+        self.factor = 1.0
+        self.symbol = nil
+        self.label = nil
         if options.is_a? Hash
           self.dimensions = options[:dimensions] || options[:physical_quantity]
-          @name = options[:name].standardize.singularize.downcase
-          @factor = options[:factor].to_f if options[:factor]
-          @symbol = options[:symbol].standardize if options[:symbol]
-          @label = options[:label].to_s if options[:label]
+          self.name = options[:name]
+          self.factor = options[:factor] if options[:factor]
+          self.symbol = options[:symbol] if options[:symbol]
+          self.label = options[:label] if options[:label]
         end
-        yield self if block_given?
+        block.call(self) if block_given?
         valid?
       end
 
+      # Set the dimensions attribute of self. Valid arguments passed in are (1)
+      # instances of the Dimensions class; or (2) string or symbol matching
+      # the physical quantity attribute of a known Dimensions object.
+      #
       def dimensions=(dimensions)
         if dimensions.is_a? Dimensions
           @dimensions = dimensions
-        elsif dimensions.is_a? String or dimensions.is_a? Symbol
-          @dimensions = Dimensions.for dimensions
+        elsif dimensions.is_a?(String) || dimensions.is_a?(Symbol)
+          @dimensions = Dimensions.for(dimensions)
         else
           raise Exceptions::InvalidArgumentError, "Unknown physical_quantity specified"
         end
       end
       alias :physical_quantity= :dimensions=
+
+      # Set the name attribute of self. Names are stringified, singlularized and
+      # stripped of underscores. Superscripts are formatted according to the
+      # configuration found in Quantify.use_superscript_characters? Names are NOT
+      # case sensitive (retrieving units by name can use any or mixed cases).
+      #
+      def name=(name)
+        name = name.to_s.remove_underscores.singularize
+        @name = Quantify.use_superscript_characters? ? name.with_superscript_characters : name.without_superscript_characters
+      end
+
+      # Set the symbol attribute of self. Symbols are stringified and stripped of
+      # any underscores. Superscripts are formatted according to the configuration
+      # found in Quantify.use_superscript_characters?
+      #
+      # Conventional symbols for units and unit prefixes prescribe case clearly
+      # (e.g. 'm' => metre, 'M' => mega-; 'g' => gram, 'G' => giga-) and
+      # therefore symbols ARE case senstive.
+      #
+      def symbol=(symbol)
+        symbol = symbol.to_s.remove_underscores
+        @symbol = Quantify.use_superscript_characters? ? symbol.with_superscript_characters : symbol.without_superscript_characters
+      end
+
+      # Set the label attribute of self. This represents the unique identifier for
+      # the unit, and follows JScience for many standard units and general
+      # formatting (e.g. underscores, forward slashes, middots).
+      #
+      # Labels are stringified and superscripts are formatted according to the
+      # configuration found in Quantify.use_superscript_characters?
+      #
+      # Labels are a unique consistent reference and are therefore case senstive.
+      #
+      def label=(label)
+        label = label.to_s.gsub(" ","_")
+        @label = Quantify.use_superscript_characters? ? label.with_superscript_characters : label.without_superscript_characters
+      end
+
+      # Refresh the name, symbol and label attributes of self with respect to the
+      # configuration found in Quantify.use_superscript_characters?
+      #
+      def refresh_identifiers!
+        self.name = name
+        self.symbol = symbol
+        self.label = label
+      end
+
+      def factor=(factor)
+        @factor = factor.to_f
+      end
 
       # Permits a block to be used, operating on self. This is useful for modifying
       # the attributes of an already instantiated unit, especially when defining
@@ -139,17 +192,17 @@ module Quantify
       #     unit.name = 'pound per square inch'
       #   end
       #
-      def configure
-        yield self if block_given?
+      def configure(&block)
+        block.call(self) if block_given?
         return self if valid?
       end
 
       # Similar to #configure but makes the new unit configuration the canonical
       # unit for self.label
       #
-      def configure_as_canonical &block
+      def configure_as_canonical(&block)
         unload if loaded?
-        configure &block if block_given?
+        configure(&block) if block_given?
         make_canonical
       end
 
@@ -158,8 +211,8 @@ module Quantify
       # If a block is given, the unit can be configured prior to loading, in a
       # similar to way to the #configure method.
       #
-      def load
-        yield self if block_given?
+      def load(&block)
+        block.call(self) if block_given?
         raise Exceptions::InvalidArgumentError, "A unit with the same label: #{self.name}) already exists" if loaded?
         Quantify::Unit.units << self if valid?
         return self
@@ -224,14 +277,14 @@ module Quantify
       end
 
       def pluralized_name
-        self.name.pluralize
+        @name.pluralize
       end
       
       # Determine if the unit represents one of the base quantities, length,
       # mass, time, temperature, etc.
       #
       def is_base_unit?
-        Dimensions::BASE_QUANTITIES.map(&:standardize).include? self.measures
+        Dimensions::BASE_QUANTITIES.map {|base| base.remove_underscores }.include? self.measures
       end
 
       # Determine if the unit is THE canonical SI unit for a base quantity (length,
@@ -239,20 +292,20 @@ module Quantify
       # returning true only for metre, kilogram, second, Kelvin, etc.
       #
       def is_base_quantity_si_unit?
-        is_si_unit? and is_base_unit? and is_benchmark_unit?
+        is_si_unit? && is_base_unit? && is_benchmark_unit?
       end
 
       # Determine is the unit is a derived unit - that is, a unit made up of more
       # than one of the base quantities
       #
       def is_derived_unit?
-        not is_base_unit?
+        !is_base_unit?
       end
 
       # Determine if the unit is a prefixed unit
       def is_prefixed_unit?
-        return true if valid_prefixes.size > 0 and
-          self.name =~ /\A(#{valid_prefixes.map(&:name).join("|")})/
+        return true if valid_prefixes.size > 0 &&
+          self.name =~ /\A(#{valid_prefixes.map {|p| p.name}.join("|")})/
         return false
       end
 
@@ -263,7 +316,7 @@ module Quantify
       # containing a prefix. This oddity makes this method useful/necessary.
       #
       def is_benchmark_unit?
-        self.factor == 1.0
+        @factor == 1.0
       end
 
       # Determine is a unit object represents an SI named unit
@@ -283,18 +336,18 @@ module Quantify
       end
 
       def is_dimensionless?
-        self.dimensions.is_dimensionless?
+        @dimensions.is_dimensionless?
       end
 
-      # Determine if self is the same unit as another. Similarity is based on
+      # Determine if self is equivalent to another. Equivalency is based on
       # representing the same physical quantity (i.e. dimensions) and the same
       # factor and scaling values.
       #
-      #  Unit.metre.is_same_as? Unit.foot    #=> false
+      #  Unit.metre.is_equivalent_to? Unit.foot    #=> false
       #
-      #  Unit.metre.is_same_as? Unit.gram    #=> false
+      #  Unit.metre.is_equivalent_to? Unit.gram    #=> false
       #
-      #  Unit.metre.is_same_as? Unit.metre   #=> true
+      #  Unit.metre.is_equivalent_to? Unit.metre   #=> true
       #
       # The base_units attr of Compound units are not compared. Neither are the
       # names or symbols. This is because we want to recognise cases where units
@@ -303,25 +356,24 @@ module Quantify
       # example, if we build a unit for energy using only SI units, we want to
       # recognise this as a joule, rather than a kg m^2 s^-2, e.g.
       #
-      #   (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).is_same_as? Unit.joule
+      #   (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).is_equivalent_to? Unit.joule
       #
       #                                      #=> true
       #
-      def is_same_as?(other)
+      def is_equivalent_to?(other)
         [:dimensions,:factor,:scaling].all? do |attr|
           self.send(attr) == other.send(attr)
         end
       end
-      
-      alias :== :is_same_as?
 
       # Check if unit has the identity as another, i.e. the same label. This is
       # used to determine if a unit with the same accessors already exists in
       # the module variable @@units
       #
       def has_same_identity_as?(other)
-        self.label == other.label and not self.label.nil?
+        @label == other.label && !@label.nil?
       end
+      alias :== :has_same_identity_as?
 
       # Determine if another unit is an alternative unit for self, i.e. do the two
       # units represent the same physical quantity. This is established by compraing
@@ -334,7 +386,7 @@ module Quantify
       #  Unit.metre.is_alternative_for? Unit.metre   #=> true
       #
       def is_alternative_for?(other)
-        other.dimensions == self.dimensions
+        other.dimensions == @dimensions
       end
       
       # List the alternative units for self, i.e. the other units which share
@@ -348,8 +400,8 @@ module Quantify
       # are returned within the array
       #
       def alternatives(by=nil)
-        self.dimensions.units(nil).reject do |unit|
-          unit.is_same_as? self or not unit.acts_as_alternative_unit
+        @dimensions.units(nil).reject do |unit|
+          unit.is_equivalent_to?(self) || !unit.acts_as_alternative_unit
         end.map(&by)
       end
 
@@ -357,18 +409,18 @@ module Quantify
       # by self, e.g.
       #
       def si_unit
-        self.dimensions.si_unit
+        @dimensions.si_unit
       end
 
       def valid?
-        return true if valid_descriptors? and valid_dimensions?
+        return true if valid_descriptors? && valid_dimensions?
         raise Exceptions::InvalidArgumentError, "Unit definition must include a name, a symbol, a label and physical quantity"
       end
 
       def valid_descriptors?
         [:name, :symbol, :label].all? do |attr|
           attribute = send(attr)
-          attribute.is_a? String and not attribute.empty?
+          attribute.is_a?(String) && !attribute.empty?
         end
       end
 
@@ -396,7 +448,7 @@ module Quantify
       #                                               "T", "P" ... ]
       #
       def valid_prefixes(by=nil)
-        return empty_array = [] if self.is_compound_unit?
+        return [] if self.is_compound_unit?
         return Unit::Prefix.si_prefixes.map(&by) if is_si_unit?
         return Unit::Prefix.non_si_prefixes.map(&by) if is_non_si_unit?
       end
@@ -406,7 +458,7 @@ module Quantify
       #
       def multiply(other)
         options = []
-        self.instance_of?(Unit::Compound) ? options += self.base_units : options << self
+        self.instance_of?(Unit::Compound) ? options += @base_units : options << self
         other.instance_of?(Unit::Compound) ? options += other.base_units : options << other
         Unit::Compound.new(*options)
       end
@@ -421,7 +473,7 @@ module Quantify
       #
       def divide(other)
         options = []
-        self.instance_of?(Unit::Compound) ? options += self.base_units : options << self
+        self.instance_of?(Unit::Compound) ? options += @base_units : options << self
 
         if other.instance_of? Unit::Compound
           options += other.base_units.map { |base| base.index *= -1; base }
@@ -461,7 +513,7 @@ module Quantify
       # of self, complete with modified name, symbol, factor, etc..
       #
       def with_prefix(name_or_symbol)
-        if self.name =~ /\A(#{valid_prefixes(:name).join("|")})/
+        if @name =~ /\A(#{valid_prefixes(:name).join("|")})/
           raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
         end
         
@@ -469,11 +521,11 @@ module Quantify
 
         unless prefix.nil?
           new_unit_options = {}
-          new_unit_options[:name] = "#{prefix.name}#{self.name}"
-          new_unit_options[:symbol] = "#{prefix.symbol}#{self.symbol}"
-          new_unit_options[:label] = "#{prefix.symbol}#{self.label}"
-          new_unit_options[:factor] = prefix.factor * self.factor
-          new_unit_options[:physical_quantity] = self.dimensions
+          new_unit_options[:name] = "#{prefix.name}#{@name}"
+          new_unit_options[:symbol] = "#{prefix.symbol}#{@symbol}"
+          new_unit_options[:label] = "#{prefix.symbol}#{@label}"
+          new_unit_options[:factor] = prefix.factor * @factor
+          new_unit_options[:physical_quantity] = @dimensions
           self.class.new(new_unit_options)
         else
           raise Exceptions::InvalidArgumentError, "Prefix unit is not known: #{prefix}"
@@ -503,7 +555,7 @@ module Quantify
       #   (1/unit).symbol                     #=> "m^-1"
       #
       def coerce(object)
-        if object.kind_of? Numeric and object == 1
+        if object.kind_of?(Numeric) && object == 1
           return Unit.unity, self
         else
           raise Exceptions::InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
@@ -520,9 +572,9 @@ module Quantify
       #
       def initialize_copy(source)
         super
-        instance_variable_set("@dimensions", dimensions.clone)
+        instance_variable_set("@dimensions", @dimensions.clone)
         if self.is_compound_unit?
-          instance_variable_set("@base_units", base_units.map {|base| base.clone })
+          instance_variable_set("@base_units", @base_units.map {|base| base.clone })
         end
       end
 
@@ -537,12 +589,12 @@ module Quantify
       # is equaivalent to Unit.m.alternatives :name
       #
       def method_missing(method, *args, &block)
-        if method.to_s =~ /(to_)(.*)/ and prefix = Prefix.for($2.to_sym)
-          return self.with_prefix prefix
-        elsif method.to_s =~ /(alternatives_by_)(.*)/ and self.respond_to? $2.to_sym
-          return self.alternatives $2.to_sym
-        elsif method.to_s =~ /(valid_prefixes_by_)(.*)/ and Prefix::Base.instance_methods.include? $2.to_s
-          return self.valid_prefixes $2.to_sym
+        if method.to_s =~ /(to_)(.*)/ && prefix = Prefix.for($2.to_sym)
+          return self.with_prefix(prefix)
+        elsif method.to_s =~ /(alternatives_by_)(.*)/ && self.respond_to?($2.to_sym)
+          return self.alternatives($2.to_sym)
+        elsif method.to_s =~ /(valid_prefixes_by_)(.*)/ && Prefix::Base.instance_methods.include?($2.to_s)
+          return self.valid_prefixes($2.to_sym)
         end
         super
       end

@@ -3,6 +3,236 @@ include Quantify
 
 describe Unit do
 
+  it "unload" do
+    Unit.unload(:rad)
+  end
+  
+  describe "unit identifiers" do
+
+    describe "default configuration" do
+
+      it "should know that superscripts are to be used" do
+        Quantify.use_superscript_characters?.should be_true
+      end
+
+      it "should use superscript characters for powers of 2 and 3 by default" do
+        Quantify.use_superscript_characters?.should be_true
+        Unit.cubic_metre.label.should eql 'm³'
+        Unit.square_metre.label.should eql 'm²'
+        (Unit.m**2).label.should eql 'm²'
+        (Unit.kg**3).label.should eql 'kg³'
+        unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
+        unit.label.should eql 'm²·K²/s³'
+        unit = unit*Unit.m
+        unit.label.should eql 'm³·K²/s³'
+        unit = unit*Unit.m
+        unit.label.should eql 'm^4·K²/s³'
+      end
+      
+      it "should recognize and get unit with alternative syntax" do
+        Unit.for("m^2").label.should eql 'm²'
+        Unit.for("km^2").label.should eql 'km²'
+        Unit.for("Gg^3").label.should eql 'Gg³'
+        (Unit.Gg**3).label.should eql 'Gg³'
+      end
+
+      it "parsing complex unit strings with any syntax should work" do
+        Unit.parse("m^4·K²/s³").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K²/s³").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2/s^3").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2 s^-3").label.should eql 'm^4·K²/s³'
+
+        Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K^2/s^3").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K^2 s^-3").symbol.should eql 'm^4 K² s^-3'
+
+        Unit.parse("m^4·K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2/s^3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2 s^-3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+      end
+
+    end
+
+    describe "explicitly turning off superscript characters" do
+
+      before :all do
+        Quantify.use_superscript_characters=false
+      end
+
+      after :all do
+        Quantify.use_superscript_characters!
+      end
+
+      it "should know that superscripts are not to be used" do
+        Quantify.use_superscript_characters?.should be_false
+      end
+
+      it "should NOT use superscript characters for powers of 2 and 3" do
+        Unit.cubic_metre.label.should eql 'm^3'
+        Unit.square_metre.label.should eql 'm^2'
+        (Unit.m**2).label.should eql 'm^2'
+        (Unit.kg**3).label.should eql 'kg^3'
+        unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
+        unit.label.should eql 'm^2·K^2/s^3'
+        unit = unit*Unit.m
+        unit.label.should eql 'm^3·K^2/s^3'
+        unit = unit*Unit.m
+        unit.label.should eql 'm^4·K^2/s^3'
+      end
+
+      it "should recognize and get unit with alternative syntax" do
+        Unit.for("m²").label.should eql "m^2"
+        Unit.for('km²').label.should eql "km^2"
+        Unit.for('Gg³').label.should eql "Gg^3"
+        (Unit.Gg**3).label.should eql "Gg^3"
+      end
+
+      it "parsing complex unit strings with any syntax should work" do
+        Unit.parse("m^4·K²/s³").label.should eql "m^4·K^2/s^3"
+        Unit.parse("m^4 K²/s³").label.should eql "m^4·K^2/s^3"
+        Unit.parse("m^4 K^2/s^3").label.should eql "m^4·K^2/s^3"
+        Unit.parse("m^4 K^2 s^-3").label.should eql "m^4·K^2/s^3"
+
+
+        Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K^2 s^-3'
+        Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K^2 s^-3'
+        Unit.parse("m^4 K^2/s^3").symbol.should eql 'm^4 K^2 s^-3'
+        Unit.parse("m^4 K^2 s^-3").symbol.should eql 'm^4 K^2 s^-3'
+
+        Unit.parse("m^4·K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2/s^3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2 s^-3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+      end
+
+    end
+
+    describe "explicitly turning on superscript characters" do
+
+      before :all do
+        Quantify.use_superscript_characters=false
+        Quantify.use_superscript_characters=true
+      end
+
+      it "should know that superscripts are to be used" do
+        Quantify.use_superscript_characters?.should be_true
+      end
+
+      it "should use superscript characters for powers of 2 and 3" do
+        Unit.cubic_metre.label.should eql 'm³'
+        Unit.square_metre.label.should eql 'm²'
+        (Unit.m**2).label.should eql 'm²'
+        (Unit.kg**3).label.should eql 'kg³'
+        unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
+        unit.label.should eql 'm²·K²/s³'
+        unit = unit*Unit.m
+        unit.label.should eql 'm³·K²/s³'
+        unit = unit*Unit.m
+        unit.label.should eql 'm^4·K²/s³'
+      end
+      
+      it "should recognize and get unit with alternative syntax" do
+        Unit.for("m^2").label.should eql 'm²'
+        Unit.for("km^2").label.should eql 'km²'
+        Unit.for("Gg^3").label.should eql 'Gg³'
+        (Unit.Gg**3).label.should eql 'Gg³'
+      end
+
+      it "parsing complex unit strings with any syntax should work" do
+        Unit.parse("m^4·K²/s³").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K²/s³").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2/s^3").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2 s^-3").label.should eql 'm^4·K²/s³'
+
+        Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K^2/s^3").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K^2 s^-3").symbol.should eql 'm^4 K² s^-3'
+
+        Unit.parse("m^4·K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2/s^3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2 s^-3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+      end
+
+    end
+
+    describe "explicitly turning on superscript characters with bang! method" do
+
+      before :all do
+        Quantify.use_superscript_characters=false
+        Quantify.use_superscript_characters!
+      end
+
+      it "should know that superscripts are to be used" do
+        Quantify.use_superscript_characters?.should be_true
+      end
+
+      it "should use superscript characters for powers of 2 and 3" do
+        Unit.cubic_metre.label.should eql 'm³'
+        Unit.square_metre.label.should eql 'm²'
+        (Unit.m**2).label.should eql 'm²'
+        (Unit.kg**3).label.should eql 'kg³'
+        unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
+        unit.label.should eql 'm²·K²/s³'
+        unit = unit*Unit.m
+        unit.label.should eql 'm³·K²/s³'
+        unit = unit*Unit.m
+        unit.label.should eql 'm^4·K²/s³'
+      end
+
+      it "should recognize and get unit with alternative syntax" do
+        Unit.for("m^2").label.should eql 'm²'
+        Unit.for("km^2").label.should eql 'km²'
+        Unit.for("Gg^3").label.should eql 'Gg³'
+        (Unit.Gg**3).label.should eql 'Gg³'
+      end
+
+      it "parsing complex unit strings with any syntax should work" do
+        Unit.parse("m^4·K²/s³").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K²/s³").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2/s^3").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2 s^-3").label.should eql 'm^4·K²/s³'
+
+        Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K^2/s^3").symbol.should eql 'm^4 K² s^-3'
+        Unit.parse("m^4 K^2 s^-3").symbol.should eql 'm^4 K² s^-3'
+
+        Unit.parse("m^4·K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2/s^3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2 s^-3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+      end
+
+    end
+
+    describe "identifier case" do
+
+      it "should ignore case when initialising units by name" do
+        Unit.METRE.label.should eql 'm'
+        Unit.metre.label.should eql 'm'
+        Unit.KiLoMeTrE.label.should eql 'km'
+      end
+
+      it "should NOT ignore case when initialising units by symbol" do
+        Unit.m.label.should eql 'm'
+        lambda{Unit.M}.should raise_error
+        Unit.Gg.name.should eql 'gigagram'
+        lambda{Unit.GG}.should raise_error
+      end
+
+      it "should NOT ignore case when initialising units by label" do
+        Unit.ton_us.label.should eql 'ton_us'
+        lambda{Unit.TON_US}.should raise_error
+      end
+
+    end
+
+  end
+
   describe "unit retrieval" do
 
     it "symbols list should include" do
@@ -86,7 +316,7 @@ describe Unit do
       Unit.cm.factor.should == 0.01
       Unit.TJ.name.should == 'terajoule'
       Unit::Prefix::NonSI.load(:name => 'million ', :symbol => 'MM', :factor => 1e6)
-      Unit.MMBTU.name.should == 'million british thermal unit (59 °f)'
+      Unit.MMBTU.name.should == 'million british thermal unit (59 °F)'
       Unit::Prefix.unload :MM
     end
 
@@ -104,6 +334,58 @@ describe Unit do
 
     it "empty string should return nil" do
       Unit.for("").should be_nil
+    end
+
+    it "should recognize m²" do
+      Unit.for("m²").should be_a Unit::Base
+    end
+
+    it "should recognise unit with single word name" do
+      Unit.centimetre.symbol.should eql "cm"
+    end
+
+    it "should recognise unit with multiple word name" do
+      Unit.centimetre_of_mercury.symbol.should eql "cmHg"
+    end
+
+    it "should recognise unit with single word pluralized name" do
+      Unit.centimetres.symbol.should eql "cm"
+    end
+
+    it "should recognise unit with multiple word pluralized name" do
+      Unit.centimetres_of_mercury.symbol.should eql "cmHg"
+    end
+
+    it "should recognise compound unit with single word name" do
+      Unit.centimetre_per_hour.symbol.should eql "cm h^-1"
+    end
+
+    it "should recognise compound unit with multiple word name" do
+      Unit.centimetre_of_mercury_per_hour.symbol.should eql "cmHg h^-1"
+    end
+
+    it "should recognise compound unit with single word pluralized name" do
+      Unit.centimetres_per_hour.symbol.should eql "cm h^-1"
+    end
+
+    it "should recognise compound unit with multiple word pluralized name" do
+      Unit.centimetres_of_mercury_per_hour.symbol.should eql "cmHg h^-1"
+    end
+
+    it "should recognise compound unit with single word name" do
+      Unit.centimetre_per_hour_US_bushel.symbol.should eql "cm h^-1 bu (Imp)^-1"
+    end
+
+    it "should recognise compound unit with multiple word name" do
+      Unit.centimetre_of_mercury_per_hour_US_bushel.symbol.should eql "cmHg h^-1 bu (Imp)^-1"
+    end
+
+    it "should recognise compound unit with single word pluralized name" do
+      Unit.centimetres_per_hour_US_bushels.symbol.should eql "cm h^-1 bu (Imp)^-1"
+    end
+
+    it "should recognise compound unit with multiple word pluralized name" do
+      Unit.centimetres_of_mercury_per_hour_US_bushels.symbol.should eql "cmHg h^-1 bu (Imp)^-1"
     end
     
     describe "parsing unit string" do
@@ -221,7 +503,7 @@ describe Unit do
     it "should mass load units with prefixes" do
       Unit::SI.prefix_and_load([:kilo,:mega,:giga,:tera],[:metre,:gram,:second])
       Unit.kilometre.loaded?.should == true
-      Unit.Gigametre.loaded?.should == true
+      Unit.gigametre.loaded?.should == true
       Unit.kilogram.loaded?.should == true
       Unit.teragram.loaded?.should == true
       Unit.kilosecond.loaded?.should == true
@@ -231,13 +513,13 @@ describe Unit do
     it "should mass load unit with prefixes" do
       Unit::SI.prefix_and_load([:kilo,:mega,:giga,:tera],:metre)
       Unit.kilometre.loaded?.should == true
-      Unit.Gigametre.loaded?.should == true
+      Unit.gigametre.loaded?.should == true
       Unit.nanometre.loaded?.should == false
     end
 
     it "should mass load units with prefix" do
       Unit::SI.prefix_and_load(:giga,[:metre,:gram,:second])
-      Unit.Gigametre.loaded?.should == true
+      Unit.gigametre.loaded?.should == true
       Unit.gigagram.loaded?.should == true
       Unit.gigasecond.loaded?.should == true
       Unit.nanometre.loaded?.should == false
@@ -245,7 +527,7 @@ describe Unit do
 
     it "should mass load units with prefix using objects as arguments" do
       Unit::SI.prefix_and_load(Unit::Prefix.giga,[Unit.metre,Unit.gram,Unit.second])
-      Unit.Gigametre.loaded?.should == true
+      Unit.gigametre.loaded?.should == true
       Unit.gigagram.loaded?.should == true
       Unit.gigasecond.loaded?.should == true
       Unit.nanometre.loaded?.should == false
@@ -297,7 +579,7 @@ describe Unit do
 
     it "should change the label of canonical unit representation" do
       unit = Unit.cubic_metre
-      unit.label.should eql "m^3"
+      unit.label.should eql "m³"
       unit.canonical_label = "m3"
       unit.label.should eql "m3"
       Unit.cubic_metre.label.should eql "m3"
@@ -612,19 +894,19 @@ describe Unit do
     it "should recognise similar units" do
       unit_1 = Unit.yard
       unit_2 = Unit.yard
-      unit_1.is_same_as?(unit_2).should == true
+      unit_1.is_equivalent_to?(unit_2).should == true
     end
 
     it "should recognise non-similar units" do
       unit_1 = Unit.yard
       unit_2 = Unit.foot
-      unit_1.is_same_as?(unit_2).should_not == true
+      unit_1.is_equivalent_to?(unit_2).should_not == true
     end
 
     it "should recognise non-similar units" do
       unit_1 = Unit.yard
       unit_2 = Unit.kelvin
-      (unit_1 == unit_2).should_not == true
+      (unit_1.is_equivalent_to? unit_2).should_not == true
     end
 
     it "should recognise known units from compound units based on dimensions and factor" do
@@ -639,7 +921,7 @@ describe Unit do
       megagram = Unit.Mg
       megagram.symbol.should == 'Mg'
       megagram.factor.should == 1000.0
-      megagram.should == tonne
+      megagram.is_equivalent_to?(tonne).should be_true
     end
 
     it "should return correct SI unit" do

@@ -81,19 +81,19 @@ module Quantify
     #   Quantity.new(123.456, :degree_celsius).represents
     #                                                 #=> :temperature
     def represents
-      self.unit.measures
+      @unit.measures
     end
 
     # Returns a string representation of the quantity, using the unit symbol
     def to_s format=:symbol
       if format == :name
-        if self.value == 1 or self.value == -1
-          "#{self.value} #{self.unit.name}"
+        if @value == 1 || @value == -1
+          "#{@value} #{@unit.name}"
         else
-          "#{self.value} #{self.unit.pluralized_name}"
+          "#{@value} #{@unit.pluralized_name}"
         end
       else
-        "#{self.value} #{self.unit.send format}"
+        "#{@value} #{@unit.send format}"
       end
     end
 
@@ -116,20 +116,20 @@ module Quantify
     def to(new_unit)
       new_unit = Unit.for new_unit
       if is_basic_conversion_with_scalings? new_unit
-        Quantity.new(value,unit).conversion_with_scalings! new_unit
+        Quantity.new(@value,@unit).conversion_with_scalings! new_unit
       elsif self.unit.is_alternative_for? new_unit
-        Quantity.new(value,unit).convert_to_equivalent_unit! new_unit
+        Quantity.new(@value,@unit).convert_to_equivalent_unit! new_unit
       elsif self.unit.is_compound_unit?
-        Quantity.new(value,unit).convert_compound_unit_to_non_equivalent_unit! new_unit
+        Quantity.new(@value,@unit).convert_compound_unit_to_non_equivalent_unit! new_unit
       else
         nil # raise? or ...
       end      
     end
 
     def is_basic_conversion_with_scalings?(new_unit)
-      return true if (self.unit.has_scaling? or new_unit.has_scaling?) and
-        not self.unit.is_compound_unit? and
-        not new_unit.is_compound_unit?
+      return true if (@unit.has_scaling? || new_unit.has_scaling?) &&
+        !@unit.is_compound_unit? &&
+        !new_unit.is_compound_unit?
       return false
     end
 
@@ -139,14 +139,14 @@ module Quantify
     # base units
     #
     def convert_to_equivalent_unit!(new_unit)
-      old_unit = unit
+      old_unit = @unit
       self.multiply!(Unit.ratio new_unit, old_unit)
       old_base_units = old_unit.base_units.map { |base| base.unit } if old_unit.is_compound_unit?
       self.cancel_base_units!(*old_base_units || old_unit)
     end
 
     def conversion_with_scalings!(new_unit)
-      @value = (((self.value + self.unit.scaling) * self.unit.factor) / new_unit.factor) - new_unit.scaling
+      @value = (((@value + @unit.scaling) * @unit.factor) / new_unit.factor) - new_unit.scaling
       @unit = new_unit
       return self
     end
@@ -158,7 +158,7 @@ module Quantify
     #   Unit.kilowatt_hour.to :second           #=> 'kilowatt second'
     #
     def convert_compound_unit_to_non_equivalent_unit!(new_unit)
-      self.unit.base_units.select do |base|
+      @unit.base_units.select do |base|
         base.unit.is_alternative_for? new_unit
       end.inject(self) do |quantity,base|
         factor = Unit.ratio(new_unit**base.index, base.unit**base.index)
@@ -168,16 +168,16 @@ module Quantify
 
     # Converts a quantity to the equivalent quantity using only SI units
     def to_si
-      if self.unit.is_compound_unit?
-        Quantity.new(value,unit).convert_compound_unit_to_si!
+      if @unit.is_compound_unit?
+        Quantity.new(@value,@unit).convert_compound_unit_to_si!
       else
-        self.to(unit.si_unit)
+        self.to(@unit.si_unit)
       end
     end
 
     def convert_compound_unit_to_si!
-      until self.unit.is_base_quantity_si_unit? do
-        unit = self.unit.base_units.find do |base|
+      until @unit.is_base_quantity_si_unit? do
+        unit = @unit.base_units.find do |base|
           !base.is_base_quantity_si_unit?
         end.unit
         self.convert_compound_unit_to_non_equivalent_unit!(unit.si_unit)
@@ -192,9 +192,9 @@ module Quantify
     #
     def add_or_subtract!(operator,other)
       if other.is_a? Quantity
-        other = other.to(unit) if other.unit.is_alternative_for?(unit)
-        if self.unit == other.unit
-          @value = value.send operator, other.value
+        other = other.to(@unit) if other.unit.is_alternative_for?(@unit)
+        if @unit.is_equivalent_to? other.unit
+          @value = @value.send operator, other.value
           return self
         else
           raise Quantify::Exceptions::InvalidObjectError "Cannot add or subtract Quantities with different dimensions"
@@ -206,11 +206,11 @@ module Quantify
 
     def multiply_or_divide!(operator,other)
       if other.kind_of? Numeric
-        @value = value.send(operator,other)
+        @value = @value.send(operator,other)
         return self
       elsif other.kind_of? Quantity
-        @unit = unit.send(operator,other.unit).or_equivalent
-        @value = value.send(operator,other.value)
+        @unit = @unit.send(operator,other.unit).or_equivalent
+        @value = @value.send(operator,other.value)
         return self
       else
         raise Quantify::Exceptions::InvalidArgumentError "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"
@@ -219,8 +219,8 @@ module Quantify
 
     def pow!(power)
       raise Exceptions::InvalidArgumentError, "Argument must be an integer" unless power.is_a? Integer
-      @value = value ** power
-      @unit = unit ** power
+      @value = @value ** power
+      @unit = @unit ** power
       return self
     end
 
@@ -241,34 +241,34 @@ module Quantify
     end
 
     def add(other)
-      Quantity.new(value,unit).add!(other)
+      Quantity.new(@value,@unit).add!(other)
     end
     alias :+ :add
 
     def subtract(other)
-      Quantity.new(value,unit).subtract!(other)
+      Quantity.new(@value,@unit).subtract!(other)
     end
     alias :- :subtract
 
     def multiply(other)
-      Quantity.new(value,unit).multiply!(other)
+      Quantity.new(@value,@unit).multiply!(other)
     end
     alias :times :multiply
     alias :* :multiply
 
     def divide(other)
-      Quantity.new(value,unit).divide!(other)
+      Quantity.new(@value,@unit).divide!(other)
     end
     alias :/ :divide
 
     def pow(power)
-      Quantity.new(value,unit).pow!(power)
+      Quantity.new(@value,@unit).pow!(power)
     end
     alias :** :pow
 
     def rationalize_units
-      return self unless unit.is_a? Unit::Compound
-      self.to unit.clone.rationalize_base_units!
+      return self unless @unit.is_a? Unit::Compound
+      self.to @unit.clone.rationalize_base_units!
     end
 
     def rationalize_units!
@@ -279,7 +279,7 @@ module Quantify
     end
 
     def cancel_base_units!(*units)
-      @unit = unit.cancel_base_units!(*units) if unit.is_compound_unit?
+      @unit = @unit.cancel_base_units!(*units) if @unit.is_compound_unit?
       return self
     end
 
@@ -304,8 +304,8 @@ module Quantify
     def <=>(other)
       raise Exceptions::InvalidArgumentError unless other.is_a? Quantity
       raise Exceptions::InvalidArgumentError unless other.unit.is_alternative_for?(unit)
-      other = other.to unit
-      value.to_f <=> other.value.to_f
+      other = other.to @unit
+      @value.to_f <=> other.value.to_f
     end
 
     def ===(range)

@@ -276,7 +276,7 @@ describe Dimensions do
   it "should return the correct SI base units" do
     units = Dimensions.area.si_base_units :symbol
     units.class.should == Array
-    units.include?('m^2').should == true
+    units.include?('m²').should == true
   end
 
   it "should recognise molar quantity" do
@@ -289,6 +289,54 @@ describe Dimensions do
     dimension = Dimensions.volume/Dimensions.mass
     dimension.is_molar_quantity?.should == false
     dimension.is_specific_quantity?.should == true
+  end
+
+  it "should unload a dimension with instance method" do
+    dimension = Dimensions.length
+    dimension.loaded?.should be_true
+    dimension.unload
+    dimension.loaded?.should be_false
+    dimension.load
+  end
+
+  it "should unload a dimension with class method and object" do
+    dimension = Dimensions.length
+    dimension.loaded?.should be_true
+    Dimensions.unload(dimension)
+    dimension.loaded?.should be_false
+    dimension.load
+  end
+
+  it "should unload a dimension with class method and multiple objects" do
+    dimension1 = Dimensions.length
+    dimension2 = Dimensions.mass
+    dimension1.loaded?.should be_true
+    dimension2.loaded?.should be_true
+    Dimensions.unload(dimension1,dimension2)
+    dimension1.loaded?.should be_false
+    dimension2.loaded?.should be_false
+    dimension1.load
+    dimension2.load
+  end
+
+  it "should unload a dimension with class method and physical_quantity" do
+    dimension = Dimensions.length
+    dimension.loaded?.should be_true
+    Dimensions.unload(dimension.physical_quantity)
+    dimension.loaded?.should be_false
+    dimension.load
+  end
+
+  it "should unload a dimension with class method and multiple objects and physical_quantity" do
+    dimension1 = Dimensions.length
+    dimension2 = Dimensions.mass
+    dimension1.loaded?.should be_true
+    dimension2.loaded?.should be_true
+    Dimensions.unload(dimension1.physical_quantity,dimension2.physical_quantity)
+    dimension1.loaded?.should be_false
+    dimension2.loaded?.should be_false
+    dimension1.load
+    dimension2.load
   end
 end
 

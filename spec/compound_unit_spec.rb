@@ -48,7 +48,7 @@ describe Unit do
 
     it "should derive correct label for compound unit" do
       unit = Unit.MJ*(Unit.m**3)/(Unit.kg**2)
-      unit.label.should == "MJ·m^3/kg^2"
+      unit.label.should == "MJ·m³/kg²"
     end
 
   end
@@ -68,7 +68,7 @@ describe Unit do
 
     it "should consolidate across all base units" do
       unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m^2 s kg s^-1 m^-3"
+      unit.symbol.should == "m² s kg s^-1 m^-3"
       unit.base_units.size.should == 5
       unit.consolidate_base_units!
       unit.symbol.should == "kg m^-1"
@@ -77,7 +77,7 @@ describe Unit do
 
     it "should cancel base units with one argument which is a symbol" do
       unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m^2 s kg s^-1 m^-3"
+      unit.symbol.should == "m² s kg s^-1 m^-3"
       unit.base_units.size.should == 5
       unit.cancel_base_units! :m
       unit.symbol.should == "s kg m^-1 s^-1"
@@ -86,7 +86,7 @@ describe Unit do
 
     it "should cancel base units with multiple arguments including unit objects and strings" do
       unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m^2 s kg s^-1 m^-3"
+      unit.symbol.should == "m² s kg s^-1 m^-3"
       unit.base_units.size.should == 5
       unit.cancel_base_units! Unit.m, 's'
       unit.symbol.should == "kg m^-1"
@@ -136,7 +136,7 @@ describe Unit do
       base1 = [Unit.h, -1]
       base2 = [Unit.m, 2]
       compound_unit = Unit::Compound.new base1, base2
-      compound_unit.symbol.should == "m^2 h^-1"
+      compound_unit.symbol.should == "m² h^-1"
     end
 
     it "should initialize compound unit with variable arguments" do
@@ -187,17 +187,17 @@ describe Unit do
 
     it "should rationalize base units with automatically" do
       unit = Unit.yard*Unit.foot
-      unit.rationalize_base_units!.label.should eql 'yd^2'
+      unit.rationalize_base_units!.label.should eql 'yd²'
       unit = Unit.metre*Unit.centimetre/Unit.inch
-      unit.rationalize_base_units!(:full).label.should eql 'm^2/m'
+      unit.rationalize_base_units!(:full).label.should eql 'm²/m'
       unit.consolidate_base_units!.label.should eql 'm'
     end
 
     it "should rationalize base units with specified unit" do
       unit = Unit.yard*Unit.foot
-      unit.rationalize_base_units!(:partial,:yd).label.should eql 'yd^2'
+      unit.rationalize_base_units!(:partial,:yd).label.should eql 'yd²'
       unit = Unit.metre*Unit.centimetre/Unit.inch
-      unit.rationalize_base_units!(:full,:m).label.should eql 'm^2/m'
+      unit.rationalize_base_units!(:full,:m).label.should eql 'm²/m'
       unit.consolidate_base_units!.label.should eql 'm'
     end
     

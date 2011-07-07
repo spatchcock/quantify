@@ -14,7 +14,7 @@ module Quantify
       def self.unload(*unloaded_prefixes)
         [unloaded_prefixes].flatten.each do |unloaded_prefix|
           unloaded_prefix = Prefix.for(unloaded_prefix)
-          @prefixes.delete_if { |unit| unit.label == unloaded_prefix.label }
+          @prefixes.delete_if { |prefix| prefix.label == unloaded_prefix.label }
         end
       end
 
@@ -24,10 +24,10 @@ module Quantify
 
       def self.for(name_or_symbol,collection=nil)
         return name_or_symbol.clone if name_or_symbol.is_a? Quantify::Unit::Prefix::Base
-        if name_or_symbol.is_a? String or name_or_symbol.is_a? Symbol
+        if name_or_symbol.is_a?(String) || name_or_symbol.is_a?(Symbol)
           if prefix = (collection.nil? ? @prefixes : collection).find do |prefix|
-             prefix.name == name_or_symbol.standardize.downcase or
-             prefix.symbol == name_or_symbol.standardize
+             prefix.name == name_or_symbol.remove_underscores.downcase ||
+             prefix.symbol == name_or_symbol.remove_underscores
             end
             return prefix.clone
           else

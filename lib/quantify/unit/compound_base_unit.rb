@@ -32,19 +32,19 @@ module Quantify
 
       # Absolute index as names always contain 'per' before denominator units
       def name
-        @unit.name.to_power(@index.abs)
+        name_to_power(@unit.name, @index.abs)
       end
 
       def pluralized_name
-        @unit.pluralized_name.to_power(@index.abs)
+        name_to_power(@unit.pluralized_name, @index.abs)
       end
 
       def symbol
-        @unit.symbol.to_s + ( @index.nil? or @index == 1 ? "" : "^#{@index}" )
+        @unit.symbol.to_s + ( @index.nil? || @index == 1 ? "" : formatted_index )
       end
 
       def label
-        @unit.label + (@index == 1 ? "" : "^#{@index}")
+        @unit.label + (@index == 1 ? "" : formatted_index)
       end
 
       # Reciprocalized version of label, i.e. sign changed. This is used to make
@@ -52,7 +52,7 @@ module Quantify
       # i.e. where no '/' appears in the label
       #
       def reciprocalized_label
-        @unit.label + (@index == -1 ? "" : "^#{@index * -1}")
+        @unit.label + (@index == -1 ? "" : formatted_index(@index * -1))
       end
 
       def factor
@@ -70,22 +70,62 @@ module Quantify
       # The following methods refer only to the unit of the CompoundBaseUnit
       # object, rather than the unit *together with its index*
 
-      Unit_Methods = [ :base_quantity_si_unit, :base_unit, :benchmark_unit, :si_unit,
-                       :non_si_unit, :prefixed_unit, :derived_unit ]
-  
-      Unit_Methods.each do |method|
-        method = "is_#{method.to_s}?"
-        define_method(method) do
-          @unit.send method.to_sym
-        end
+      def is_base_quantity_si_unit?
+        @unit.is_base_quantity_si_unit?
       end
 
+      def is_base_unit?
+        @unit.is_base_unit?
+      end
+      
+      def is_benchmark_unit?
+        @unit.is_benchmark_unit?
+      end
+
+      def is_si_unit?
+        @unit.is_si_unit?
+      end
+      
+      def is_non_si_unit?
+        @unit.is_non_si_unit?
+      end
+
+      def is_prefixed_unit?
+        @unit.is_prefixed_unit?
+      end
+
+      def is_derived_unit?
+        @unit.is_derived_unit?
+      end
+  
       def measures
         @unit.measures
       end
 
       def initialize_copy(source)
-        instance_variable_set("@unit", unit.clone)
+        instance_variable_set("@unit", @unit.clone)
+      end
+
+      private
+
+      # Returns a string representation of the unit index, formatted according to
+      # the global superscript configuration
+      #
+      def formatted_index(index=nil)
+        index = "^#{index.nil? ? @index : index}"
+        Quantify.use_superscript_characters? ? index.with_superscript_characters : index
+      end
+
+      def name_to_power(string,index)
+        name = string.clone
+        case index
+        when 1 then name
+        when 2 then "square #{name}"
+        when 3 then "cubic #{name}"
+        else
+          ordinal = ActiveSupport::Inflector.ordinalize index
+          name << " to the #{ordinal} power"
+        end
       end
     end
   end
