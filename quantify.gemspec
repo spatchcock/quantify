@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{quantify}
-  s.version = ""
+  s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Berkeley"]
@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
     "Gemfile",
     "README",
     "Rakefile",
+    "VERSION",
     "lib/quantify.rb",
     "lib/quantify/config.rb",
     "lib/quantify/core_extensions/numeric.rb",
