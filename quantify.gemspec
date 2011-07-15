@@ -41,6 +41,7 @@ Gem::Specification.new do |s|
     "lib/quantify/unit/prefix/si_prefix.rb",
     "lib/quantify/unit/si_unit.rb",
     "lib/quantify/unit/unit.rb",
+    "quantify.gemspec",
     "spec/compound_unit_spec.rb",
     "spec/dimension_spec.rb",
     "spec/quantify_spec.rb",
