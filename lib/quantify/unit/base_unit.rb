@@ -52,13 +52,13 @@ module Quantify
       # Syntactic sugar for defining the units known to the system, enabling the
       # required associated units to be loaded at runtime, e.g.
       #
-      #  Unit::[Base|SI|NonSI].configure do |config|
+      #   Unit::[Base|SI|NonSI].configure do |config|
       #
-      #    load :name => :metre, :physical_quantity => :length
-      #    load :name => 'hectare', :physical_quantity => :area, :factor => 10000
-      #    load :name => :watt, :physical_quantity => :power, :symbol => 'W'
+      #     load :name => :metre, :physical_quantity => :length
+      #     load :name => 'hectare', :physical_quantity => :area, :factor => 10000
+      #     load :name => :watt, :physical_quantity => :power, :symbol => 'W'
       #
-      #  end
+      #   end
       #
       def self.configure &block
         class_eval &block if block
@@ -138,7 +138,7 @@ module Quantify
       #
       def name=(name)
         name = name.to_s.remove_underscores.singularize
-        @name = Quantify.use_superscript_characters? ? name.with_superscript_characters : name.without_superscript_characters
+        @name = Unit.use_superscript_characters? ? name.with_superscript_characters : name.without_superscript_characters
       end
 
       # Set the symbol attribute of self. Symbols are stringified and stripped of
@@ -151,7 +151,7 @@ module Quantify
       #
       def symbol=(symbol)
         symbol = symbol.to_s.remove_underscores
-        @symbol = Quantify.use_superscript_characters? ? symbol.with_superscript_characters : symbol.without_superscript_characters
+        @symbol = Unit.use_superscript_characters? ? symbol.with_superscript_characters : symbol.without_superscript_characters
       end
 
       # Set the label attribute of self. This represents the unique identifier for
@@ -165,13 +165,13 @@ module Quantify
       #
       def label=(label)
         label = label.to_s.gsub(" ","_")
-        @label = Quantify.use_superscript_characters? ? label.with_superscript_characters : label.without_superscript_characters
+        @label = Unit.use_superscript_characters? ? label.with_superscript_characters : label.without_superscript_characters
       end
 
       # Refresh the name, symbol and label attributes of self with respect to the
       # configuration found in Quantify.use_superscript_characters?
       #
-      def refresh_identifiers!
+      def refresh_attributes
         self.name = name
         self.symbol = symbol
         self.label = label
@@ -448,7 +448,7 @@ module Quantify
       #                                               "T", "P" ... ]
       #
       def valid_prefixes(by=nil)
-        return [] if self.is_compound_unit?
+        return [] if is_compound_unit? && has_multiple_base_units?
         return Unit::Prefix.si_prefixes.map(&by) if is_si_unit?
         return Unit::Prefix.non_si_prefixes.map(&by) if is_non_si_unit?
       end
@@ -513,25 +513,20 @@ module Quantify
       # of self, complete with modified name, symbol, factor, etc..
       #
       def with_prefix(name_or_symbol)
-        if @name =~ /\A(#{valid_prefixes(:name).join("|")})/
-          raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}"
-        end
+        raise Exceptions::InvalidArgumentError, "No valid prefixes exist for unit: #{self.name}" if valid_prefixes.empty?
+        raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}" if @name =~ /\A(#{valid_prefixes(:name).join("|")})/
         
         prefix = Unit::Prefix.for(name_or_symbol,valid_prefixes)
-
-        unless prefix.nil?
-          new_unit_options = {}
-          new_unit_options[:name] = "#{prefix.name}#{@name}"
-          new_unit_options[:symbol] = "#{prefix.symbol}#{@symbol}"
-          new_unit_options[:label] = "#{prefix.symbol}#{@label}"
-          new_unit_options[:factor] = prefix.factor * @factor
-          new_unit_options[:physical_quantity] = @dimensions
-          self.class.new(new_unit_options)
+        if !prefix.nil?
+          self.class.new(options_for_prefixed_version(prefix))
         else
           raise Exceptions::InvalidArgumentError, "Prefix unit is not known: #{prefix}"
         end
       end
 
+      # Return an array of new unit instances based upon self, together with the
+      # prefixes specified by <tt>prefixes</tt>
+      #
       def with_prefixes(*prefixes)
         [prefixes].map { |prefix| self.with_prefix(prefix) }
       end
@@ -561,6 +556,18 @@ module Quantify
           raise Exceptions::InvalidArgumentError, "Cannot coerce #{self.class} into #{object.class}"
         end
       end
+
+      private
+
+      def options_for_prefixed_version(prefix)
+        options = {}
+        options[:name] = "#{prefix.name}#{@name}"
+        options[:symbol] = "#{prefix.symbol}#{@symbol}"
+        options[:label] = "#{prefix.symbol}#{@label}"
+        options[:factor] = prefix.factor * @factor
+        options[:physical_quantity] = @dimensions
+        return options
+      end
       
       # Clone self and explicitly clone the associated Dimensions object located
       # at @dimensions.
@@ -573,9 +580,6 @@ module Quantify
       def initialize_copy(source)
         super
         instance_variable_set("@dimensions", @dimensions.clone)
-        if self.is_compound_unit?
-          instance_variable_set("@base_units", @base_units.map {|base| base.clone })
-        end
       end
 
       # Provides syntactic sugar for several methods. E.g.

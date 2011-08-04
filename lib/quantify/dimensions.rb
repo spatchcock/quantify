@@ -51,7 +51,7 @@ module Quantify
     #
     def self.base_dimensions
       @@dimensions.select do |dimensions|
-        BASE_QUANTITIES.map {|q| q.remove_underscores}.include?(dimensions.describe)
+        BASE_QUANTITIES.map {|quantity| quantity.remove_underscores}.include?(dimensions.describe)
       end
     end
 

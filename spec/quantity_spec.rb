@@ -154,7 +154,7 @@ describe Quantity do
     speed.class.should == Quantity
     speed.value.should be_close 27.1143792976291, 0.00000001
     speed.to_s(:name).should == "27.1143792976291 miles per hour"
-    speed.to_s.should == "27.1143792976291 mi h^-1"
+    speed.to_s.should == "27.1143792976291 mi/h"
   end
 
   it "coerce method should handle inverted syntax" do
@@ -185,7 +185,7 @@ describe Quantity do
 
   it "should convert compound units correctly" do
     speed = Quantity.new 100, (Unit.km/Unit.h)
-    speed.to_mi.round(2).to_s.should == "62.14 mi h^-1"
+    speed.to_mi.round(2).to_s.should == "62.14 mi/h"
   end
 
   it "should convert to SI unit correctly" do
@@ -224,9 +224,9 @@ describe Quantity do
     unit = 50.ft ** -1
     unit.to_s.should == "0.02 ft^-1"
     unit = (10.m/1.s)**2
-    unit.to_s.should == "100.0 m² s^-2"
+    unit.to_s.should == "100.0 m²/s²"
     unit = (10.m/1.s)**-1
-    unit.to_s.should == "0.1 s m^-1"
+    unit.to_s.should == "0.1 s/m"
     lambda{ ((10.m/1.s)** 0.5) }.should raise_error
   end
 
@@ -234,8 +234,8 @@ describe Quantity do
     (50.ft.pow! 2).to_s.should == "2500.0 ft²"
     (50.ft.pow! 3).to_s.should == "125000.0 ft³"
     (50.ft.pow! -1).to_s.should == "0.02 ft^-1"
-    ((10.m/1.s).pow! 2).to_s.should == "100.0 m² s^-2"
-    ((10.m/1.s).pow! -1).to_s.should == "0.1 s m^-1"
+    ((10.m/1.s).pow! 2).to_s.should == "100.0 m²/s²"
+    ((10.m/1.s).pow! -1).to_s.should == "0.1 s/m"
     lambda{ ((10.m/1.s).pow! 0.5) }.should raise_error
   end
 

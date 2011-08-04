@@ -3,6 +3,79 @@ include Quantify
 
 describe Unit do
 
+  describe "compound unit symbols" do
+
+    after :all do
+      Unit.use_symbol_denominator_syntax!
+      Unit.use_symbol_parentheses = false
+    end
+
+    it "should use denominator syntax by default" do
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m² s kg/m³ s"
+      Unit.metre_per_second.symbol.should eql "m/s"
+    end
+    
+    it "should use indices only with bang! method" do
+      Unit.use_symbol_indices_only!
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m² s kg s^-1 m^-3"
+      Unit.metre_per_second.symbol.should eql "m s^-1"
+    end
+
+    it "should use denominator syntax with bang! method" do
+      Unit.use_symbol_denominator_syntax!
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m² s kg/m³ s"
+      Unit.metre_per_second.symbol.should eql "m/s"
+    end
+
+    it "should use indices only with setter method" do
+      Unit.use_symbol_denominator_syntax = false
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m² s kg s^-1 m^-3"
+      Unit.metre_per_second.symbol.should eql "m s^-1"
+    end
+
+    it "should use denominator syntax with setter method" do
+      Unit.use_symbol_denominator_syntax = true
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m² s kg/m³ s"
+      Unit.metre_per_second.symbol.should eql "m/s"
+    end
+
+    it "should use parentheses with setter method" do
+      Unit.use_symbol_parentheses = true
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "(m² s kg)/(m³ s)"
+      unit = Unit.m*Unit.m/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m²/(m³ s)"
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m)
+      unit.symbol.should == "(m² s kg)/m³"
+    end
+
+    it "should not use parentheses with setter method" do
+      Unit.use_symbol_parentheses = false
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m² s kg/m³ s"
+      unit = Unit.m*Unit.m/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m²/m³ s"
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m)
+      unit.symbol.should == "m² s kg/m³"
+    end
+
+    it "should use parentheses with bang! method" do
+      Unit.use_symbol_parentheses!
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "(m² s kg)/(m³ s)"
+      unit = Unit.m*Unit.m/(Unit.m*Unit.m*Unit.m*Unit.s)
+      unit.symbol.should == "m²/(m³ s)"
+      unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m)
+      unit.symbol.should == "(m² s kg)/m³"
+    end
+
+  end
+
   describe "compound unit naming algorithms" do
 
     it "should return pluralised unit name" do
@@ -56,7 +129,7 @@ describe Unit do
   describe "specific compound unit operations" do
 
     it "should find equivalent unit for compound unit" do
-      (Unit.m*Unit.m).equivalent_known_unit.name.should == 'square metre'
+      (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).equivalent_known_unit.name.should == 'joule'
       (Unit.km*Unit.lb).equivalent_known_unit.should == nil
     end
 
@@ -68,28 +141,28 @@ describe Unit do
 
     it "should consolidate across all base units" do
       unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m² s kg s^-1 m^-3"
+      unit.symbol.should == "m² s kg/m³ s"
       unit.base_units.size.should == 5
       unit.consolidate_base_units!
-      unit.symbol.should == "kg m^-1"
+      unit.symbol.should == "kg/m"
       unit.base_units.size.should == 2
     end
 
     it "should cancel base units with one argument which is a symbol" do
       unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m² s kg s^-1 m^-3"
+      unit.symbol.should == "m² s kg/m³ s"
       unit.base_units.size.should == 5
       unit.cancel_base_units! :m
-      unit.symbol.should == "s kg m^-1 s^-1"
+      unit.symbol.should == "s kg/m s"
       unit.base_units.size.should == 4
     end
 
     it "should cancel base units with multiple arguments including unit objects and strings" do
       unit = Unit.m*Unit.m*Unit.s*Unit.kg/(Unit.m*Unit.m*Unit.m*Unit.s)
-      unit.symbol.should == "m² s kg s^-1 m^-3"
+      unit.symbol.should == "m² s kg/m³ s"
       unit.base_units.size.should == 5
       unit.cancel_base_units! Unit.m, 's'
-      unit.symbol.should == "kg m^-1"
+      unit.symbol.should == "kg/m"
       unit.base_units.size.should == 2
     end
 
@@ -108,7 +181,7 @@ describe Unit do
       base1 = Unit::CompoundBaseUnit.new Unit.h, -1
       base2 = Unit::CompoundBaseUnit.new Unit.mi
       compound_unit = Unit::Compound.new base1, base2
-      compound_unit.symbol.should == "mi h^-1"
+      compound_unit.symbol.should == "mi/h"
     end
 
     it "should initialize compound unit with multiple individual units" do
@@ -136,7 +209,7 @@ describe Unit do
       base1 = [Unit.h, -1]
       base2 = [Unit.m, 2]
       compound_unit = Unit::Compound.new base1, base2
-      compound_unit.symbol.should == "m² h^-1"
+      compound_unit.symbol.should == "m²/h"
     end
 
     it "should initialize compound unit with variable arguments" do
@@ -189,17 +262,55 @@ describe Unit do
       unit = Unit.yard*Unit.foot
       unit.rationalize_base_units!.label.should eql 'yd²'
       unit = Unit.metre*Unit.centimetre/Unit.inch
-      unit.rationalize_base_units!(:full).label.should eql 'm²/m'
+      unit.rationalize_base_units!.label.should eql 'm²/m'
       unit.consolidate_base_units!.label.should eql 'm'
     end
 
     it "should rationalize base units with specified unit" do
       unit = Unit.yard*Unit.foot
-      unit.rationalize_base_units!(:partial,:yd).label.should eql 'yd²'
+      unit.rationalize_numerator_and_denominator_units!(:yd).label.should eql 'yd²'
       unit = Unit.metre*Unit.centimetre/Unit.inch
-      unit.rationalize_base_units!(:full,:m).label.should eql 'm²/m'
-      unit.consolidate_base_units!.label.should eql 'm'
+      unit.rationalize_base_units!(:cm).label.should eql 'cm²/cm'
+      unit.consolidate_base_units!.label.should eql 'cm'
+    end
+
+    it "should rationalize only numerator and denominator base units" do
+      unit = Unit.yard*Unit.foot
+      unit.rationalize_numerator_and_denominator_units!.label.should eql 'yd²'
+      unit = Unit.metre*Unit.centimetre/Unit.inch
+      unit.rationalize_numerator_and_denominator_units!.label.should eql 'm²/in'
+      unit.consolidate_base_units!.label.should eql 'm²/in'
     end
     
+  end
+
+  describe "adding prefixes" do
+
+    it "should have no valid prefixes with multiple base units" do
+      (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).valid_prefixes.should be_empty
+    end
+
+    it "should return SI prefixes with single SI unit" do
+      prefixes = (Unit.kg**3).valid_prefixes
+      prefixes.should_not be_empty
+      prefixes.first.should be_a Unit::Prefix::SI
+    end
+
+    it "should return SI prefixes with single SI unit" do
+      prefixes = (Unit.lb**3).valid_prefixes
+      prefixes.should be_empty # no NonSI prefixes defined
+    end
+
+    it "should refuse to add prefix to multi-unit compound unit" do
+      lambda{(Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).with_prefix(:giga)}.should raise_error
+    end
+
+    it "should prefix a single unit compound unit" do
+      unit = (Unit.m**2).with_prefix(:kilo)
+      unit.name.should eql "square kilometre"
+      unit.factor.should == 1000000
+    end
+
+
   end
 end

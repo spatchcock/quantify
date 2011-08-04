@@ -1,40 +1,7 @@
 module Quantify
 
-  def self.configure &block
-    self.module_eval &block if block
-  end
-
-  # Check whether superscript characters are turned on.
-  def self.use_superscript_characters?
-    @use_superscript_characters.nil? ? true : @use_superscript_characters
-  end
-
-  # Shorthand method for Quantify.use_superscript_characters=true
-  def self.use_superscript_characters!
-    self.use_superscript_characters=true
-  end
-
-  # Declare whether superscript characters should be used for unit names, symbols
-  # and labels - i.e. "²" and "³" rather than "^2" and "^3". Set to either true or
-  # false. If not set, superscript characters are used by default.
-  #
-  def self.use_superscript_characters=(true_or_false)
-    raise Exceptions::InvalidArgumentError,
-      "Argument must be true or false" unless true_or_false == true || true_or_false == false
-    @use_superscript_characters = true_or_false
-    refresh_all_unit_identifiers!
-  end
-
-  # Switch all unit identifiers (name, symbol, label) to use the currently
-  # configured system for superscripts.
-  #
-  def refresh_all_unit_identifiers!
-    Unit.units.replace(
-      Unit.units.map do |unit|
-        unit.refresh_identifiers!
-        unit
-      end
-    )
+  def self.configure(&block)
+    self.module_eval(&block) if block
   end
 
   module ExtendedMethods

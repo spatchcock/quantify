@@ -177,24 +177,24 @@ Unit::SI.configure do
   load :name => 'kilogram', :physical_quantity => :mass, :symbol => 'kg', :label => 'kg'
   load :name => 'gram',     :physical_quantity => :mass, :symbol => 'g',  :label => 'g',  :factor => 1e-3
 
-  # Define units on the basis of unit operations
+  # Define compound units on the basis of SI units
 
-  construct_and_load metre**2
-  construct_and_load metre**3
-  construct_and_load(metre/second)
-  construct_and_load(metre/second**2)
+  (metre**2).load
+  (metre**3).load
+  (metre/second).load
+  (metre/second**2).load
 
-  construct_and_load(1/centimetre) do |unit|
+  (1/centimetre).configure do |unit|
     unit.name = 'inverse centimetre'
-  end
+  end.load
 
-  construct_and_load(centimetre/second**2) do |unit|
+  (centimetre/second**2).configure do |unit|
     unit.name = 'galileo'
     unit.symbol = 'Gal'
     unit.label = 'galileo'
-  end
+  end.load
 
-  # add required prefixed unit individually
+  # add required prefixed units individually
 
   kilometre.load
 
@@ -215,8 +215,6 @@ Unit::SI.configure do
   
   si_base_units.each { |unit| unit.acts_as_equivalent_unit = true }
 
-  cubic_metre.acts_as_equivalent_unit = true
-
   joule.acts_as_equivalent_unit = true
 
   newton.acts_as_equivalent_unit = true
@@ -224,8 +222,6 @@ Unit::SI.configure do
   watt.acts_as_equivalent_unit = true
 
   pascal.acts_as_equivalent_unit = true
-
-  square_metre.acts_as_equivalent_unit = true
 
 end
 

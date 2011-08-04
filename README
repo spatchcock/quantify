@@ -9,7 +9,7 @@ Quick introduction
 
   12.feet + 12.feet                   => "24.0 feet"
 
-  6.m ** 2                            => "36.0 m^2"
+  6.m ** 2                            => "36.0 m²"
 
   100.km / 2.h                        => "50 kilometers per hour"
 
@@ -124,11 +124,11 @@ Convert a quantity to a different unit
 
 Convert the units of a quantity with a compound unit
 
-  speed = 70.mi/1.h                     => "70.0 mi h^-1"
+  speed = 70.mi/1.h                     => "70.0 mi/h"
 
-  speed_in_kms = speed.to_km            => "112.65408 km h^-1"
+  speed_in_kms = speed.to_km            => "112.65408 km/h"
 
-  speed_in_mins = speed_in_kms.to_min   => "1.877568 km min^-1"
+  speed_in_mins = speed_in_kms.to_min   => "1.877568 km/min"
 
   # Note: all of the above results are string representations of the actual
   # objects which result from these operations.
@@ -180,18 +180,18 @@ and the user may not necessarily prefer a conversion into consistent mass units
   area = 12.yd * 36.ft                  => <Quantify::Quantity:0xb7332bbc ... >
   area.to_s                             => "432.0 yd ft"
   area.to_yd
-  area.to_s                             => "144.0 yd^2"
+  area.to_s                             => "144.0 yd²"
 
   # Alternatively, all units within the numerator and denominator respectively
   # can be standardized.
   quantity = (12.ft*8.mi)/(1.s*8.min)
-  quantity.to_s                         => 12.0 ft mi s^-1 min^-1
+  quantity.to_s                         => 12.0 ft mi/s min
   quantity.rationalize_units!
-  quantity.to_s                         => 1056.0 ft^2 s^-2
+  quantity.to_s                         => 1056.0 ft²/s²
 
   # A quantity with arbitrary cancelable units can be cancelled manually
   quantity = (12.m**6) / 2.m**2
-  quantity.to_s                         => "746496.0 m^6 m^-2"
+  quantity.to_s                         => "746496.0 m^6/m²"
   quantity.cancel_base_units! :m
   quantity.to_s                         => "746496.0 m^4"
 
@@ -228,14 +228,14 @@ Initialize a unit object
 
   another_unit = unit / other_unit       => <Quantify::Unit::Compound:0xb74af323 ... >
   another_unit.name                      => 'kilometer per hour'
-  another_unit.symbol                    => 'km h^-1'
+  another_unit.symbol                    => 'km/h'
   another_unit.measures                  => 'velocity'
   another_unit.base_units.map(&:name)    => ['kilogram','hour']
 
   last_unit = Unit.m
   last.unit.measures                     => 'length'
   square = last_unit ** 2                => <Quantify::Unit::Compound:0xb446f12f ... >
-  square.symbol                          => 'm^2'
+  square.symbol                          => 'm²'
   square.measures                        => 'area'
 
 

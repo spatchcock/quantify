@@ -31,7 +31,7 @@ module Quantify
       end
 
       # Absolute index as names always contain 'per' before denominator units
-      def name
+      def name(reciprocal=false)
         name_to_power(@unit.name, @index.abs)
       end
 
@@ -39,20 +39,12 @@ module Quantify
         name_to_power(@unit.pluralized_name, @index.abs)
       end
 
-      def symbol
-        @unit.symbol.to_s + ( @index.nil? || @index == 1 ? "" : formatted_index )
+      def symbol(reciprocal=false)
+        @unit.symbol + index_as_string(reciprocal)
       end
 
-      def label
-        @unit.label + (@index == 1 ? "" : formatted_index)
-      end
-
-      # Reciprocalized version of label, i.e. sign changed. This is used to make
-      # a denominator unit renderable in cases where there are no numerator units,
-      # i.e. where no '/' appears in the label
-      #
-      def reciprocalized_label
-        @unit.label + (@index == -1 ? "" : formatted_index(@index * -1))
+      def label(reciprocal=false)
+        @unit.label + index_as_string(reciprocal)
       end
 
       def factor
@@ -67,8 +59,9 @@ module Quantify
         @index < 0
       end
 
-      # The following methods refer only to the unit of the CompoundBaseUnit
-      # object, rather than the unit *together with its index*
+      def measures
+        dimensions.describe
+      end
 
       def is_base_quantity_si_unit?
         @unit.is_base_quantity_si_unit?
@@ -97,10 +90,6 @@ module Quantify
       def is_derived_unit?
         @unit.is_derived_unit?
       end
-  
-      def measures
-        @unit.measures
-      end
 
       def initialize_copy(source)
         instance_variable_set("@unit", @unit.clone)
@@ -109,11 +98,21 @@ module Quantify
       private
 
       # Returns a string representation of the unit index, formatted according to
-      # the global superscript configuration
+      # the global superscript configuration.
+      #
+      # The index value can be overridden by specifying as an argument.
       #
       def formatted_index(index=nil)
         index = "^#{index.nil? ? @index : index}"
-        Quantify.use_superscript_characters? ? index.with_superscript_characters : index
+        Unit.use_superscript_characters? ? index.with_superscript_characters : index
+      end
+
+      def index_as_string(reciprocal=false)
+        if reciprocal == true
+          @index == -1 ? "" : formatted_index(@index * -1)
+        else
+          @index.nil? || @index == 1 ? "" : formatted_index
+        end
       end
 
       def name_to_power(string,index)
@@ -123,7 +122,7 @@ module Quantify
         when 2 then "square #{name}"
         when 3 then "cubic #{name}"
         else
-          ordinal = ActiveSupport::Inflector.ordinalize index
+          ordinal = ActiveSupport::Inflector.ordinalize(index)
           name << " to the #{ordinal} power"
         end
       end

@@ -20,17 +20,132 @@ module Quantify
     # prefixes) at any time and either used in place or loaded into the known
     # system.
 
-    # Make the @units instance array readable
     class << self
       attr_reader :units
+      #attr_reader :symbol_denominator_delimiter, :symbol_unit_delimiter
+      #attr_reader :use_symbol_parentheses, :use_symbol_denominator_syntax
     end
+
+    # Instance variable containing system of known units
+    @units = []
+
+    # Default configuration for unit symbols
+    #@use_symbol_denominator_syntax = true
+    #@use_symbol_parentheses = false
+    #@symbol_denominator_delimiter = "/"
+    #@symbol_unit_delimiter = " "
 
     def self.configure(&block)
       self.class_eval(&block) if block
     end
 
-    # Instance variable containing system of known units
-    @units = []
+    # Set the default string which is used to delimit numerator and denominator
+    # strings in compound unit symbol representations. Defaults to "/".
+    #
+    def self.symbol_denominator_delimiter=(string)
+      @symbol_denominator_delimiter = string
+      refresh_all_unit_attributes!
+    end
+
+    def self.symbol_denominator_delimiter
+      @symbol_denominator_delimiter ||= "/"
+    end
+
+    # Set the default string which is used to delimit unit symbol strings in
+    # compound unit symbol representations. Defaults to " ".
+    #
+    def self.symbol_unit_delimiter=(string)
+      @symbol_unit_delimiter = string
+      refresh_all_unit_attributes!
+    end
+
+    def self.symbol_unit_delimiter
+      @symbol_unit_delimiter ||= " "
+    end
+
+    # Specify whether parentheses should be used to group multiple units in
+    # compound unit symbol representations. Set either <tt>true</tt> (e.g.
+    # "kg/(t km)") or <tt>false</tt> (e.g. "kg/t km"). Defaults to <tt>false</tt>
+    #
+    def self.use_symbol_parentheses=(true_or_false)
+      @use_symbol_parentheses = true_or_false
+      refresh_all_unit_attributes!
+    end
+
+    # Shorthand bang! method for configuring parentheses in compound unit symbol
+    # representations
+    #
+    def self.use_symbol_parentheses!
+      @use_symbol_parentheses = true
+    end
+
+    # Returns <tt>true</tt> if parentheses are configured for use within compound
+    # unit symbol representations. Otherwise returns <tt>false</tt>.
+    #
+    def self.use_symbol_parentheses?
+      @use_symbol_parentheses.nil? ? false : @use_symbol_parentheses
+    end
+
+    # Shorthand bang! method for configuring denominator structures in compound
+    # unit symbol representations (e.g. "kg/t km")
+    #
+    def self.use_symbol_denominator_syntax!
+      self.use_symbol_denominator_syntax = true
+    end
+
+    # Shorthand bang! method for configuring index-only structures in compound
+    # unit symbol representations (e.g. "kg t^-1 km^-1")
+    #
+    def self.use_symbol_indices_only!
+      self.use_symbol_denominator_syntax = false
+    end
+
+    # Specify whether denominator structures should be used in compound unit
+    # symbol representations. Set either <tt>true</tt> (e.g. "kg/t km") or
+    # <tt>false</tt> (e.g. "kg t^-1 km^-1"). Defaults to <tt>true</tt>
+    #
+    def self.use_symbol_denominator_syntax=(true_or_false)
+      @use_symbol_denominator_syntax = true_or_false
+      refresh_all_unit_attributes!
+    end
+
+    # Returns <tt>true</tt> if denominator structures are configured for use
+    # within compound unit symbol representations. Otherwise returns
+    # <tt>false</tt>.
+    #
+    def self.use_symbol_denominator_syntax?
+      @use_symbol_denominator_syntax.nil? ? true : @use_symbol_denominator_syntax
+    end
+
+    # Check whether superscript characters are turned on.
+    def self.use_superscript_characters?
+      @use_superscript_characters.nil? ? true : @use_superscript_characters
+    end
+
+    # Shorthand method for ::use_superscript_characters=true
+    def self.use_superscript_characters!
+      self.use_superscript_characters = true
+    end
+
+    # Declare whether superscript characters should be used for unit names, symbols
+    # and labels - i.e. "²" and "³" rather than "^2" and "^3". Set to either true or
+    # false. If not set, superscript characters are used by default.
+    #
+    def self.use_superscript_characters=(true_or_false)
+      raise Exceptions::InvalidArgumentError,
+        "Argument must be true or false" unless true_or_false == true || true_or_false == false
+      @use_superscript_characters = true_or_false
+      refresh_all_unit_attributes!
+    end
+
+    # Switch all unit identifiers (name, symbol, label) to use the currently
+    # configured system for superscripts.
+    #
+    def self.refresh_all_unit_attributes!
+      Unit.units.replace(
+        Unit.units.map { |unit| unit.refresh_attributes; unit }
+      )
+    end
 
     # Load a new unit into they system of known units
     def self.load(unit)
@@ -168,7 +283,7 @@ module Quantify
         when :name then string_or_symbol.remove_underscores.singularize.downcase
         else string_or_symbol.to_s
       end
-      Quantify.use_superscript_characters? ?
+      Unit.use_superscript_characters? ?
         string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
     end
     

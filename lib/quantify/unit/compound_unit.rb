@@ -20,58 +20,6 @@ module Quantify
       # The Compound class provides support for arbitrarily defined compound units
       # which don't have well-established names.
 
-
-
-      # Consilidates base quantities by finding multiple instances of the same unit
-      # type and reducing them into a single unit represenation, by altering the
-      # repsective index. It has the effect of raising units to powers and cancelling
-      # those which appear in the numerator AND denominator
-      #
-      # This is a class method which takes an arbitrary array of base units as an
-      # argument. This means that consolidation can be performed on either all
-      # base units or just a subset - the numerator or denominator units.
-      #
-      def self.consolidate_base_units(base_units)
-        raise Exceptions::InvalidArgumentError, "Must provide an array of base units" unless base_units.is_a? Array
-
-        new_base_units = []
-
-        while base_units.size > 0 do
-          new_base = base_units.shift
-          next if new_base.unit.is_dimensionless?
-
-          new_base.index = base_units.select do |other_base|
-            new_base.unit.is_equivalent_to? other_base.unit
-          end.inject(new_base.index) do |index,other_base|
-            base_units.delete other_base
-            index += other_base.index
-          end
-
-          new_base_units << new_base unless new_base.is_dimensionless?
-        end
-        return new_base_units
-      end
-
-      # Make compound unit use consistent units for representing each physical
-      # quantity. For example, lb/kg => kg/kg.
-      #
-      # This is a class method which takes an arbitrary array of base units as an
-      # argument. This means that consolidation can be performed on either all
-      # base units or just a subset - e.g. the numerator or denominator units.
-      #
-      # The units to use for particular physical dimension can be specified
-      # following the inital argument. If no unit is specified for a physical
-      # quantity which is represented in the array of base units, then the first
-      # unit found for that physical quantity is used as the canonical one.
-      #
-      def self.rationalize_base_units(base_units=[],*required_units)
-        base_units.each do |base|
-          new_unit = required_units.map { |unit| Unit.for(unit) }.find { |unit| unit.measures == base.measures } ||
-            base_units.find { |unit| unit.measures == base.measures }.unit
-          base.unit = new_unit
-        end
-      end
-
       attr_reader :base_units, :acts_as_equivalent_unit
 
       # Initialize a compound unit by providing an array containing a represenation
@@ -87,7 +35,7 @@ module Quantify
       #     explicit index
       #
       def initialize(*units)
-        @base_units = []
+        @base_units = CompoundBaseUnitList.new
         units.each do |unit|
           if unit.is_a? CompoundBaseUnit
             @base_units << unit
@@ -105,100 +53,43 @@ module Quantify
         consolidate_numerator_and_denominator_units!
       end
 
+      # Refresh all unit attributes. Can be used following a change to unit attribute
+      # global configurations
+      #
+      def refresh_attributes
+        initialize_attributes
+      end
 
       # Returns an array containing only the base units which have positive indices
       def numerator_units
-        @base_units.select { |base| base.is_numerator? }
+        @base_units.numerator_units
       end
 
       # Returns an array containing only the base units which have negative indices
       def denominator_units
-        @base_units.select { |base| base.is_denominator? }
+        @base_units.denominator_units
       end
 
       # Convenient accessor method for pluralized names
       def pluralized_name
-        derive_name :plural
+        @base_units.name(true)
       end
 
       # Determine is a unit object represents an SI named unit.
-      #
       def is_si_unit?
-        @base_units.all? { |base| base.is_si_unit? }
+        @base_units.is_si_unit?
       end
 
       def is_non_si_unit?
-        @base_units.any? { |base| base.is_non_si_unit? }
+        @base_units.is_non_si_unit?
       end
 
       def is_base_quantity_si_unit?
-        @base_units.all? { |base| base.is_base_quantity_si_unit? }
+        @base_units.is_base_quantity_si_unit?
       end
 
-      # Consolidate base units. A 'full' consolidation is performed, i.e.
-      # consolidation across numerator and denominator. This is equivalent to the
-      # automatic partial consolidation AND a cancelling of units (i.e.
-      # #cancel_base_units!)
-      #
-      def consolidate_base_units!
-        @base_units = Compound.consolidate_base_units(@base_units)
-        initialize_attributes
-        return self
-      end
-
-      # Cancel base units across numerator and denominator. If similar units occur
-      # in both the numerator and denominator, they can be cancelled, i.e. their
-      # powers reduced correspondingly until one is removed.
-      #
-      # This method is useful when wanting to remove specific units that can be
-      # cancelled from the compound unit configuration while retaining the
-      # remaining units in the current format.
-      #
-      # If no other potentially cancelable units need to be retained, the method
-      # #consolidate_base_units! can be called with the :full argument instead
-      #
-      # This method takes an arbitrary number of arguments which represent the units
-      # which are required to be cancelled (string, symbol or object)
-      #
-      def cancel_base_units!(*units)
-        units.each do |unit|
-          raise Exceptions::InvalidArgumentError, "Cannot cancel by a compound unit" if unit.is_a? Unit::Compound
-          unit = Unit.for unit unless unit.is_a? Unit::Base
-
-          numerator_unit = numerator_units.find { |base| unit.is_equivalent_to? base.unit }
-          denominator_unit = denominator_units.find { |base| unit.is_equivalent_to? base.unit }
-
-          if numerator_unit && denominator_unit
-            cancel_value = [numerator_unit.index,denominator_unit.index].min.abs
-            numerator_unit.index -= cancel_value
-            denominator_unit.index += cancel_value
-          end
-        end
-        consolidate_numerator_and_denominator_units!
-      end
-
-      # Make the base units of self use consistent units for each physical quantity
-      # represented. For example, lb/kg => kg/kg.
-      #
-      # By default, units are rationalized within the the numerator and denominator
-      # respectively. That is, different units representing the same physical
-      # quantity may appear across the numerator and denominator, but not within
-      # each. To fully rationalize the base units of self, pass in the symbol
-      # :full as a first argument. Otherwise :partial is passed as the default.
-      #
-      # The units to use for particular physical dimension can be specified
-      # following the inital argument. If no unit is specified for a physical
-      # quantity which is represented in the array of base units, then the first
-      # unit found for that physical quantity is used as the canonical one.
-      #
-      def rationalize_base_units!(scope=:partial,*units)
-        if scope == :full
-          Compound.rationalize_base_units(@base_units,*units)
-        else
-          Compound.rationalize_base_units(numerator_units,*units)
-          Compound.rationalize_base_units(denominator_units,*units)
-        end
-        consolidate_numerator_and_denominator_units!
+      def has_multiple_base_units?
+        @base_units.size > 1
       end
 
       # Return a known unit which is equivalent to self in terms of its physical
@@ -227,121 +118,90 @@ module Quantify
         end
       end
 
-      protected
-
-      def initialize_attributes
-        self.dimensions = derive_dimensions
-        self.name = derive_name
-        self.symbol = derive_symbol
-        self.factor = derive_factor
-        self.label = derive_label
+      # Cancel base units across numerator and denominator. If similar units occur
+      # in both the numerator and denominator, they can be cancelled, i.e. their
+      # powers reduced correspondingly until one is removed.
+      #
+      # This method is useful when wanting to remove specific units that can be
+      # cancelled from the compound unit configuration while retaining the
+      # remaining units in the current format.
+      #
+      # If no other potentially cancelable units need to be retained, the method
+      # #consolidate_base_units! can be called with the :full argument instead
+      #
+      # This method takes an arbitrary number of arguments which represent the units
+      # which are required to be cancelled (string, symbol or object)
+      #
+      def cancel_base_units!(*units)
+        @base_units.cancel!(*units)
+        initialize_attributes
       end
 
-      # Partially consolidate base units, i.e. numerator and denomiator are
-      # consolidated separately. This means that two instances of the same unit
+      # Consilidates base quantities by finding multiple instances of the same unit
+      # type and reducing them into a single unit represenation, by altering the
+      # repsective index. It has the effect of raising units to powers and cancelling
+      # those which appear in the numerator AND denominator
+      #
+      def consolidate_base_units!
+        @base_units.consolidate!
+        initialize_attributes
+      end
+
+      # Similar to #consolidate_base_units! but operates on the numerator and
+      # denomiator are separately. This means that two instances of the same unit
       # should not occur in the numerator OR denominator (rather they are combined
       # and the index changed accordingly), but similar units are not cancelled
       # across the numerator and denominators.
       #
       def consolidate_numerator_and_denominator_units!
-        new_base_units = []
-        new_base_units += Compound.consolidate_base_units(numerator_units)
-        new_base_units += Compound.consolidate_base_units(denominator_units)
-        @base_units = new_base_units
+        @base_units.consolidate_numerator_and_denominator!
         initialize_attributes
+      end
+
+      # Make compound unit use consistent units for representing each physical
+      # quantity. For example, lb/kg => kg/kg.
+      #
+      # The units to use for particular physical dimension can be specified. If
+      # no unit is specified for a physical quantity which is represented in the
+      # <tt>self</tt>, then the first unit found for that physical quantity is
+      # used as the canonical one.
+      #
+      def rationalize_base_units!(*units)
+        @base_units.rationalize!(*units)
+        initialize_attributes
+      end
+
+      # Similar to #rationalize_base_units! but operates on the numerator and
+      # denomiator are separately. This means that different units representing
+      # the same physical quantity may remain across the numerator and
+      # denominator units.
+      #
+      def rationalize_numerator_and_denominator_units!(*units)
+        @base_units.rationalize_numerator_and_denominator!(*units)
+        initialize_attributes
+      end
+
+      private
+
+      def initialize_attributes
+        self.dimensions = @base_units.dimensions
+        self.name = @base_units.name
+        self.symbol = @base_units.symbol
+        self.factor = @base_units.factor
+        self.label = @base_units.label
         return self
       end
 
-      # Derive a representation of the physical dimensions of the compound unit
-      # by multilying together the dimensions of each of the base units.
-      #
-      def derive_dimensions
-        @base_units.inject(Dimensions.dimensionless) do |dimension,base|
-          dimension * base.dimensions
-        end
+      def options_for_prefixed_version(prefix)
+        raise Exceptions::InvalidArgumentError, "No valid prefixes exist for unit: #{self.name}" if has_multiple_base_units?
+        base = @base_units.first
+        base.unit = base.unit.with_prefix(prefix)
+        return base
       end
 
-      # Derive a name for the unit based on the names of the base units
-      #
-      # Both singluar and plural names can be derived. In the case of pluralized
-      # names, the last unit in the numerator is pluralized. Singular names are
-      # assumed by default, in which case no argument is required.
-      #
-      # Format for names includes the phrase 'per' to differentiate denominator
-      # units and words, rather than numbers, for representing powers, e.g.
-      #
-      #   square metres per second
-      #
-      def derive_name(inflection=:singular)
-        unit_name = ""
-        unless numerator_units.empty?
-          units = numerator_units
-          last_unit = units.pop if inflection == :plural
-          units.inject(unit_name) do |name,base|
-            name << base.name + " "
-          end
-          unit_name << last_unit.pluralized_name + " " if last_unit
-        end
-        unless denominator_units.empty?
-          unit_name << "per "
-          denominator_units.inject(unit_name) do |name,base|
-            name << base.name + " "
-          end
-        end
-        return unit_name.strip
-      end
-
-      # Derive a symbol for the unit based on the symbols of the base units
-      # 
-      # Get the units in order first so that the denominator values (those
-      # with negative powers) follow the numerators
-      #
-      # Symbol format use unit symbols, with numerator symbols followed by
-      # denominator symbols and powers expressed using the "^" notation with 'true'
-      # values (i.e. preservation of minus signs).
-      #
-      def derive_symbol
-        @base_units.sort do |base,next_unit|
-          next_unit.index <=> base.index
-        end.inject('') do |symbol,base|
-          symbol << base.symbol + " "
-        end.strip
-      end
-
-      # Derive a label for the comound unit. This follows the format used in the
-      # JScience library in using a middot notation ("·") to spearate units and
-      # slash notation "/" to separate numerator and denominator. Since the
-      # denominator is differentiated, denominator unit powers are rendered in
-      # absolute terms (i.e. minus sign omitted) except when no numerator values
-      # are present.
-      #
-      def derive_label
-        unit_label = ""
-        unless numerator_units.empty?
-          numerator_units.inject(unit_label) do |label,base|
-            label << "·" unless unit_label.empty?
-            label << base.label
-          end
-        end
-
-        unless denominator_units.empty?
-          format = ( unit_label.empty? ? :label : :reciprocalized_label )
-          unit_label << "/" unless unit_label.empty?
-          denominator_units.inject(unit_label) do |label,base|
-            label << "·" unless unit_label.empty? || unit_label =~ /\/\z/
-            label << base.send(format)
-          end
-        end
-        return unit_label
-      end
-
-      # Derive the multiplicative factor for the unit based on those of the base
-      # units
-      #
-      def derive_factor
-        @base_units.inject(1) do |factor,base|
-          factor * base.factor
-        end
+      def initialize_copy(source)
+        super
+        instance_variable_set("@base_units", @base_units.clone)
       end
 
     end
