@@ -22,18 +22,10 @@ module Quantify
 
     class << self
       attr_reader :units
-      #attr_reader :symbol_denominator_delimiter, :symbol_unit_delimiter
-      #attr_reader :use_symbol_parentheses, :use_symbol_denominator_syntax
     end
 
     # Instance variable containing system of known units
     @units = []
-
-    # Default configuration for unit symbols
-    #@use_symbol_denominator_syntax = true
-    #@use_symbol_parentheses = false
-    #@symbol_denominator_delimiter = "/"
-    #@symbol_unit_delimiter = " "
 
     def self.configure(&block)
       self.class_eval(&block) if block

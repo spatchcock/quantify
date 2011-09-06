@@ -305,7 +305,7 @@ Unit::NonSI.configure do
   load :name => 'line',                                  :physical_quantity => 'length',                    :factor => 2.116667e-3,      :symbol => 'ln',          :label => 'ln'
   load :name => 'link',                                  :physical_quantity => 'length',                    :factor => 201.168e-3,       :symbol => 'lnk',         :label => 'lnk'
   load :name => 'litre',                                 :physical_quantity => 'volume',                    :factor => 1e-3,             :symbol => 'L',           :label => 'L'
-  load :name => 'long ton',                              :physical_quantity => 'mass',                      :factor => 1.016047,         :symbol => 'ton',         :label => 'ton_uk'
+  load :name => 'long ton',                              :physical_quantity => 'mass',                      :factor => 1.016047e3,         :symbol => 'ton',         :label => 'ton_uk'
   load :name => 'maxwell',                               :physical_quantity => 'magnetic flux',             :factor => 10e-9,            :symbol => 'Mx',          :label => 'Mx'
   load :name => 'metric horsepower',                     :physical_quantity => 'power',                     :factor => 735.4988,         :symbol => 'hp',          :label => 'hp'
   load :name => 'mile',                                  :physical_quantity => 'length',                    :factor => 1.609344e3,       :symbol => 'mi',          :label => 'mi'
