@@ -324,6 +324,7 @@ Unit::NonSI.configure do
   load :name => 'pound',                                 :physical_quantity => 'mass',                      :factor => 0.45359237,       :symbol => 'lb',          :label => 'lb'
   load :name => 'poundal',                               :physical_quantity => 'force',                     :factor => 138.255,          :symbol => 'pdl',         :label => 'pdl'
   load :name => 'pound force',                           :physical_quantity => 'force',                     :factor => 4.448222,         :symbol => 'lbf',         :label => 'lbf'
+  load :name => 'pound mole',                            :physical_quantity => 'amount_of_substance',       :factor => 453.59237,        :symbol => 'lbmol',       :label => 'lbmol'
   load :name => 'quad',                                  :physical_quantity => 'energy',                    :factor => 1.055056e18,      :symbol => 'quad',        :label => 'quad'
   load :name => 'rad',                                   :physical_quantity => 'radiation absorbed dose',   :factor => 0.01,             :symbol => 'rad',         :label => 'rd'
   load :name => 'rem',                                   :physical_quantity => 'radiation_dose_equivalent', :factor => 0.01,             :symbol => 'rem',         :label => 'rem'

@@ -1060,5 +1060,15 @@ describe Unit do
 
   end
 
+  describe "specific units" do
+
+    it "should represent the pound mole correctly" do
+      unit = Unit.lbmol
+      unit.name.should eql 'pound mole'
+      Unit.ratio(Unit.mol,unit).value.should eql 453.59237
+      unit.alternatives_by_name.should eql ['mole']
+    end
+  end
+
 end
 
