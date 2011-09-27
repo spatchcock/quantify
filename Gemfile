@@ -1,6 +1,6 @@
 source "http://rubygems.org"
 
-gem "activesupport"
+gem "activesupport", "~> 3.0.10"
 gem "i18n"
 
 # Add dependencies to develop your gem here.
@@ -8,7 +8,7 @@ gem "i18n"
 group :development do
   gem "bundler", "~> 1.0.0"
   gem "jeweler", "~> 1.6.4"
-  gem 'rspec', '1.3.0'
+  gem 'rspec', '~> 2.6.0'
   gem 'rcov'
-  gem 'rspec_spinner', '1.1.3'
+  gem 'rdoc'
 end

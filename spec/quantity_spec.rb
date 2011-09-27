@@ -152,7 +152,7 @@ describe Quantity do
     time_in_hours = time_in_min.to_hours
     speed = distance_in_miles / time_in_hours
     speed.class.should == Quantity
-    speed.value.should be_close 27.1143792976291, 0.00000001
+    speed.value.should be_within(1.0e-08).of(27.1143792976291)
     speed.to_s(:name).should == "27.1143792976291 miles per hour"
     speed.to_s.should == "27.1143792976291 mi/h"
   end
