@@ -1,4 +1,4 @@
-
+$KCODE = 'UTF8'
 require 'quantify'
 
 describe String do
