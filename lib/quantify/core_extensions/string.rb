@@ -1,4 +1,4 @@
-
+# encoding: UTF-8
 class String
 
   def with_superscript_characters

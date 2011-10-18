@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'quantify'
 include Quantify
 
@@ -1027,7 +1028,8 @@ describe Unit do
     end
 
     it "should return correct unit ratio quantity with symbols" do
-      Unit.ratio(:lb,:kg).to_s(:name).should == "2.20462262184878 pounds per kilogram"
+      Unit.ratio(:lb,:kg).to_s(:name).split(" ").first.to_f.should be_within(0.00000000000001).of(2.20462262184878)
+      Unit.ratio(:lb,:kg).to_s(:name).split(" ")[1..3].join(" ").should == "pounds per kilogram"
     end
 
     it "should return correct unit ratio quantity with symbols and rounding" do

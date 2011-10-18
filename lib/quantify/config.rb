@@ -1,3 +1,4 @@
+# encoding: UTF-8
 include Quantify
 
 # Configure known dimensions, prefixes and units.

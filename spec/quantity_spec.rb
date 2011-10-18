@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'quantify'
 include Quantify
 
@@ -104,7 +105,9 @@ describe Quantity do
   end
 
   it "should subtract quantities correctly with different units of same dimension" do
-    (125.4.kelvin - -211.85.degree_celsius).to_s.should == "64.1 K"
+    result = (125.4.kelvin - -211.85.degree_celsius)
+    result.value.should be_within(0.00000001).of(64.1)
+    result.unit.symbol.should == "K"
   end
 
   it "should subtract quantities correctly with different units of same dimension" do
@@ -202,7 +205,8 @@ describe Quantity do
 
   it "should convert compound units to SI correctly" do
     speed = Quantity.new 100, (Unit.km/Unit.h)
-    speed.to_si.to_s(:name).should == "27.7777777777778 metres per second"
+    speed.to_si.value.should be_within(0.0000000000001).of(27.7777777777778)
+    speed.to_si.unit.name.should == "metre per second"
   end
 
   it "should convert compound units to SI correctly" do
@@ -257,14 +261,16 @@ describe Quantity do
     quantity.to_s.should eql "432.0 yd ft"
     new_quantity=quantity.rationalize_units
     quantity.to_s.should eql "432.0 yd ft"
-    new_quantity.to_s.should eql "144.0 yd²"
+    new_quantity.value.should be_within(0.0000001).of(144)
+    new_quantity.unit.symbol.should eql  "yd²"
   end
 
   it "should rationalize units and modify value in place" do
     quantity = 12.yards*36.feet
     quantity.to_s.should eql "432.0 yd ft"
     quantity.rationalize_units!
-    quantity.to_s.should eql  "144.0 yd²"
+    quantity.value.should be_within(0.0000001).of(144)
+    quantity.unit.symbol.should eql  "yd²"
   end
 
   it "should be greater than" do

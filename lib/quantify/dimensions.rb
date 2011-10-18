@@ -265,7 +265,7 @@ module Quantify
     #   Dimensions.length.units :symbol     #=> [ 'm', 'ft', 'yd', ... ]
     #
     def units(by=nil)
-      Unit.units.select { |unit| unit.dimensions == self }.map(&by)
+      Unit.units.select { |unit| unit.dimensions == self }.map(&by).to_a
     end
 
     # Returns the SI unit for the physical quantity described by self.
@@ -319,7 +319,7 @@ module Quantify
         Unit.base_quantity_si_units.select do |unit|
           unit.measures == dimension.remove_underscores
         end.first.clone ** index
-      end.map(&by)
+      end.map(&by).to_a
     end
 
     # Compares the base quantities of two Dimensions objects and returns true if
@@ -454,7 +454,11 @@ module Quantify
     #
     def base_quantities
       quantities = self.instance_variables
-      quantities.delete("@physical_quantity")
+      if RUBY_VERSION < "1.9"
+        quantities.delete("@physical_quantity")
+      else
+        quantities.delete(:@physical_quantity)
+      end
       return quantities
     end
 
@@ -475,7 +479,7 @@ module Quantify
     def to_hash
       hash = {}
       base_quantities.each do |variable|
-        hash[variable.gsub("@","").to_sym] = self.instance_variable_get(variable)
+        hash[variable.to_s.gsub("@","").to_sym] = self.instance_variable_get(variable)
       end
       return hash
     end

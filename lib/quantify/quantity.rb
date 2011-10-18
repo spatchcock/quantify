@@ -55,8 +55,8 @@ module Quantify
       raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
     end
 
-    def self.configure &block
-      self.class_eval &block if block
+    def self.configure(&block)
+      self.class_eval(&block) if block
     end
 
     attr_accessor :value, :unit
@@ -95,6 +95,10 @@ module Quantify
       else
         "#{@value} #{@unit.send format}"
       end
+    end
+    
+    def inspect
+      to_s
     end
 
     # Converts self into a quantity using the unit provided as an argument. The

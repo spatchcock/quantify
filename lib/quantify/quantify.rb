@@ -25,7 +25,7 @@ module Quantify
           units = Unit.units
         end
         return_format = ( $8 ? $8.to_sym : nil )
-        units.map(&return_format)
+        units.map(&return_format).to_a
       elsif unit = Unit.for(method)
         return unit
       else

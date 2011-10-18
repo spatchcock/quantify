@@ -1,4 +1,3 @@
-
 module Quantify
   module Unit
     class Base
@@ -60,8 +59,8 @@ module Quantify
       #
       #   end
       #
-      def self.configure &block
-        class_eval &block if block
+      def self.configure(&block)
+        class_eval(&block) if block
       end
       
       attr_reader :name, :symbol, :label, :factor, :dimensions
@@ -402,7 +401,7 @@ module Quantify
       def alternatives(by=nil)
         @dimensions.units(nil).reject do |unit|
           unit.is_equivalent_to?(self) || !unit.acts_as_alternative_unit
-        end.map(&by)
+        end.map(&by).to_a
       end
 
       # Returns the SI unit for the same physical quantity which is represented
@@ -449,8 +448,8 @@ module Quantify
       #
       def valid_prefixes(by=nil)
         return [] if is_compound_unit? && has_multiple_base_units?
-        return Unit::Prefix.si_prefixes.map(&by) if is_si_unit?
-        return Unit::Prefix.non_si_prefixes.map(&by) if is_non_si_unit?
+        return Unit::Prefix.si_prefixes.map(&by).to_a if is_si_unit?
+        return Unit::Prefix.non_si_prefixes.map(&by).to_a if is_non_si_unit?
       end
 
       # Multiply two units together. This results in the generation of a compound
@@ -537,7 +536,7 @@ module Quantify
       def to_hash
         hash = {}
         self.instance_variables.each do |var|
-          symbol = var.gsub("@","").to_sym
+          symbol = var.to_s.gsub("@","").to_sym
           hash[symbol] = send symbol
         end
         return hash

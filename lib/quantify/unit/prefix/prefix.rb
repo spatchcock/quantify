@@ -60,7 +60,7 @@ module Quantify
             prefixes = Prefix.prefixes
           end
           return_format = ( $4 ? $4.to_sym : nil )
-          prefixes.map(&return_format)
+          prefixes.map(&return_format).to_a
         elsif prefix = self.for(method)
           return prefix
         else
