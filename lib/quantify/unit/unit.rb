@@ -204,9 +204,12 @@ module Quantify
       end
       if unit = Unit.match(name_symbol_or_label)
         return unit
-      end
-      if unit = Unit.parse(name_symbol_or_label)
+      elsif unit = Unit.parse(name_symbol_or_label)
         return unit
+      elsif unit = Unit.parse(name_symbol_or_label, :iterative => true)
+        return unit
+      else
+        return nil
       end
     rescue Exceptions::InvalidUnitError
       return nil
@@ -214,17 +217,16 @@ module Quantify
 
     # Parse complex strings into unit.
     #
-    def self.parse(string)
+    def self.parse(string, options={})
       string = string.remove_underscores.without_superscript_characters
-      if string.scan(/(\/|per)/).size > 1
-        raise Exceptions::InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
+      if options[:iterative] == true
+        units = Unit.iterative_parse(string)
+      else
+        units = Unit.simple_parse(string)
       end
-
-      units = []
-      numerator, per, denominator = string.split(/(\/|per)/)
-      units += Unit.parse_numerator_units(numerator)
-      units += Unit.parse_denominator_units(denominator) unless denominator.nil?
-      if units.size == 1 && units.first.index == 1
+      if units.empty?
+        return nil
+      elsif units.size == 1 && units.first.index == 1
         return units.first.unit
       else
         return Unit::Compound.new(*units)
@@ -266,17 +268,32 @@ module Quantify
       return nil
     end
 
-    # standardize query strings or symbols into canonical form for unit names,
-    # symbols and labels
-    #
-    def self.format_unit_attribute(attribute, string_or_symbol)
-      string_or_symbol = case attribute
-        when :symbol then string_or_symbol.remove_underscores
-        when :name then string_or_symbol.remove_underscores.singularize.downcase
-        else string_or_symbol.to_s
+    def self.simple_parse(string)
+      if string.scan(/(\/|per)/).size > 1
+        raise Exceptions::InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
       end
-      Unit.use_superscript_characters? ?
-        string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
+      units = []
+      numerator, per, denominator = string.split(/(\/|per)/)
+      units += Unit.parse_numerator_units(numerator)
+      units += Unit.parse_denominator_units(denominator) unless denominator.nil?
+      return units
+    end
+
+    def self.iterative_parse(string)
+      units=[]
+      current_set = "numerator_units"
+      while unit = Unit.unit_label_regex.match(string) || unit = Unit.unit_symbol_regex.match(string) ||
+          unit = Unit.unit_name_regex.match(string) || unit = Unit.unit_denominator_regex.match(string) do
+        if unit[0] =~ Unit.unit_denominator_regex
+          current_set = "denominator_units"
+        else
+          units += Unit.send("parse_#{current_set}".to_sym, unit[0])
+        end
+        # Remove matched pattern from string for next iteration
+        match_length = unit[0].size
+        string = string[match_length, string.length-match_length].strip
+      end
+      return units
     end
     
     def self.parse_unit_and_index(string)
@@ -304,6 +321,19 @@ module Quantify
       end
     end
 
+    # standardize query strings or symbols into canonical form for unit names,
+    # symbols and labels
+    #
+    def self.format_unit_attribute(attribute, string_or_symbol)
+      string_or_symbol = case attribute
+        when :symbol then string_or_symbol.remove_underscores
+        when :name then string_or_symbol.remove_underscores.singularize.downcase
+        else string_or_symbol.to_s
+      end
+      Unit.use_superscript_characters? ?
+        string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
+    end
+    
     # This returns the suite of units which represents THE SI units for each of
     # the base dimensions, i.e. metre, kilogram, second, etc. but not prefixed
     # versions of the same unit
@@ -341,6 +371,24 @@ module Quantify
       @units.map {|unit| unit.symbol if unit.symbol.word_count > 1 }.compact
     end
 
+    # might want to try atomic groupings, but must get units in size order perhaps first
+    def self.unit_label_regex
+      /\A((#{Unit.units_for_regex(Unit::Prefix,:non_si_prefixes,:label)})?((#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:label)})\b)|(#{Unit.units_for_regex(Unit::Prefix,:si_prefixes,:label)})?((#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:label)})\b))(\^[\d\.-]*)?/
+    end
+
+    def self.unit_symbol_regex
+      /\A((#{Unit.units_for_regex(Unit::Prefix,:si_prefixes,:symbol)})?((#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:symbol)})\b)|(#{Unit.units_for_regex(Unit::Prefix,:non_si_prefixes,:symbol)})?((#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:symbol)})\b))(\^[\d\.-]*)?/
+    end
+
+    def self.unit_name_regex
+      # Specifically case insensitive
+      /\A((#{Unit.units_for_regex(Unit::Prefix,:non_si_prefixes,:name)})?((#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:pluralized_name)}|#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:name)})\b)|(#{Unit.units_for_regex(Unit::Prefix,:si_prefixes,:name)})?((#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:pluralized_name)}|#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:name)})\b))(\^[\d\.-]*)?/i
+    end
+
+    def self.unit_denominator_regex
+      /\A(\/|per)/i
+    end
+
     # Underscore any parts of string which represent multi-word unit identifiers
     # so that units can be parsed on whitespace
     #
@@ -354,9 +402,9 @@ module Quantify
     # Returns a list of "|" separated unit identifiers for use as regex
     # alternatives. Lists are constructed by calling 
     def self.units_for_regex(klass,method,attribute)
-      list = klass.send(method).map { |item| item.send(attribute) }
+      list = klass.send(method).map { |item| item.send(attribute).gsub("/","\\/").gsub("^","\\^")  }
       list.map! { |item| item.downcase } if attribute == :name
-      list.join("|")
+      list.sort {|x, y| y.size <=> x.size }.join("|")
     end
 
   end

@@ -239,6 +239,7 @@ describe Unit do
       it "should NOT ignore case when initialising units by symbol" do
         Unit.m.label.should eql 'm'
         lambda{Unit.M}.should raise_error
+        
         Unit.Gg.name.should eql 'gigagram'
         lambda{Unit.GG}.should raise_error
       end
@@ -325,8 +326,8 @@ describe Unit do
     it "dynamic unit retrieval with symbol should be successful" do
       Unit.m.name.should == 'metre'
       Unit.ft.symbol.should == 'ft'
-      # Unit.μm.factor.should == 0.000001
-      # Unit.°C.name.should == 'degree celsius'
+      #Unit.μm.factor.should == 0.000001
+      #Unit.°C.name.should == 'degree celsius'
     end
 
     it "dynamic unit retrieval with symbol and prefix should be successful" do

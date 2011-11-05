@@ -34,6 +34,15 @@ describe Quantity do
     quantity.unit.name.should == 'kilometre'
   end
 
+  it "should create valid instances with class parse method" do
+    quantities = Quantity.parse "10m driving and 5 tonnes carried"
+    quantities.should be_a Array
+    quantities.first.value.should == 10
+    quantities.first.unit.symbol.should == 'm'
+    quantities.last.value.should == 5
+    quantities.last.unit.symbol.should == 't'
+  end
+
   it "should create a valid instance with class parse method" do
     quantity = Quantity.parse "10 m"
     quantity.value.should == 10
@@ -45,6 +54,84 @@ describe Quantity do
     quantity.value.should == 155.6789
     quantity.unit.name.should == 'light year'
     quantity.represents.should == 'length'
+  end
+
+  it "should create a valid instance with class parse method and per unit with symbols" do
+    quantity = Quantity.parse "10 m / h"
+    quantity.value.should == 10
+    quantity.unit.symbol.should == 'm/h'
+  end
+
+  it "should create a valid instance with class parse method and per unit with names" do
+    quantity = Quantity.parse "10 miles / hour"
+    quantity.value.should == 10
+    quantity.unit.symbol.should == 'mi/h'
+  end
+
+  it "should create a valid instance with class parse method and compound per unit with names" do
+    quantity = Quantity.parse "10 kilograms / tonne kilometre"
+    quantity.value.should == 10
+    quantity.unit.symbol.should == 'kg/t km'
+  end
+
+  it "should create a valid instance with class parse method and compound per unit with symbols" do
+    quantity = Quantity.parse "10 kg / t km"
+    quantity.value.should == 10
+    quantity.unit.symbol.should == 'kg/t km'
+  end
+
+  it "should create a valid instance from complex string with compound per unit" do
+    quantities = Quantity.parse "We sent some freight 6000 nautical miles by ship and the emissions rate was 10 kg / t km"
+    quantities.first.value.should == 6000
+    quantities.first.unit.name.should == 'nautical mile'
+    quantities.first.unit.symbol.should == 'nmi'
+    quantities[1].value.should == 10
+    quantities[1].unit.pluralized_name.should == 'kilograms per tonne kilometre'
+    quantities[1].unit.symbol.should == 'kg/t km'
+  end
+
+  it "should create valid instances from complex string" do
+    quantities = Quantity.parse "I travelled 220 miles driving my car and using 0.13 UK gallons per mile of diesel"
+    quantities.first.value.should == 220
+    quantities.first.unit.name.should == 'mile'
+    quantities.first.unit.symbol.should == 'mi'
+    quantities[1].value.should == 0.13
+    quantities[1].unit.pluralized_name.should == 'UK gallons per mile'
+    quantities[1].unit.symbol.should == 'gal/mi'
+  end
+
+  it "should create valid instances from complex string with indices" do
+    quantities = Quantity.parse "I sprayed 500 litres of fertilizer across 6000 m^2 of farmland"
+    quantities.first.value.should == 500
+    quantities.first.unit.name.should == 'litre'
+    quantities.first.unit.symbol.should == 'L'
+    quantities[1].value.should == 6000
+    quantities[1].unit.pluralized_name.should == 'square metres'
+    quantities[1].unit.symbol.should == 'm²'
+  end
+
+  it "should create valid instances from complex string with no spaces" do
+    quantities = Quantity.parse "I sprayed 500L of fertilizer across 6000m^2 of farmland"
+    quantities.first.value.should == 500
+    quantities.first.unit.name.should == 'litre'
+    quantities.first.unit.symbol.should == 'L'
+    quantities[1].value.should == 6000
+    quantities[1].unit.pluralized_name.should == 'square metres'
+    quantities[1].unit.symbol.should == 'm²'
+  end
+
+
+
+  it "should create a valid instance with class parse method and per unit" do
+    quantity = Quantity.parse "10 miles / hour"
+    quantity.value.should == 10
+    quantity.unit.symbol.should == 'mi/h'
+  end
+  
+  it "should parse using string method" do
+    "20 m".to_q.value.should == 20.0
+    "45.45 BTU".to_q.class.should == Quantity
+    "65 kilometres per hour".to_q.unit.class.should == Unit::Compound
   end
 
   it "should create a valid instance with class parse method based on to_string method" do
@@ -241,13 +328,6 @@ describe Quantity do
     ((10.m/1.s).pow! 2).to_s.should == "100.0 m²/s²"
     ((10.m/1.s).pow! -1).to_s.should == "0.1 s/m"
     lambda{ ((10.m/1.s).pow! 0.5) }.should raise_error
-  end
-
-  it "should parse using string method" do
-    "20 m".to_q.value.should == 20.0
-    "45.45 BTU".to_q.class.should == Quantity
-    "65 kilometres per hour".to_q.unit.class.should == Unit::Compound
-    "65 kilometre per hour".to_q.unit.class.should == Unit::Compound
   end
 
   it "should cancel by base units of original compound unit if necessary" do

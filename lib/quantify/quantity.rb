@@ -41,15 +41,34 @@ module Quantify
     #
     #       16.Gg                                       #=> Quantity (gigagrams)
 
-
-
     # Parse a string and return a Quantity object based upon the value and
     # subseqent unit name, symbol or JScience label
     def self.parse(string)
-      if quantity = /\A([\d\s.,]+)(\D+.*)\z/.match(string)
-        Quantity.new($1.strip, $2)
+      words = string.words
+
+      # Find 'words' which are numbers or start with numeric values and parse the
+      # subsequent string for unit references
+      quantities = []
+      words.each_with_index do |word,index|
+        if word.starts_with_number?
+          value, string = word, words[index+1..-1].join(" ")
+
+          # Shift any trailing non-numeric characters to start of string.
+          if (/([\d\s.,]+)([^\d\s.,](\^[\d\.-]*)?)/i).match(word)
+            string = "#{$2} " + string
+            value = $1
+          end
+          
+          unit = Unit.parse(string, :iterative => true)
+          quantities << Quantity.new(value,unit)
+        end
+      end
+      if quantities.empty?
+        return nil
+      elsif quantities.size == 1
+        return quantities.first
       else
-        raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
+        quantities
       end
     rescue Quantify::Exceptions::InvalidArgumentError
       raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
@@ -58,6 +77,17 @@ module Quantify
     def self.configure(&block)
       self.class_eval(&block) if block
     end
+    
+    protected
+
+    def self.is_basic_conversion_with_scalings?(quantity,new_unit)
+      return true if (quantity.unit.has_scaling? || new_unit.has_scaling?) &&
+        !quantity.unit.is_compound_unit? &&
+        !new_unit.is_compound_unit?
+      return false
+    end
+
+    public
 
     attr_accessor :value, :unit
 
@@ -74,7 +104,7 @@ module Quantify
     # quantity which is represented by the Dimensions object in the Quantity unit.
     # e.g.
     #
-    #   Quantity.parse( )"25 yr").represents          #=> :time
+    #   Quantity.parse("25 yr").represents            #=> :time
     #
     #   1.foot.represents                             #=> :length
     #
@@ -119,7 +149,7 @@ module Quantify
     #
     def to(new_unit)
       new_unit = Unit.for new_unit
-      if is_basic_conversion_with_scalings? new_unit
+      if Quantity.is_basic_conversion_with_scalings?(self,new_unit)
         Quantity.new(@value,@unit).conversion_with_scalings! new_unit
       elsif self.unit.is_alternative_for? new_unit
         Quantity.new(@value,@unit).convert_to_equivalent_unit! new_unit
@@ -128,13 +158,6 @@ module Quantify
       else
         nil # raise? or ...
       end      
-    end
-
-    def is_basic_conversion_with_scalings?(new_unit)
-      return true if (@unit.has_scaling? || new_unit.has_scaling?) &&
-        !@unit.is_compound_unit? &&
-        !new_unit.is_compound_unit?
-      return false
     end
 
     # Conversion where both units (including compound units) are of precisely
@@ -316,6 +339,9 @@ module Quantify
       raise Exceptions::InvalidArgumentError unless range.is_a? Range
       range.include? self
     end
+
+    protected :convert_compound_unit_to_si!, :add_or_subtract!, :multiply_or_divide!
+
 
     # Enables shorthand for reciprocal of quantity, e.g.
     #

@@ -21,6 +21,10 @@ class String
     words.size
   end
 
+  def starts_with_number?
+    (/\A([\d\s.,]+)/i).match(self) ? true : false
+  end
+
   def to_quantity
     Quantify::Quantity.parse(self)
   end
