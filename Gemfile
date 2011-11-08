@@ -1,6 +1,6 @@
 source "http://rubygems.org"
 
-gem "activesupport", "~> 3.0.10"
+gem "activesupport", "~> 3.0"
 gem "i18n"
 
 # Add dependencies to develop your gem here.
