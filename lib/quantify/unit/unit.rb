@@ -173,6 +173,12 @@ module Quantify
       Quantity.new(value, new_unit)
     end
 
+    def self.dimensionless
+      Unit::Base.new(:dimensions => 'dimensionless') do |unit|
+        unit.acts_as_alternative_unit = false
+      end
+    end
+
     # Retrieve an object representing the specified unit.
     #
     # Argument can be the unit name, symbol or JScience label and provided as
@@ -219,18 +225,10 @@ module Quantify
     #
     def self.parse(string, options={})
       string = string.remove_underscores.without_superscript_characters
-      if options[:iterative] == true
-        units = Unit.iterative_parse(string)
-      else
-        units = Unit.simple_parse(string)
-      end
-      if units.empty?
-        return nil
-      elsif units.size == 1 && units.first.index == 1
-        return units.first.unit
-      else
-        return Unit::Compound.new(*units)
-      end
+      units = options[:iterative] == true ? Unit.iterative_parse(string) : Unit.simple_parse(string)
+      return nil if units.empty?
+      return units.first.unit if units.size == 1 && units.first.index == 1
+      return Unit::Compound.new(*units)
     end
 
     def self.match(name_symbol_or_label)
@@ -299,7 +297,12 @@ module Quantify
     def self.parse_unit_and_index(string)
       string.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
       index = ($2.nil? || $2.empty? ? 1 : $2.to_i)
-      CompoundBaseUnit.new($1.to_s, index)
+      unit = Unit.match($1.to_s)
+      if unit.is_a? Compound
+        return unit.base_units.each {|base_unit| base_unit.index = base_unit.index * index}
+      else
+        return CompoundBaseUnit.new($1.to_s, index)
+      end
     end
 
     def self.parse_numerator_units(string)
@@ -311,7 +314,7 @@ module Quantify
       end
       num_units.map! do |substring|
         Unit.parse_unit_and_index(substring)
-      end
+      end.flatten
     end
 
     def self.parse_denominator_units(string)

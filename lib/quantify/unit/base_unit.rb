@@ -417,6 +417,7 @@ module Quantify
       end
 
       def valid_descriptors?
+        return true if is_dimensionless?
         [:name, :symbol, :label].all? do |attr|
           attribute = send(attr)
           attribute.is_a?(String) && !attribute.empty?

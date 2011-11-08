@@ -41,35 +41,26 @@ module Quantify
     #
     #       16.Gg                                       #=> Quantity (gigagrams)
 
+
+
     # Parse a string and return a Quantity object based upon the value and
-    # subseqent unit name, symbol or JScience label
+    # subseqent unit name, symbol or JScience label. Returns an array containing
+    # quantity objects for each quantity recognised.
     def self.parse(string)
       words = string.words
-
-      # Find 'words' which are numbers or start with numeric values and parse the
-      # subsequent string for unit references
-      quantities = []
-      words.each_with_index do |word,index|
+      quantities = words.each_with_index.map do |word,index|
         if word.starts_with_number?
+          # Isolate number from subsequent string
           value, string = word, words[index+1..-1].join(" ")
-
           # Shift any trailing non-numeric characters to start of string.
-          if (/([\d\s.,]+)([^\d\s.,](\^[\d\.-]*)?)/i).match(word)
-            string = "#{$2} " + string
-            value = $1
-          end
-          
-          unit = Unit.parse(string, :iterative => true)
-          quantities << Quantity.new(value,unit)
+          value, string = $1, "#{$2} #{string}" if (/([\d\s.,]+)([^\d\s.,\^]+(\^[\d\.-]*)?)/i).match(word)
+          # Parse string for unit references
+          unit = Unit.parse(string, :iterative => true) || Unit.dimensionless
+          # Instantiate quantity using value and unit
+          Quantity.new(value,unit)
         end
-      end
-      if quantities.empty?
-        return nil
-      elsif quantities.size == 1
-        return quantities.first
-      else
-        quantities
-      end
+      end.compact
+      return quantities
     rescue Quantify::Exceptions::InvalidArgumentError
       raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
     end

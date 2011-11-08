@@ -44,40 +44,40 @@ describe Quantity do
   end
 
   it "should create a valid instance with class parse method" do
-    quantity = Quantity.parse "10 m"
-    quantity.value.should == 10
-    quantity.unit.symbol.should == 'm'
+    quantities = Quantity.parse "10 m"
+    quantities.first.value.should == 10
+    quantities.first.unit.symbol.should == 'm'
   end
 
   it "should create a valid instance with class parse method" do
-    quantity = Quantity.parse "155.6789 ly"
-    quantity.value.should == 155.6789
-    quantity.unit.name.should == 'light year'
-    quantity.represents.should == 'length'
+    quantities = Quantity.parse "155.6789 ly"
+    quantities.first.value.should == 155.6789
+    quantities.first.unit.name.should == 'light year'
+    quantities.first.represents.should == 'length'
   end
 
   it "should create a valid instance with class parse method and per unit with symbols" do
-    quantity = Quantity.parse "10 m / h"
-    quantity.value.should == 10
-    quantity.unit.symbol.should == 'm/h'
+    quantities = Quantity.parse "10 m / h"
+    quantities.first.value.should == 10
+    quantities.first.unit.symbol.should == 'm/h'
   end
 
   it "should create a valid instance with class parse method and per unit with names" do
-    quantity = Quantity.parse "10 miles / hour"
-    quantity.value.should == 10
-    quantity.unit.symbol.should == 'mi/h'
+    quantities = Quantity.parse "10 miles / hour"
+    quantities.first.value.should == 10
+    quantities.first.unit.symbol.should == 'mi/h'
   end
 
   it "should create a valid instance with class parse method and compound per unit with names" do
-    quantity = Quantity.parse "10 kilograms / tonne kilometre"
-    quantity.value.should == 10
-    quantity.unit.symbol.should == 'kg/t km'
+    quantities = Quantity.parse "10 kilograms / tonne kilometre"
+    quantities.first.value.should == 10
+    quantities.first.unit.symbol.should == 'kg/t km'
   end
 
   it "should create a valid instance with class parse method and compound per unit with symbols" do
-    quantity = Quantity.parse "10 kg / t km"
-    quantity.value.should == 10
-    quantity.unit.symbol.should == 'kg/t km'
+    quantities = Quantity.parse "10 kg / t km"
+    quantities.first.value.should == 10
+    quantities.first.unit.symbol.should == 'kg/t km'
   end
 
   it "should create a valid instance from complex string with compound per unit" do
@@ -100,6 +100,50 @@ describe Quantity do
     quantities[1].unit.symbol.should == 'gal/mi'
   end
 
+  it "should create valid instances from easy string" do
+    quantities = Quantity.parse "100km"
+    quantities.first.value.should == 100
+    quantities.first.unit.name.should == 'kilometre'
+  end
+
+  it "should create valid instances from complex string, no space and two-digit symbol" do
+    quantities = Quantity.parse "100km driving cars"
+    quantities.first.value.should == 100
+    quantities.first.unit.name.should == 'kilometre'
+  end
+
+  it "should create valid instances from complex string with punctuation" do
+    quantities = Quantity.parse "66666 kg; 5 lb; 86 gigagrams per kelvin and some more words"
+    quantities.first.value.should == 66666
+    quantities.first.unit.name.should == 'kilogram'
+    quantities[1].value.should == 5
+    quantities[1].unit.pluralized_name.should == 'pounds'
+    quantities[1].unit.symbol.should == 'lb'
+    quantities[2].value.should == 86
+    quantities[2].unit.pluralized_name.should == 'gigagrams per kelvin'
+    quantities[2].unit.symbol.should == 'Gg/K'
+  end
+
+  it "should create valid instances from complex string with punctuation" do
+    quantities = Quantity.parse "6 kilogram square metre per second^2"
+    quantities.first.value.should == 6
+    quantities.first.unit.name.should == 'kilogram square metre per square second'
+  end
+  
+  it "should create valid instances from complex string with punctuation" do
+    quantities = Quantity.parse "I make 1 cup of tea with 1 tea bag, 0.3 litres of water, 10 g of sugar and 1 dram of milk"
+    quantities.first.value.should == 1
+    quantities.first.unit.name.should == 'cup'
+    quantities[1].value.should == 1
+    quantities[1].unit.name.should == ''
+    quantities[2].value.should == 0.3
+    quantities[2].unit.name.should == 'litre'
+    quantities[3].value.should == 10
+    quantities[3].unit.name.should == 'gram'
+    quantities[4].value.should == 1
+    quantities[4].unit.name.should == 'dram'
+  end
+
   it "should create valid instances from complex string with indices" do
     quantities = Quantity.parse "I sprayed 500 litres of fertilizer across 6000 m^2 of farmland"
     quantities.first.value.should == 500
@@ -120,34 +164,32 @@ describe Quantity do
     quantities[1].unit.symbol.should == 'm²'
   end
 
-
-
   it "should create a valid instance with class parse method and per unit" do
-    quantity = Quantity.parse "10 miles / hour"
-    quantity.value.should == 10
-    quantity.unit.symbol.should == 'mi/h'
+    quantities = Quantity.parse "10 miles / hour"
+    quantities.first.value.should == 10
+    quantities.first.unit.symbol.should == 'mi/h'
   end
   
   it "should parse using string method" do
-    "20 m".to_q.value.should == 20.0
-    "45.45 BTU".to_q.class.should == Quantity
-    "65 kilometres per hour".to_q.unit.class.should == Unit::Compound
+    "20 m".to_q.first.value.should == 20.0
+    "45.45 BTU".to_q.first.class.should == Quantity
+    "65 kilometres per hour".to_q.first.unit.class.should == Unit::Compound
   end
 
   it "should create a valid instance with class parse method based on to_string method" do
     quantity_1 = Quantity.new 15, :watt
     quantity_2 = Quantity.parse quantity_1.to_s
-    quantity_2.value.should == 15
-    quantity_2.unit.name.should == 'watt'
-    quantity_2.represents.should == 'power'
+    quantity_2.first.value.should == 15
+    quantity_2.first.unit.name.should == 'watt'
+    quantity_2.first.represents.should == 'power'
   end
 
   it "should create a valid instance with class parse method and unit prefix based on to_string method" do
     quantity_1 = Quantity.new 15, :watt
     quantity_2 = Quantity.parse quantity_1.to_s
-    quantity_2.value.should == 15
-    quantity_2.unit.name.should == 'watt'
-    quantity_2.represents.should == 'power'
+    quantity_2.first.value.should == 15
+    quantity_2.first.unit.name.should == 'watt'
+    quantity_2.first.represents.should == 'power'
   end
 
   it "should convert quantity correctly" do

@@ -456,10 +456,17 @@ describe Unit do
       unit.symbol.should == 'Mpd'
     end
 
-    it "should raise with block initialize and no name" do
+    it "should not raise with block initialize and no name if dimensionless" do
       lambda{unit = Unit::Base.new do |unit|
         unit.symbol = 'Mpd'
         unit.dimensions = Dimensions.dimensionless
+      end}.should_not raise_error
+    end
+
+    it "should raise with block initialize and no name" do
+      lambda{unit = Unit::Base.new do |unit|
+        unit.symbol = 'Mpd'
+        unit.dimensions = Dimensions.mass
       end}.should raise_error
     end
 

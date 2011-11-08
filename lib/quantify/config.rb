@@ -374,4 +374,6 @@ Unit::NonSI.configure do
 
   non_si_base_units.each { |unit| unit.acts_as_equivalent_unit = true }
 
+  Dimensions.dimensionless.units.each { |unit| unit.acts_as_alternative_unit = false }
+
 end
