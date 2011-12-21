@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{quantify}
-  s.version = "3.0.0"
+  s.name = "quantify"
+  s.version = "3.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Berkeley"]
-  s.date = %q{2011-11-08}
-  s.description = %q{A gem to support physical quantities and unit conversions}
-  s.email = %q{andrew.berkeley.is@googlemail.com}
+  s.date = "2011-12-21"
+  s.description = "A gem to support physical quantities and unit conversions"
+  s.email = "andrew.berkeley.is@googlemail.com"
   s.extra_rdoc_files = [
     "README"
   ]
@@ -30,7 +30,6 @@ Gem::Specification.new do |s|
     "lib/quantify/dimensions.rb",
     "lib/quantify/exception.rb",
     "lib/quantify/inflections.rb",
-    "lib/quantify/parser.rb",
     "lib/quantify/quantify.rb",
     "lib/quantify/quantity.rb",
     "lib/quantify/unit/base_unit.rb",
@@ -47,16 +46,15 @@ Gem::Specification.new do |s|
     "quantify.gemspec",
     "spec/compound_unit_spec.rb",
     "spec/dimension_spec.rb",
-    "spec/quantify_spec.rb",
     "spec/quantity_spec.rb",
     "spec/string_spec.rb",
     "spec/unit_spec.rb"
   ]
-  s.homepage = %q{https://github.com/spatchcock/quantify}
+  s.homepage = "https://github.com/spatchcock/quantify"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.5.3}
-  s.summary = %q{Support for handling physical quantities, unit conversions, etc}
+  s.rubygems_version = "1.8.10"
+  s.summary = "Support for handling physical quantities, unit conversions, etc"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
