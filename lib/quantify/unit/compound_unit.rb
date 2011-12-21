@@ -19,7 +19,14 @@ module Quantify
       #
       # The Compound class provides support for arbitrarily defined compound units
       # which don't have well-established names.
-
+      
+      def self.initialize_prefixed_version(prefix,compound)
+        if compound.has_multiple_base_units? 
+          raise Exceptions::InvalidArgumentError, "Cannot apply prefix to compound unit with multiple base units: #{self.name}" 
+        end
+        super
+      end
+      
       attr_reader :base_units, :acts_as_equivalent_unit
 
       # Initialize a compound unit by providing an array containing a represenation
@@ -34,7 +41,7 @@ module Quantify
       #  3. a sub-array of size 2 containing an instance of Unit::Base and an
       #     explicit index
       #
-      def initialize(*units)
+      def initialize(*units,&block)
         @base_units = CompoundBaseUnitList.new
         units.each do |unit|
           if unit.is_a? CompoundBaseUnit
@@ -50,6 +57,7 @@ module Quantify
         end
         @acts_as_alternative_unit = true
         @acts_as_equivalent_unit = false
+        block.call(self) if block_given?
         consolidate_numerator_and_denominator_units!
       end
 
@@ -180,23 +188,24 @@ module Quantify
         @base_units.rationalize_numerator_and_denominator!(*units)
         initialize_attributes
       end
-
+      
       private
 
       def initialize_attributes
         self.dimensions = @base_units.dimensions
-        self.name = @base_units.name
-        self.symbol = @base_units.symbol
-        self.factor = @base_units.factor
-        self.label = @base_units.label
+        self.name       = @base_units.name
+        self.symbol     = @base_units.symbol
+        self.factor     = @base_units.factor
+        self.label      = @base_units.label
         return self
       end
-
-      def options_for_prefixed_version(prefix)
-        raise Exceptions::InvalidArgumentError, "No valid prefixes exist for unit: #{self.name}" if has_multiple_base_units?
-        base = @base_units.first
+      
+      def self.block_for_prefixed_version(prefix,compound)
+        base = compound.base_units.first
         base.unit = base.unit.with_prefix(prefix)
-        return base
+        return Proc.new do |compound|
+          compound.base_units << base
+        end
       end
 
       def initialize_copy(source)

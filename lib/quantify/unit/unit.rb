@@ -4,7 +4,7 @@ module Quantify
   module Unit
 
     extend ExtendedMethods
-
+    
     # The Unit module contains functionality for defining and handling
     # representations of physical units.
     #
@@ -19,7 +19,24 @@ module Quantify
     # prefixes specified in config.rb. New units can be defined (with or without
     # prefixes) at any time and either used in place or loaded into the known
     # system.
+    
+    NUMBER_REGEX            = /([\d\s.,]+)/i
+      
+    UNIT_DENOMINATOR_REGEX  = /(\/|per)/i
+      
+    ORDINAL_SUFFIXES_REGEX  = /(st|nd|rd|th)\b/i
+        
+    UNIT_PREFIX_TERMS_REGEX = /\A(square|cubic)\b/i
+    
+    INDEX_REGEX             = /\^?([\d\.-]*)/
 
+    WORD_WITH_INDEX_REGEX   = /([^\d\s.,\^]+)#{INDEX_REGEX}?/i
+
+    UNIT_SUFFIX_TERMS_REGEX = /\A(squared|cubed|to the \d+(#{ORDINAL_SUFFIXES_REGEX}) power)\b/i
+    
+    QUANTITY_REGEX          = /#{Unit::NUMBER_REGEX}(#{Quantify::Unit::WORD_WITH_INDEX_REGEX})/i
+    
+    
     class << self
       attr_reader :units
     end
@@ -221,6 +238,13 @@ module Quantify
       return nil
     end
 
+    def self.match(name_symbol_or_label)
+      return name_symbol_or_label.clone if name_symbol_or_label.is_a? Unit::Base
+      Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
+      Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
+      Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
+    end
+    
     # Parse complex strings into unit.
     #
     def self.parse(string, options={})
@@ -230,112 +254,6 @@ module Quantify
       return units.first.unit if units.size == 1 && units.first.index == 1
       return Unit::Compound.new(*units)
     end
-
-    def self.match(name_symbol_or_label)
-      return name_symbol_or_label.clone if name_symbol_or_label.is_a? Unit::Base
-      Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
-      Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
-      Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
-    end
-
-    protected
-
-    def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
-      Unit.match_known_unit(attribute, string_or_symbol) or
-      Unit.match_prefixed_variant(attribute, string_or_symbol)
-    end
-
-    def self.match_known_unit(attribute, string_or_symbol)
-      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      @units.find do |unit|
-        unit_attribute = unit.send(attribute)
-        if attribute == :name
-          unit_attribute.downcase == string_or_symbol
-        else
-          unit_attribute == string_or_symbol
-        end
-      end.clone rescue nil
-    end
-
-    def self.match_prefixed_variant(attribute, string_or_symbol)
-      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      if string_or_symbol =~ /\A(#{units_for_regex(Unit::Prefix,:si_prefixes,attribute)})(#{units_for_regex(Unit,:si_non_prefixed_units,attribute)})\z/ ||
-         string_or_symbol =~ /\A(#{units_for_regex(Unit::Prefix,:non_si_prefixes,attribute)})(#{units_for_regex(Unit,:non_si_non_prefixed_units,attribute)})\z/
-        return Unit.for($2).with_prefix($1).clone
-      end
-      return nil
-    end
-
-    def self.simple_parse(string)
-      if string.scan(/(\/|per)/).size > 1
-        raise Exceptions::InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
-      end
-      units = []
-      numerator, per, denominator = string.split(/(\/|per)/)
-      units += Unit.parse_numerator_units(numerator)
-      units += Unit.parse_denominator_units(denominator) unless denominator.nil?
-      return units
-    end
-
-    def self.iterative_parse(string)
-      units=[]
-      current_set = "numerator_units"
-      while unit = Unit.unit_label_regex.match(string) || unit = Unit.unit_symbol_regex.match(string) ||
-          unit = Unit.unit_name_regex.match(string) || unit = Unit.unit_denominator_regex.match(string) do
-        if unit[0] =~ Unit.unit_denominator_regex
-          current_set = "denominator_units"
-        else
-          units += Unit.send("parse_#{current_set}".to_sym, unit[0])
-        end
-        # Remove matched pattern from string for next iteration
-        match_length = unit[0].size
-        string = string[match_length, string.length-match_length].strip
-      end
-      return units
-    end
-    
-    def self.parse_unit_and_index(string)
-      string.scan(/([^0-9\^]+)\^?([\d\.-]*)?/i)
-      index = ($2.nil? || $2.empty? ? 1 : $2.to_i)
-      unit = Unit.match($1.to_s)
-      if unit.is_a? Compound
-        return unit.base_units.each {|base_unit| base_unit.index = base_unit.index * index}
-      else
-        return CompoundBaseUnit.new($1.to_s, index)
-      end
-    end
-
-    def self.parse_numerator_units(string)
-      # If no middot then names parsed by whitespace
-      if string =~ /·/
-        num_units = string.split("·")
-      else
-        num_units = Unit.escape_multi_word_units(string).split(" ")
-      end
-      num_units.map! do |substring|
-        Unit.parse_unit_and_index(substring)
-      end.flatten
-    end
-
-    def self.parse_denominator_units(string)
-      Unit.parse_numerator_units(string).map do |unit|
-        unit.index *= -1
-        unit
-      end
-    end
-
-    # standardize query strings or symbols into canonical form for unit names,
-    # symbols and labels
-    #
-    def self.format_unit_attribute(attribute, string_or_symbol)
-      string_or_symbol = case attribute
-        when :symbol then string_or_symbol.remove_underscores
-        when :name then string_or_symbol.remove_underscores.singularize.downcase
-        else string_or_symbol.to_s
-      end
-      Unit.use_superscript_characters? ?
-        string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
-    end
     
     # This returns the suite of units which represents THE SI units for each of
     # the base dimensions, i.e. metre, kilogram, second, etc. but not prefixed
@@ -343,6 +261,13 @@ module Quantify
     #
     def self.base_quantity_si_units
       @units.select {|unit| unit.is_base_quantity_si_unit? }
+    end
+    
+    # This can be replicated by method missing approach, but explicit method provided
+    # given importance in #match (and #for) methods regexen
+    #
+    def self.non_prefixed_units
+      @units.select {|unit| !unit.is_prefixed_unit? }
     end
 
     # This can be replicated by method missing approach, but explicit method provided
@@ -358,40 +283,127 @@ module Quantify
     def self.non_si_non_prefixed_units
       @units.select {|unit| unit.is_non_si_unit? && !unit.is_prefixed_unit? }
     end
-
+    
+    protected
+    
+    def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
+      Unit.match_known_unit(attribute, string_or_symbol) or
+      Unit.match_prefixed_variant(attribute, string_or_symbol)
+    end
+    
+    def self.match_known_unit(attribute, string_or_symbol)
+      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+      @units.find do |unit|
+        unit_attribute = unit.send(attribute)
+        if attribute == :name
+          unit_attribute.downcase == string_or_symbol
+        else
+          unit_attribute == string_or_symbol
+        end
+      end.clone rescue nil
+    end
+    
+    def self.match_prefixed_variant(attribute, string_or_symbol)
+      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+      if string_or_symbol =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(#{Unit.terms_for_regex(Unit,:non_prefixed_units,attribute)})\z/
+        return Unit.for($2).with_prefix($1).clone
+      end
+      return nil
+    end
+    
+    def self.simple_parse(string)
+      if string.scan(UNIT_DENOMINATOR_REGEX).size > 1
+        raise Exceptions::InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
+      end
+      units = []
+      numerator, per, denominator = string.split(UNIT_DENOMINATOR_REGEX)
+      units += Unit.parse_numerator_units(numerator)
+      units += Unit.parse_denominator_units(denominator) unless denominator.nil?
+      return units
+    end
+    
+    def self.iterative_parse(string)
+      units=[]
+      is_denominator = false
+      current_exponent = nil
+      while term = string.starts_with_valid_unit_term? do  
+        if term =~ /^#{UNIT_PREFIX_TERMS_REGEX}$/
+          current_exponent = Unit.exponent_term_to_number(term)
+        elsif term =~ /^#{UNIT_SUFFIX_TERMS_REGEX}$/
+          units.last.index *= Unit.exponent_term_to_number(term)
+        elsif term =~ /^#{UNIT_DENOMINATOR_REGEX}/
+          is_denominator = true
+        else
+          unit = Unit.send("parse_#{is_denominator ? 'denominator' : 'numerator'}_units".to_sym, term).first
+          unit.index *= current_exponent if current_exponent
+          units << unit
+          current_exponent = nil
+        end
+        # Remove matched pattern from string for next iteration
+        match_length = term.size
+        string = string[match_length, string.length-match_length].strip
+      end
+      return units
+    end
+    
+    def self.parse_unit_and_index(string)
+      string.scan(WORD_WITH_INDEX_REGEX)
+      index = ($2.nil? || $2.empty? ? 1 : $2.to_i)
+      unit = Unit.match($1.to_s)
+      if unit.is_a? Compound
+        return unit.base_units.each {|base_unit| base_unit.index = base_unit.index * index}
+      else
+        return CompoundBaseUnit.new($1.to_s, index)
+      end
+    end
+    
+    def self.parse_numerator_units(string)
+      # If no middot then names parsed by whitespace
+      if string =~ /·/
+        num_units = string.split("·")
+      else
+        num_units = Unit.escape_multi_word_units(string).split(" ")
+      end
+      num_units.map! do |substring|
+        Unit.parse_unit_and_index(substring)
+      end.flatten
+    end
+    
+    def self.parse_denominator_units(string)
+      Unit.parse_numerator_units(string).map do |unit|
+        unit.index *= -1
+        unit
+      end
+    end
+  
+    # standardize query strings or symbols into canonical form for unit names,
+    # symbols and labels
+    #
+    def self.format_unit_attribute(attribute, string_or_symbol)
+      string_or_symbol = case attribute
+        when :symbol then string_or_symbol.remove_underscores
+        when :name then string_or_symbol.remove_underscores.singularize.downcase
+        else string_or_symbol.to_s
+      end
+      Unit.use_superscript_characters? ?
+      string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
+    end
+    
     # Return a list of unit names which are multi-word
     def self.multi_word_unit_names
-      @units.map {|unit| unit.name if unit.name.word_count > 1 }.compact
+      Unit.units.map {|unit| unit.name if unit.name.word_count > 1 }.compact
     end
-
+    
     # Return a list of pluralised unit names which are multi-word
     def self.multi_word_unit_pluralized_names
       multi_word_unit_names.map {|name| name.pluralize }
     end
-
+    
     # Return a list of unit symbols which are multi-word
     def self.multi_word_unit_symbols
-      @units.map {|unit| unit.symbol if unit.symbol.word_count > 1 }.compact
+      Unit.units.map {|unit| unit.symbol if unit.symbol.word_count > 1 }.compact
     end
-
-    # might want to try atomic groupings, but must get units in size order perhaps first
-    def self.unit_label_regex
-      /\A((#{Unit.units_for_regex(Unit::Prefix,:non_si_prefixes,:label)})?((#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:label)})\b)|(#{Unit.units_for_regex(Unit::Prefix,:si_prefixes,:label)})?((#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:label)})\b))(\^[\d\.-]*)?/
-    end
-
-    def self.unit_symbol_regex
-      /\A((#{Unit.units_for_regex(Unit::Prefix,:si_prefixes,:symbol)})?((#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:symbol)})\b)|(#{Unit.units_for_regex(Unit::Prefix,:non_si_prefixes,:symbol)})?((#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:symbol)})\b))(\^[\d\.-]*)?/
-    end
-
-    def self.unit_name_regex
-      # Specifically case insensitive
-      /\A((#{Unit.units_for_regex(Unit::Prefix,:non_si_prefixes,:name)})?((#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:pluralized_name)}|#{Unit.units_for_regex(Unit,:non_si_non_prefixed_units,:name)})\b)|(#{Unit.units_for_regex(Unit::Prefix,:si_prefixes,:name)})?((#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:pluralized_name)}|#{Unit.units_for_regex(Unit,:si_non_prefixed_units,:name)})\b))(\^[\d\.-]*)?/i
-    end
-
-    def self.unit_denominator_regex
-      /\A(\/|per)/i
-    end
-
+    
     # Underscore any parts of string which represent multi-word unit identifiers
     # so that units can be parsed on whitespace
     #
@@ -401,14 +413,34 @@ module Quantify
       end
       string
     end
-
+    
+    def self.exponent_term_to_number(term)
+      return 2 if /square(d)?/i.match(term)
+      return 3 if /cub(ic|ed)/i.match(term)
+    end
+    
     # Returns a list of "|" separated unit identifiers for use as regex
     # alternatives. Lists are constructed by calling 
-    def self.units_for_regex(klass,method,attribute)
+    def self.terms_for_regex(klass,method,attribute)
       list = klass.send(method).map { |item| item.send(attribute).gsub("/","\\/").gsub("^","\\^")  }
       list.map! { |item| item.downcase } if attribute == :name
+      list.reject! { |item| item == "" }
       list.sort {|x, y| y.size <=> x.size }.join("|")
     end
-
+    
+    def self.unit_label_regex
+      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:label)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:label)})\b)/
+    end
+    
+    def self.unit_symbol_regex
+      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:symbol)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:symbol)})\b)/
+    end
+    
+    def self.unit_name_regex
+      # Specifically case insensitive
+      # Double '?' (i.e. '??') makes prefix matching lazy, e.g. "centimetres of mercury" is matched fully rather than as 'centimetres'
+      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:name)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:pluralized_name)}|#{Unit.terms_for_regex(Unit,:non_prefixed_units,:name)})\b)/i
+    end
+    
   end
 end

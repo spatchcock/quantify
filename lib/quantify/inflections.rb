@@ -1,8 +1,6 @@
 
 ActiveSupport::Inflector.inflections do |inflect|
 
-  inflect.uncountable %w( clo hertz lux siemens )
-
   inflect.plural /(metre)/i, '\1s'
   inflect.singular /(metre)s?/i, '\1'
 
@@ -27,9 +25,11 @@ ActiveSupport::Inflector.inflections do |inflect|
   inflect.plural /(gallon)/i, '\1s'
   inflect.singular /(gallon)s?/i, '\1'
 
+  # 'uncountable' but required regex inflection definition for cases where combined with prefix
   inflect.plural /(horsepower)/i, '\1'
   inflect.singular /(horsepower)/i, '\1'
 
+  # 'uncountable' but required regex inflection definition for cases where combined with prefix
   inflect.plural /(hundredweight)/i, '\1'
   inflect.singular /(hundredweight)/i, '\1'
 
@@ -48,6 +48,10 @@ ActiveSupport::Inflector.inflections do |inflect|
   inflect.plural /(pound)/i, '\1s'
   inflect.singular /(pound)s?/i, '\1'
 
+  # This inflection is defined after that of 'pound' so that 'pound mole' is inflected appropriately
+  inflect.plural /(mole)/i, '\1s'
+  inflect.singular /(mole)s?/i, '\1'
+  
   inflect.plural /(ton)/i, '\1s'
   inflect.singular /(ton)s?/i, '\1'
 
@@ -56,7 +60,27 @@ ActiveSupport::Inflector.inflections do |inflect|
 
   inflect.plural /(stone)/i, '\1s'
   inflect.singular /(stone)s?/i, '\1'
+  
+  # 'uncountable' but required regex inflection definition for cases where combined with prefix
+  inflect.plural /(gauss)/i, '\1'
+  inflect.singular /(gauss)/i, '\1'
 
+  # 'uncountable' but required regex inflection definition for cases where combined with prefix
+  inflect.plural /(clo)/i, '\1'
+  inflect.singular /(clo)/i, '\1'
+
+  # 'uncountable' but required regex inflection definition for cases where combined with prefix
+  inflect.plural /(hertz)/i, '\1'
+  inflect.singular /(hertz)/i, '\1'
+  
+  # 'uncountable' but required regex inflection definition for cases where combined with prefix
+  inflect.plural /(lux)/i, '\1'
+  inflect.singular /(lux)/i, '\1'
+  
+  # 'uncountable' but required regex inflection definition for cases where combined with prefix
+  inflect.plural /(siemens)/i, '\1'
+  inflect.singular /(siemens)/i, '\1'
+  
   inflect.irregular 'footcandle', 'footcandles'
   inflect.irregular 'kilowatt hour', 'kilowatt hours'
 

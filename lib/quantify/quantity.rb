@@ -41,8 +41,6 @@ module Quantify
     #
     #       16.Gg                                       #=> Quantity (gigagrams)
 
-
-
     # Parse a string and return a Quantity object based upon the value and
     # subseqent unit name, symbol or JScience label. Returns an array containing
     # quantity objects for each quantity recognised.
@@ -53,7 +51,7 @@ module Quantify
           # Isolate number from subsequent string
           value, string = word, words[index+1..-1].join(" ")
           # Shift any trailing non-numeric characters to start of string.
-          value, string = $1, "#{$2} #{string}" if (/([\d\s.,]+)([^\d\s.,\^]+(\^[\d\.-]*)?)/i).match(word)
+          value, string = $1, "#{$2} #{string}" if (Unit::QUANTITY_REGEX).match(word)
           # Parse string for unit references
           unit = Unit.parse(string, :iterative => true) || Unit.dimensionless
           # Instantiate quantity using value and unit
@@ -77,7 +75,7 @@ module Quantify
         !new_unit.is_compound_unit?
       return false
     end
-
+    
     public
 
     attr_accessor :value, :unit
@@ -150,40 +148,7 @@ module Quantify
         nil # raise? or ...
       end      
     end
-
-    # Conversion where both units (including compound units) are of precisely
-    # equivalent dimensions, i.e. direct alternatives for one another. Where
-    # previous unit is a compound unit, new unit must be cancelled by all original
-    # base units
-    #
-    def convert_to_equivalent_unit!(new_unit)
-      old_unit = @unit
-      self.multiply!(Unit.ratio new_unit, old_unit)
-      old_base_units = old_unit.base_units.map { |base| base.unit } if old_unit.is_compound_unit?
-      self.cancel_base_units!(*old_base_units || old_unit)
-    end
-
-    def conversion_with_scalings!(new_unit)
-      @value = (((@value + @unit.scaling) * @unit.factor) / new_unit.factor) - new_unit.scaling
-      @unit = new_unit
-      return self
-    end
-
-    # Conversion where self is a compound unit, and new unit is not an alternative
-    # to the whole compound but IS an alternative to one or more of the base units,
-    # e.g.,
-    #
-    #   Unit.kilowatt_hour.to :second           #=> 'kilowatt second'
-    #
-    def convert_compound_unit_to_non_equivalent_unit!(new_unit)
-      @unit.base_units.select do |base|
-        base.unit.is_alternative_for? new_unit
-      end.inject(self) do |quantity,base|
-        factor = Unit.ratio(new_unit**base.index, base.unit**base.index)
-        quantity.multiply!(factor).cancel_base_units!(base.unit)
-      end
-    end
-
+    
     # Converts a quantity to the equivalent quantity using only SI units
     def to_si
       if @unit.is_compound_unit?
@@ -192,49 +157,7 @@ module Quantify
         self.to(@unit.si_unit)
       end
     end
-
-    def convert_compound_unit_to_si!
-      until @unit.is_base_quantity_si_unit? do
-        unit = @unit.base_units.find do |base|
-          !base.is_base_quantity_si_unit?
-        end.unit
-        self.convert_compound_unit_to_non_equivalent_unit!(unit.si_unit)
-      end
-      return self
-    end
-
-    # Quantities must be of the same dimension in order to operate. If they are
-    # represented by different units (but represent the same physical quantity)
-    # the second quantity is converted into the unit belonging to the first unit
-    # and the addition is completed
-    #
-    def add_or_subtract!(operator,other)
-      if other.is_a? Quantity
-        other = other.to(@unit) if other.unit.is_alternative_for?(@unit)
-        if @unit.is_equivalent_to? other.unit
-          @value = @value.send operator, other.value
-          return self
-        else
-          raise Quantify::Exceptions::InvalidObjectError "Cannot add or subtract Quantities with different dimensions"
-        end
-      else
-        raise Quantify::Exceptions::InvalidObjectError "Cannot add or subtract non-Quantity objects"
-      end
-    end
-
-    def multiply_or_divide!(operator,other)
-      if other.kind_of? Numeric
-        @value = @value.send(operator,other)
-        return self
-      elsif other.kind_of? Quantity
-        @unit = @unit.send(operator,other.unit).or_equivalent
-        @value = @value.send(operator,other.value)
-        return self
-      else
-        raise Quantify::Exceptions::InvalidArgumentError "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"
-      end
-    end
-
+    
     def pow!(power)
       raise Exceptions::InvalidArgumentError, "Argument must be an integer" unless power.is_a? Integer
       @value = @value ** power
@@ -331,8 +254,82 @@ module Quantify
       range.include? self
     end
 
-    protected :convert_compound_unit_to_si!, :add_or_subtract!, :multiply_or_divide!
+    protected
+    
+    # Quantities must be of the same dimension in order to operate. If they are
+    # represented by different units (but represent the same physical quantity)
+    # the second quantity is converted into the unit belonging to the first unit
+    # and the addition is completed
+    #
+    def add_or_subtract!(operator,other)
+      if other.is_a? Quantity
+        other = other.to(@unit) if other.unit.is_alternative_for?(@unit)
+        if @unit.is_equivalent_to? other.unit
+          @value = @value.send operator, other.value
+          return self
+        else
+          raise Quantify::Exceptions::InvalidObjectError, "Cannot add or subtract Quantities with different dimensions"
+        end
+      else
+        raise Quantify::Exceptions::InvalidObjectError, "Cannot add or subtract non-Quantity objects"
+      end
+    end
 
+    def multiply_or_divide!(operator,other)
+      if other.kind_of? Numeric
+        @value = @value.send(operator,other)
+        return self
+      elsif other.kind_of? Quantity
+        @unit = @unit.send(operator,other.unit).or_equivalent
+        @value = @value.send(operator,other.value)
+        return self
+      else
+        raise Quantify::Exceptions::InvalidArgumentError, "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"
+      end
+    end
+    
+    # Conversion where both units (including compound units) are of precisely
+    # equivalent dimensions, i.e. direct alternatives for one another. Where
+    # previous unit is a compound unit, new unit must be cancelled by all original
+    # base units
+    #
+    def convert_to_equivalent_unit!(new_unit)
+      old_unit = @unit
+      self.multiply!(Unit.ratio new_unit, old_unit)
+      old_base_units = old_unit.base_units.map { |base| base.unit } if old_unit.is_compound_unit?
+      self.cancel_base_units!(*old_base_units || old_unit)
+    end
+
+    def conversion_with_scalings!(new_unit)
+      @value = (((@value + @unit.scaling) * @unit.factor) / new_unit.factor) - new_unit.scaling
+      @unit = new_unit
+      return self
+    end
+
+    # Conversion where self is a compound unit, and new unit is not an alternative
+    # to the whole compound but IS an alternative to one or more of the base units,
+    # e.g.,
+    #
+    #   Unit.kilowatt_hour.to :second           #=> 'kilowatt second'
+    #
+    def convert_compound_unit_to_non_equivalent_unit!(new_unit)
+      @unit.base_units.select do |base|
+        base.unit.is_alternative_for? new_unit
+      end.inject(self) do |quantity,base|
+        factor = Unit.ratio(new_unit**base.index, base.unit**base.index)
+        quantity.multiply!(factor).cancel_base_units!(base.unit)
+      end
+    end
+    
+    def convert_compound_unit_to_si!
+      until @unit.is_base_quantity_si_unit? do
+        unit = @unit.base_units.find do |base|
+          !base.is_base_quantity_si_unit?
+        end.unit
+        self.convert_compound_unit_to_non_equivalent_unit!(unit.si_unit)
+      end
+      return self
+    end
 
     # Enables shorthand for reciprocal of quantity, e.g.
     #

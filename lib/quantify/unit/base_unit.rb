@@ -17,6 +17,14 @@ module Quantify
       def self.construct_and_load(unit,&block)
         self.construct(unit, &block).load
       end
+      
+      def self.initialize_prefixed_version(prefix,unit)
+        prefix, unit = Prefix.for(prefix), Unit.for(unit)
+        raise Exceptions::InvalidArgumentError, "Prefix is not known" if prefix.nil?
+        raise Exceptions::InvalidArgumentError, "Unit is not known" if unit.nil?
+        raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{unit.prefix.name}" if unit.prefix
+        self.new &self.block_for_prefixed_version(prefix,unit)
+      end
 
       # Mass load prefixed units. First argument is a single or array of units.
       # Second argument is a single or array of prefixes. All specfied units will
@@ -36,9 +44,9 @@ module Quantify
       # unit becomes a representation of the compound - without explicitly holding
       # the base units, e.g.
       #
-      #   Unit::Base.define(Unit.m**2).name              #=> "square metre"
+      #   Unit::Base.construct(Unit.m**2).name           #=> "square metre"
       #
-      #   Unit::Base.define(Unit**3) do |unit|
+      #   Unit::Base.construct(Unit.m**3) do |unit|
       #     unit.name = "metres cubed"
       #   end.name                                       #=> "metres cubed"
       #
@@ -65,6 +73,7 @@ module Quantify
       
       attr_reader :name, :symbol, :label, :factor, :dimensions
       attr_reader :acts_as_alternative_unit, :acts_as_equivalent_unit
+      attr_accessor :base_unit, :prefix
 
       # Create a new Unit::Base instance.
       #
@@ -104,10 +113,13 @@ module Quantify
         self.factor = 1.0
         self.symbol = nil
         self.label = nil
+        self.name = nil
+        self.base_unit = nil
+        self.prefix = nil
         if options.is_a? Hash
-          self.dimensions = options[:dimensions] || options[:physical_quantity]
-          self.name = options[:name]
+          self.dimensions = options[:dimensions] || options[:physical_quantity] if options[:dimensions] || options[:physical_quantity] 
           self.factor = options[:factor] if options[:factor]
+          self.name = options[:name] if options[:name]
           self.symbol = options[:symbol] if options[:symbol]
           self.label = options[:label] if options[:label]
         end
@@ -303,9 +315,7 @@ module Quantify
 
       # Determine if the unit is a prefixed unit
       def is_prefixed_unit?
-        return true if valid_prefixes.size > 0 &&
-          self.name =~ /\A(#{valid_prefixes.map {|p| p.name}.join("|")})/
-        return false
+        self.prefix ? true : false
       end
 
       # Determine if the unit is one of the units against which all other units
@@ -428,31 +438,6 @@ module Quantify
         @dimensions.is_a? Dimensions
       end
 
-      # Returns an array representing the valid prefixes for the unit described 
-      # by self
-      #
-      # If no argument is given, the array holds instances of Prefix::Base (or
-      # subclasses; SI, NonSI...). Alternatively only the names or symbols of each
-      # prefix can be returned by providing the appropriate prefix attribute as a
-      # symbolized argument, e.g.
-      #
-      #   Unit.m.valid_prefixes                 #=> [ #<Quantify::Prefix: .. >,
-      #                                               #<Quantify::Prefix: .. >,
-      #                                               ... ]
-      #
-      #   Unit.m.valid_prefixes :name           #=> [ "deca", "hecto", "kilo", 
-      #                                               "mega", "giga", "tera"
-      #                                               ... ]    
-      #
-      #   Unit.m.valid_prefixes :symbol         #=> [ "da", "h", "k", "M", "G",
-      #                                               "T", "P" ... ]
-      #
-      def valid_prefixes(by=nil)
-        return [] if is_compound_unit? && has_multiple_base_units?
-        return Unit::Prefix.si_prefixes.map(&by).to_a if is_si_unit?
-        return Unit::Prefix.non_si_prefixes.map(&by).to_a if is_non_si_unit?
-      end
-
       # Multiply two units together. This results in the generation of a compound
       # unit.
       #
@@ -513,15 +498,7 @@ module Quantify
       # of self, complete with modified name, symbol, factor, etc..
       #
       def with_prefix(name_or_symbol)
-        raise Exceptions::InvalidArgumentError, "No valid prefixes exist for unit: #{self.name}" if valid_prefixes.empty?
-        raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{self.name}" if @name =~ /\A(#{valid_prefixes(:name).join("|")})/
-        
-        prefix = Unit::Prefix.for(name_or_symbol,valid_prefixes)
-        if !prefix.nil?
-          self.class.new(options_for_prefixed_version(prefix))
-        else
-          raise Exceptions::InvalidArgumentError, "Prefix unit is not known: #{prefix}"
-        end
+        self.class.initialize_prefixed_version(name_or_symbol,self)
       end
 
       # Return an array of new unit instances based upon self, together with the
@@ -558,16 +535,6 @@ module Quantify
       end
 
       private
-
-      def options_for_prefixed_version(prefix)
-        options = {}
-        options[:name] = "#{prefix.name}#{@name}"
-        options[:symbol] = "#{prefix.symbol}#{@symbol}"
-        options[:label] = "#{prefix.symbol}#{@label}"
-        options[:factor] = prefix.factor * @factor
-        options[:physical_quantity] = @dimensions
-        return options
-      end
       
       # Clone self and explicitly clone the associated Dimensions object located
       # at @dimensions.
@@ -580,6 +547,18 @@ module Quantify
       def initialize_copy(source)
         super
         instance_variable_set("@dimensions", @dimensions.clone)
+      end
+      
+      def self.block_for_prefixed_version(prefix,unit)
+        return Proc.new do |new_unit| 
+          new_unit.base_unit  = unit.clone
+          new_unit.prefix     = prefix
+          new_unit.dimensions = unit.dimensions.clone
+          new_unit.name       = "#{prefix.name}#{unit.name}"
+          new_unit.factor     = prefix.factor * unit.factor
+          new_unit.symbol     = "#{prefix.symbol}#{unit.symbol}"
+          new_unit.label      = "#{prefix.symbol}#{unit.label}"
+        end
       end
 
       # Provides syntactic sugar for several methods. E.g.
@@ -597,8 +576,6 @@ module Quantify
           return self.with_prefix(prefix)
         elsif method.to_s =~ /(alternatives_by_)(.*)/ && self.respond_to?($2.to_sym)
           return self.alternatives($2.to_sym)
-        elsif method.to_s =~ /(valid_prefixes_by_)(.*)/ && Prefix::Base.instance_methods.include?($2.to_s)
-          return self.valid_prefixes($2.to_sym)
         end
         super
       end

@@ -22,10 +22,10 @@ module Quantify
         @prefixes
       end    
 
-      def self.for(name_or_symbol,collection=nil)
+      def self.for(name_or_symbol)
         return name_or_symbol.clone if name_or_symbol.is_a? Quantify::Unit::Prefix::Base
         if name_or_symbol.is_a?(String) || name_or_symbol.is_a?(Symbol)
-          if prefix = (collection.nil? ? @prefixes : collection).find do |prefix|
+          if prefix = @prefixes.find do |prefix|
              prefix.name == name_or_symbol.remove_underscores.downcase ||
              prefix.symbol == name_or_symbol.remove_underscores
             end
@@ -64,7 +64,7 @@ module Quantify
         elsif prefix = self.for(method)
           return prefix
         else
-          raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
+          super
         end
       end
 

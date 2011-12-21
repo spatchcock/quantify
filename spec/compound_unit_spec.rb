@@ -285,22 +285,7 @@ describe Unit do
     
   end
 
-  describe "adding prefixes" do
-
-    it "should have no valid prefixes with multiple base units" do
-      (Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).valid_prefixes.should be_empty
-    end
-
-    it "should return SI prefixes with single SI unit" do
-      prefixes = (Unit.kg**3).valid_prefixes
-      prefixes.should_not be_empty
-      prefixes.first.should be_a Unit::Prefix::SI
-    end
-
-    it "should return SI prefixes with single SI unit" do
-      prefixes = (Unit.lb**3).valid_prefixes
-      prefixes.should be_empty # no NonSI prefixes defined
-    end
+  describe "adding prefixes" do 
 
     it "should refuse to add prefix to multi-unit compound unit" do
       lambda{(Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s).with_prefix(:giga)}.should raise_error

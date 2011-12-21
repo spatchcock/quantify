@@ -4,3 +4,4 @@ nbproject/
 *.gem
 coverage
 doc
+.redcar/

@@ -89,6 +89,16 @@ describe Quantity do
     quantities[1].unit.pluralized_name.should == 'kilograms per tonne kilometre'
     quantities[1].unit.symbol.should == 'kg/t km'
   end
+  
+  it "should create a valid instance from complex string with compound per unit and no spaces" do
+    quantities = Quantity.parse "We sent some freight 6000 nautical miles by ship and the emissions rate was 10 kg/t km"
+    quantities.first.value.should == 6000
+    quantities.first.unit.name.should == 'nautical mile'
+    quantities.first.unit.symbol.should == 'nmi'
+    quantities[1].value.should == 10
+    quantities[1].unit.pluralized_name.should == 'kilograms per tonne kilometre'
+    quantities[1].unit.symbol.should == 'kg/t km'
+  end
 
   it "should create valid instances from complex string" do
     quantities = Quantity.parse "I travelled 220 miles driving my car and using 0.13 UK gallons per mile of diesel"
@@ -152,6 +162,34 @@ describe Quantity do
     quantities[1].value.should == 6000
     quantities[1].unit.pluralized_name.should == 'square metres'
     quantities[1].unit.symbol.should == 'm²'
+  end
+  
+  it "should create valid instance from string with 'square' prefix descriptor" do
+    quantities = Quantity.parse "25 square feet"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == 'square foot'
+    quantities.first.unit.symbol.should == 'ft²'
+  end
+  
+  it "should create valid instance from string with 'cubic' prefix descriptor" do
+    quantities = Quantity.parse "25 cubic feet"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == 'cubic foot'
+    quantities.first.unit.symbol.should == 'ft³'
+  end
+  
+  it "should create valid instance from string with 'squared' suffix descriptor" do
+    quantities = Quantity.parse "25 feet squared"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == 'square foot'
+    quantities.first.unit.symbol.should == 'ft²'
+  end
+  
+  it "should create valid instance from string with 'cubed' suffix descriptor" do
+    quantities = Quantity.parse "25 feet cubed"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == 'cubic foot'
+    quantities.first.unit.symbol.should == 'ft³'
   end
 
   it "should create valid instances from complex string with no spaces" do

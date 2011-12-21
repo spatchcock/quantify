@@ -241,7 +241,7 @@ describe Unit do
         lambda{Unit.M}.should raise_error
         
         Unit.Gg.name.should eql 'gigagram'
-        lambda{Unit.GG}.should raise_error
+        Unit.GG.name.should eql 'gigagauss'
       end
 
       it "should NOT ignore case when initialising units by label" do
@@ -319,10 +319,6 @@ describe Unit do
       unit.factor.should == 1000
     end
 
-    it "dynamic unit retrieval with name and invalid prefix should throw error" do
-      lambda{Unit.megafoot}.should raise_error
-    end
-
     it "dynamic unit retrieval with symbol should be successful" do
       Unit.m.name.should == 'metre'
       Unit.ft.symbol.should == 'ft'
@@ -342,7 +338,6 @@ describe Unit do
 
     it "dynamic unit retrieval with symbol and invalid prefix should raise error" do
       lambda{Unit.MMm}.should raise_error
-      lambda{Unit.Gft}.should raise_error
       lambda{Unit.centimetre.with_prefix :kilo}.should raise_error
     end
 
@@ -1060,12 +1055,12 @@ describe Unit do
       lambda{Unit.kilometre.with_prefix :giga}.should raise_error
     end
 
-    it "should add prefix with explcit method" do
+    it "should add prefix with explicit method" do
       Unit.metre.with_prefix(:c).name.should == 'centimetre'
-    end
+    end    
     
-    it "trying to add invalid prefix should raise error" do
-      lambda{Unit.ft.with_prefix(:kilo)}.should raise_error
+    it "should pluralise uncountable unit with prefix correctly" do
+      Unit.siemens.with_prefix(:kilo).name.should == 'kilosiemens'
     end
 
   end
@@ -1075,6 +1070,7 @@ describe Unit do
     it "should represent the pound mole correctly" do
       unit = Unit.lbmol
       unit.name.should eql 'pound mole'
+      unit.pluralized_name.should eql 'pound moles'
       Unit.ratio(Unit.mol,unit).value.should eql 453.59237
       unit.alternatives_by_name.should eql ['mole']
     end
