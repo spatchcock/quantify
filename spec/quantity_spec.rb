@@ -185,6 +185,48 @@ describe Quantity do
     quantities.first.unit.symbol.should == 'ft²'
   end
   
+  it "should return dimensionless quantity when 'squared' suffix used without a unit" do
+    quantities = Quantity.parse "25 squared"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == ''
+    quantities.first.unit.symbol.should == ''
+  end
+  
+  it "should return unsquared quantity when 'squared' suffix used unrelated to unit" do
+    quantities = Quantity.parse "25 grams some more text and then squared"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == 'gram'
+    quantities.first.unit.symbol.should == 'g'
+  end
+  
+  it "should return unsquared quantity when 'square' suffix used" do
+    quantities = Quantity.parse "25 grams square"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == 'gram'
+    quantities.first.unit.symbol.should == 'g'
+  end
+  
+  it "should return dimensionless quantity when 'square' prefix used without a unit" do
+    quantities = Quantity.parse "25 square"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == ''
+    quantities.first.unit.symbol.should == ''
+  end
+  
+  it "should return dimensionless quantity when 'cubed' suffix used without a unit" do
+    quantities = Quantity.parse "25 cubed"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == ''
+    quantities.first.unit.symbol.should == ''
+  end
+  
+  it "should return dimensionless quantity when 'cubic' prefix used without a unit" do
+    quantities = Quantity.parse "25 cubic"
+    quantities.first.value.should == 25
+    quantities.first.unit.name.should == ''
+    quantities.first.unit.symbol.should == ''
+  end
+  
   it "should create valid instance from string with 'cubed' suffix descriptor" do
     quantities = Quantity.parse "25 feet cubed"
     quantities.first.value.should == 25

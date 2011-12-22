@@ -191,9 +191,7 @@ module Quantify
     end
 
     def self.dimensionless
-      Unit::Base.new(:dimensions => 'dimensionless') do |unit|
-        unit.acts_as_alternative_unit = false
-      end
+      Unit::Base.new(:dimensions => 'dimensionless')
     end
 
     # Retrieve an object representing the specified unit.
@@ -329,8 +327,8 @@ module Quantify
       while term = string.starts_with_valid_unit_term? do  
         if term =~ /^#{UNIT_PREFIX_TERMS_REGEX}$/
           current_exponent = Unit.exponent_term_to_number(term)
-        elsif term =~ /^#{UNIT_SUFFIX_TERMS_REGEX}$/
-          units.last.index *= Unit.exponent_term_to_number(term)
+        elsif term =~ /^#{UNIT_SUFFIX_TERMS_REGEX}$/ 
+          units.last.index *= Unit.exponent_term_to_number(term) unless units.empty?
         elsif term =~ /^#{UNIT_DENOMINATOR_REGEX}/
           is_denominator = true
         else
@@ -424,7 +422,6 @@ module Quantify
     def self.terms_for_regex(klass,method,attribute)
       list = klass.send(method).map { |item| item.send(attribute).gsub("/","\\/").gsub("^","\\^")  }
       list.map! { |item| item.downcase } if attribute == :name
-      list.reject! { |item| item == "" }
       list.sort {|x, y| y.size <=> x.size }.join("|")
     end
     
