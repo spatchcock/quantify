@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "quantify"
-  s.version = "3.1.0"
+  s.version = "3.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Berkeley"]
-  s.date = "2011-12-21"
+  s.date = "2011-12-22"
   s.description = "A gem to support physical quantities and unit conversions"
   s.email = "andrew.berkeley.is@googlemail.com"
   s.extra_rdoc_files = [
