@@ -251,7 +251,7 @@ module Quantify
 
     def ===(range)
       raise Exceptions::InvalidArgumentError unless range.is_a? Range
-      range.include? self
+      range.cover? self
     end
 
     protected

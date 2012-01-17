@@ -352,14 +352,14 @@ module Quantify
     # quantities which represent a quantity of something *per unit mass*
     #
     def is_specific_quantity?
-      denominator_quantities == ["@mass"]
+      denominator_quantities == [:@mass]
     end
 
     # Method for identifying quantities which are 'molar' quantities, i.e
     # quantities which represent a quantity of something *per mole*
     #
     def is_molar_quantity?
-      denominator_quantities == ["@amount_of_substance"]
+      denominator_quantities == [:@amount_of_substance]
     end
 
 
@@ -456,10 +456,11 @@ module Quantify
       quantities = self.instance_variables
       if RUBY_VERSION < "1.9"
         quantities.delete("@physical_quantity")
+        return quantities.map(&:to_sym)
       else
         quantities.delete(:@physical_quantity)
+        return quantities
       end
-      return quantities
     end
 
     # Just the base quantities which have positive indices

@@ -512,13 +512,13 @@ describe Quantity do
   end
 
   it "should return between value from range" do
-    (2.ft..20.ft).include?(3.ft).should be_true
+    (2.ft..20.ft).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 3.ft).should be_true
   end
 
   it "should return between value from range with different units" do
-    (2.ft..4.m).include?(200.cm).should be_true
-    (1.ly..1.parsec).include?(2.ly).should be_true
-    (1.ly..1.parsec).include?(2.in).should be_false
+    (2.ft..4.m).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 200.cm).should be_true
+    (1.ly..1.parsec).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 2.ly).should be_true
+    (1.ly..1.parsec).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 2.in).should be_false
   end
 
   it "should return between value from range using === operator" do
