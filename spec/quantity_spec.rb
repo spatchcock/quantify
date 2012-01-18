@@ -364,9 +364,9 @@ describe Quantity do
     time_in_hours = time_in_min.to_hours
     speed = distance_in_miles / time_in_hours
     speed.class.should == Quantity
+    # use #be_within to tolerate Ruby 1.8.7 - 1.9.2 differences
     speed.value.should be_within(1.0e-08).of(27.1143792976291)
-    speed.to_s(:name).should == "27.1143792976291 miles per hour"
-    speed.to_s.should == "27.1143792976291 mi/h"
+    speed.unit.pluralized_name.should eql "miles per hour"
   end
 
   it "coerce method should handle inverted syntax" do
@@ -388,11 +388,17 @@ describe Quantity do
   end
 
   it "should convert standard units correctly" do
-    6000.BTU.to_megajoules.to_s(:name).should == "6.328824 megajoules"
+    quantity = 6000.BTU.to_megajoules
+    # use #be_within to tolerate Ruby 1.8.7 - 1.9.2 differences
+    quantity.value.should be_within(1.0e-08).of(6.328824)
+    quantity.unit.pluralized_name.should eql "megajoules"
   end
 
   it "should convert standard units correctly" do
-    13.1.stones.to_kg.to_s(:name).should == "83.1888383 kilograms"
+    quantity = 13.1.stones.to_kg
+    # use #be_within to tolerate Ruby 1.8.7 - 1.9.2 differences
+    quantity.value.should be_within(1.0e-08).of(83.1888383)
+    quantity.unit.pluralized_name.should eql "kilograms"
   end
 
   it "should convert compound units correctly" do
@@ -402,7 +408,12 @@ describe Quantity do
 
   it "should convert to SI unit correctly" do
     100.cm.to_si.to_s.should == "1.0 m"
-    2.kWh.to_si.to_s.should == "7200000.0 J"
+
+    quantity = 2.kWh.to_si
+    # use #be_within to tolerate Ruby 1.8.7 - 1.9.2 differences
+    quantity.value.should be_within(1.0e-08).of(7200000.0)
+    quantity.unit.symbol.should eql "J"
+
     400.ha.to_si.to_s.should == "4000000.0 m²"
     35.degree_celsius.to_si.to_s.should == "308.15 K"
   end
@@ -455,7 +466,9 @@ describe Quantity do
   it "should cancel by base units of original compound unit if necessary" do
     quantity = Quantity.new(20, Unit.psi).to(Unit.inches_of_mercury)
     quantity.unit.base_units.size.should == 1
-    quantity.to_s.should == "40.720412743579 inHg"
+    # use #be_within to tolerate Ruby 1.8.7 - 1.9.2 differences
+    quantity.value.should be_within(1.0e-08).of(40.720412743579)
+    quantity.unit.symbol.should eql "inHg"
   end
 
   it "should rationalize units and return new quantity" do

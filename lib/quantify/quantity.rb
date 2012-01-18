@@ -297,7 +297,7 @@ module Quantify
       old_unit = @unit
       self.multiply!(Unit.ratio new_unit, old_unit)
       old_base_units = old_unit.base_units.map { |base| base.unit } if old_unit.is_compound_unit?
-      self.cancel_base_units!(*old_base_units || old_unit)
+      self.cancel_base_units!(*old_base_units || [old_unit])
     end
 
     def conversion_with_scalings!(new_unit)
