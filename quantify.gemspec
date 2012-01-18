@@ -5,26 +5,27 @@
 
 Gem::Specification.new do |s|
   s.name = "quantify"
-  s.version = "3.1.1"
+  s.version = "3.1.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Berkeley"]
-  s.date = "2011-12-22"
+  s.date = "2012-01-18"
   s.description = "A gem to support physical quantities and unit conversions"
   s.email = "andrew.berkeley.is@googlemail.com"
   s.extra_rdoc_files = [
-    "README"
+    "README.md"
   ]
   s.files = [
     ".rvmrc",
     "COPYING",
     "Gemfile",
-    "README",
+    "README.md",
     "Rakefile",
     "VERSION",
     "lib/quantify.rb",
     "lib/quantify/config.rb",
     "lib/quantify/core_extensions/numeric.rb",
+    "lib/quantify/core_extensions/range.rb",
     "lib/quantify/core_extensions/string.rb",
     "lib/quantify/core_extensions/symbol.rb",
     "lib/quantify/dimensions.rb",
@@ -53,7 +54,7 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/spatchcock/quantify"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.15"
   s.summary = "Support for handling physical quantities, unit conversions, etc"
 
   if s.respond_to? :specification_version then
