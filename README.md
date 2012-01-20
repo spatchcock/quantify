@@ -13,7 +13,7 @@ Homepage: https://github.com/spatchcock/quantify
 Quick introduction
 ------------------
 
-Operating on quantities
+    # Operating on quantities
 
     12.feet + 12.feet                   #=> "24.0 feet"
 
@@ -31,7 +31,7 @@ Note: these results are string representations of the actual objects
 which result from these operations, using the Quantity#to_s method which
 renders quantities using either the unit name or symbol.
 
-Handling units
+    # Handling units
 
     Unit.ton.name                       #=> "long ton"
 
@@ -86,14 +86,14 @@ There are several ways to initialize a quantity object
     mass = Quantity.parse "100 lb"        #=> <Quantify::Quantity:0xb7332bbc ... >
     mass = "100 lb".to_q                  #=> <Quantify::Quantity:0xb7332bbc ... >
 
-Quantity object attributes
+Quantity object can be insterrogated for a range of attributes
 
     mass.value                            #=> 100.0
     mass.unit                             #=> <Quantify::Unit::NonSI:0xb7332b08 ... >
     mass.unit.name                        #=> "pound"
     mass.unit.symbol                      #=> "lb"
 
-  # unique identifier, follows JScience
+    # unique identifier, follows JScience
     mass.unit.label                       #=> "lb"
     mass.unit.pluralized_name             #=> "pounds"
     mass.to_s                             #=> "100 lb"
@@ -115,8 +115,6 @@ Convert a quantity to a different unit
     # Initialize a unit object and pass as conversion argument
     unit = Unit.MJ                        #=> <Quantify::Unit::SI:0xb75c9718 ... >
     new_energy = energy.to(unit)          #=> "360.0 MJ"
-  
-Note: all of the above results are string representations of the actual objects which result from these operations.
 
 Convert the units of a quantity with a compound unit
 
@@ -126,15 +124,10 @@ Convert the units of a quantity with a compound unit
 
     speed_in_mins = speed_in_kms.to_min   #=> "1.877568 km/min"
 
-Note: all of the above results are string representations of the actual objects which result from these operations.
-
 Convert a quantity to the corresponding SI unit
 
     energy = 100.kWh                      #=> "100 kWh"
     si = quantity.to_si                   #=> "360000000.0 J"
-
-Note: all of the above results are string representations of the actual
-objects which result from these operations.
 
 Operate on a quantity
 
@@ -155,6 +148,8 @@ Note: all of the above results are string representations of the actual
 objects which result from these operations.
 
 Additional operations
+---------------------
+
 The result of quantity operations is commonly a new quantity with a compound unit. Unless the result is equivalent to one of the base SI units (m, kg, s, K, etc.) or one of the following, square metre, cubic metre, joule, watt, newton or pascal, then the compound unit represents appropriate combination of the units involved, albeit with any like-units within the numerator and denominator grouped under a single
 power/index.
 
