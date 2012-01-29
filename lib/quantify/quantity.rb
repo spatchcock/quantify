@@ -44,20 +44,47 @@ module Quantify
     # Parse a string and return a Quantity object based upon the value and
     # subseqent unit name, symbol or JScience label. Returns an array containing
     # quantity objects for each quantity recognised.
-    def self.parse(string)
-      words = string.words
-      quantities = words.each_with_index.map do |word,index|
+    def self.parse(string,options={})
+      
+      quantities   = []
+      remainder    = []
+      words        = string.words
+
+      until words.empty? do
+        word = words.shift
         if word.starts_with_number?
-          # Isolate number from subsequent string
-          value, string = word, words[index+1..-1].join(" ")
-          # Shift any trailing non-numeric characters to start of string.
-          value, string = $1, "#{$2} #{string}" if (Unit::QUANTITY_REGEX).match(word)
-          # Parse string for unit references
-          unit = Unit.parse(string, :iterative => true) || Unit.dimensionless
-          # Instantiate quantity using value and unit
-          Quantity.new(value,unit)
+          if (Unit::QUANTITY_REGEX).match(word)
+            word, other = $1, $2
+            words.unshift(other)
+          end
+          quantities << [word]
+        else
+          if quantities.empty?
+            remainder << word
+          else
+            quantities.last << word
+          end
         end
+      end      
+
+      remainders = []
+      remainders << remainder.join(" ")
+
+      quantities.map! do |words|
+
+        value = words.shift
+        string = words.join(" ")
+
+        # Parse string for unit references
+        unit, remainder = Unit.parse(string, :iterative => true, :remainder => true) 
+        unit, remainder = Unit.dimensionless, string if unit.nil?
+        remainders << remainder
+
+        # Instantiate quantity using value and unit
+        Quantity.new(value,unit)
+          
       end.compact
+      return [quantities, remainders] if options[:remainder] == true
       return quantities
     rescue Quantify::Exceptions::InvalidArgumentError
       raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
@@ -66,7 +93,16 @@ module Quantify
     def self.configure(&block)
       self.class_eval(&block) if block
     end
+
+    def self.auto_consolidate_units=(true_or_false)
+      @auto_consolidate_units = true_or_false
+    end
     
+    def self.auto_consolidate_units?
+      @auto_consolidate_units.nil? ? false : @auto_consolidate_units
+    end
+    #alias :auto_consolidate_units? :auto_consolidate_units
+
     protected
 
     def self.is_basic_conversion_with_scalings?(quantity,new_unit)
@@ -281,6 +317,7 @@ module Quantify
         return self
       elsif other.kind_of? Quantity
         @unit = @unit.send(operator,other.unit).or_equivalent
+        @unit.consolidate_base_units! if @unit.is_compound_unit? && Quantity.auto_consolidate_units?
         @value = @value.send(operator,other.value)
         return self
       else

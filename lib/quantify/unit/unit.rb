@@ -247,10 +247,22 @@ module Quantify
     #
     def self.parse(string, options={})
       string = string.remove_underscores.without_superscript_characters
-      units = options[:iterative] == true ? Unit.iterative_parse(string) : Unit.simple_parse(string)
-      return nil if units.empty?
-      return units.first.unit if units.size == 1 && units.first.index == 1
-      return Unit::Compound.new(*units)
+      if options[:iterative] == true
+        units = Unit.iterative_parse(string, options) 
+        units, remainder = units if options[:remainder] == true
+      else
+        units = Unit.simple_parse(string)
+      end
+
+      if units.empty?
+        units = nil 
+      elsif units.size == 1 && units.first.index == 1
+        units = units.first.unit
+      else
+        units = Unit::Compound.new(*units)
+      end
+
+      options[:iterative] == true && options[:iterative] == true ? [units, remainder] : units
     end
     
     # This returns the suite of units which represents THE SI units for each of
@@ -320,7 +332,7 @@ module Quantify
       return units
     end
     
-    def self.iterative_parse(string)
+    def self.iterative_parse(string, options={})
       units=[]
       is_denominator = false
       current_exponent = nil
@@ -341,6 +353,7 @@ module Quantify
         match_length = term.size
         string = string[match_length, string.length-match_length].strip
       end
+      return [units, string] if options[:remainder] == true
       return units
     end
     

@@ -146,7 +146,7 @@ module Quantify
       end
 
       # Consilidates base quantities by finding multiple instances of the same unit
-      # type and reducing them into a single unit represenation, by altering the
+      # type and reducing them into a single unit representation, by altering the
       # repsective index. It has the effect of raising units to powers and cancelling
       # those which appear in the numerator AND denominator
       #

@@ -249,6 +249,22 @@ describe Quantity do
     quantities.first.value.should == 10
     quantities.first.unit.symbol.should == 'mi/h'
   end
+
+  it "should create a valid instance with class parse method and return remainders" do
+    quantities = Quantity.parse "I sprayed 500L of fertilizer across 6000m^2 of farmland", :remainder => true
+    quantities.first.should be_a Array
+    quantities.first[0].value.should == 500
+    quantities.first[0].unit.name.should == 'litre'
+    quantities.first[0].unit.symbol.should == 'L'
+    quantities.first[1].value.should == 6000
+    quantities.first[1].unit.pluralized_name.should == 'square metres'
+    quantities.first[1].unit.symbol.should == 'm²'
+    quantities[1].should be_a Array
+    quantities[1].size.should eql 3
+    quantities[1][0].should eql "I sprayed"
+    quantities[1][1].should eql "of fertilizer across"
+    quantities[1][2].should eql "of farmland"
+  end
   
   it "should parse using string method" do
     "20 m".to_q.first.value.should == 20.0
@@ -525,13 +541,13 @@ describe Quantity do
   end
 
   it "should return between value from range" do
-    (2.ft..20.ft).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 3.ft).should be_true
+    (2.ft..20.ft).cover?(3.ft).should be_true
   end
 
   it "should return between value from range with different units" do
-    (2.ft..4.m).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 200.cm).should be_true
-    (1.ly..1.parsec).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 2.ly).should be_true
-    (1.ly..1.parsec).send(RUBY_VERSION < "1.9" ? :include? : :cover?, 2.in).should be_false
+    (2.ft..4.m).cover?(200.cm).should be_true
+    (1.ly..1.parsec).cover?(2.ly).should be_true
+    (1.ly..1.parsec).cover?(2.in).should be_false
   end
 
   it "should return between value from range using === operator" do
@@ -550,6 +566,46 @@ describe Quantity do
 
   it "range comparison with non quantity should raise error" do
     lambda{20.ft === (1.ft..3)}.should raise_error
+  end
+
+  it "should return unit consolidation setting" do
+    Quantity.auto_consolidate_units?.should be_false
+  end
+
+  it "should set unit consolidation setting" do
+    Quantity.auto_consolidate_units?.should be_false
+
+    Quantity.auto_consolidate_units=true
+    Quantity.auto_consolidate_units?.should be_true
+
+    Quantity.auto_consolidate_units=false
+    Quantity.auto_consolidate_units?.should be_false
+  end
+
+  it "should return non-consolidated units if consolidation disabled" do
+    quantity = 20.L * 1.km * (5.lb / 1.L)
+    quantity.to_s.should eql "100.0 L km lb/L"
+  end
+
+  it "should return equivalent units if consolidation disabled" do
+    quantity = 20.L * (5.lb / 1.L)
+    quantity.to_s.should eql "100.0 lb"
+  end
+
+  it "should return equivalent units if consolidation enabled" do
+    Quantity.auto_consolidate_units=true
+    quantity = 20.L * (5.lb / 1.L)
+    quantity.to_s.should eql "100.0 lb"
+  end
+
+  it "should return consolidated units if enabled" do
+    Quantity.auto_consolidate_units=true
+    quantity = 20.L * 1.km * (5.lb / 1.L)
+    quantity.to_s.should eql "100.0 km lb"
+  end
+
+  it "should return consolidated units if enabled" do
+    
   end
 end
 
