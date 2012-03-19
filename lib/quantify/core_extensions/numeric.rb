@@ -1,4 +1,3 @@
-
 class Numeric
   # Syntactic sugar for defining instances of the Quantity class.
   #
@@ -10,7 +9,9 @@ class Numeric
   #   1000.t         is equivalent to Quantity. new 1000, :t
   #
   def method_missing(method, *args, &block)
-    if unit = Unit.for(method.to_s)
+    if (method == :to_str || method == :to_ary)
+      super
+    elsif unit = Unit.for(method.to_s)
       Quantify::Quantity.new self, unit
     else
       super
