@@ -25,7 +25,7 @@ Quick introduction
 
     1.5.lb.to_si.round(2)               #=> "0.68 kg"
 
-    Unit.ratio :kg, :ton                #=> "1.016047 kilograms per long ton"
+    Unit.ratio :kg, :ton                #=> "1016.047 kilograms per long ton"
 
 Note: these results are string representations of the actual objects
 which result from these operations, using the Quantity#to_s method which

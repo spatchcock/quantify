@@ -38,11 +38,17 @@ module Quantify
     
     
     class << self
-      attr_reader :units
+      attr_reader :units, :unit_names, :unit_symbols
+      attr_reader :prefixed_units, :prefixed_unit_names, :prefixed_unit_symbols
     end
 
     # Instance variable containing system of known units
-    @units = []
+    #
+    #
+    #
+    @units                 = {}
+    @unit_names            = {}
+    @unit_symbols          = {}
 
     def self.configure(&block)
       self.class_eval(&block) if block
@@ -156,15 +162,30 @@ module Quantify
       )
     end
 
+    def self.all_descriptors
+      @units.
+      merge(@unit_names).
+      merge(@unit_symbols).
+      merge(@prefixed_units).
+      merge(@prefixed_unit_names).
+      merge(@prefixed_unit_symbols)
+    end
+
     # Load a new unit into they system of known units
     def self.load(unit)
-      @units << unit if unit.is_a? Unit::Base
+      if unit.is_a? Unit::Base
+        @units[unit.label] = unit
+        @unit_names[unit.name] = unit.label
+        @unit_symbols[unit.symbol] = unit.label
+      end
     end
 
     # Remove a unit from the system of known units
     def self.unload(*unloaded_units)
       [unloaded_units].flatten.each do |unloaded_unit|
-        @units.delete(Unit.for(unloaded_unit))
+        unloaded_unit = Unit.for(unloaded_unit) 
+        @units.delete(unloaded_unit.label)
+        @unit_aliases.delete_if { |k,v| v == unloaded_unit.label}
       end
     end
 
@@ -237,6 +258,7 @@ module Quantify
     end
 
     def self.match(name_symbol_or_label)
+      puts name_symbol_or_label
       return name_symbol_or_label.clone if name_symbol_or_label.is_a? Unit::Base
       Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
       Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
@@ -303,22 +325,24 @@ module Quantify
     
     def self.match_known_unit(attribute, string_or_symbol)
       string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      @units.find do |unit|
-        unit_attribute = unit.send(attribute)
-        if attribute == :name
-          unit_attribute.downcase == string_or_symbol
-        else
-          unit_attribute == string_or_symbol
-        end
-      end.clone rescue nil
+      if attribute == :label
+        @units[string_or_symbol]
+      elsif attribute == :symbol
+        @units[@unit_symbols[string_or_symbol]]
+      elsif attribute == :name
+        @units[@unit_names[string_or_symbol]]
+      end
+    rescue
+      nil
     end
     
     def self.match_prefixed_variant(attribute, string_or_symbol)
       string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      if string_or_symbol =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(#{Unit.terms_for_regex(Unit,:non_prefixed_units,attribute)})\z/
+      if string_or_symbol =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(.*)\z/
         return Unit.for($2).with_prefix($1).clone
       end
-      return nil
+    rescue
+      nil
     end
     
     def self.simple_parse(string)
@@ -402,7 +426,7 @@ module Quantify
     
     # Return a list of unit names which are multi-word
     def self.multi_word_unit_names
-      Unit.units.map {|unit| unit.name if unit.name.word_count > 1 }.compact
+      Unit.unit_names.keys.map {|name| name if name.word_count > 1 }.compact
     end
     
     # Return a list of pluralised unit names which are multi-word
@@ -412,7 +436,7 @@ module Quantify
     
     # Return a list of unit symbols which are multi-word
     def self.multi_word_unit_symbols
-      Unit.units.map {|unit| unit.symbol if unit.symbol.word_count > 1 }.compact
+      Unit.unit_symbols.keys.map {|symbol| symbol if symbol.word_count > 1 }.compact
     end
     
     # Underscore any parts of string which represent multi-word unit identifiers

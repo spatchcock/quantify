@@ -225,7 +225,7 @@ module Quantify
       def load(&block)
         block.call(self) if block_given?
         raise Exceptions::InvalidArgumentError, "A unit with the same label: #{self.name}) already exists" if loaded?
-        Quantify::Unit.units << self if valid?
+        Quantify::Unit.load(self) if valid?
         return self
       end
 
@@ -236,7 +236,7 @@ module Quantify
 
       # check if an object with the same label already exists
       def loaded?
-        Unit.units.any? { |unit| self.has_same_identity_as? unit }
+        Unit.units.has_key? @label
       end
 
       # Make self the canonical representation of the unit defined by self#label
@@ -382,7 +382,6 @@ module Quantify
       def has_same_identity_as?(other)
         @label == other.label && !@label.nil?
       end
-      alias :== :has_same_identity_as?
 
       # Determine if another unit is an alternative unit for self, i.e. do the two
       # units represent the same physical quantity. This is established by compraing
