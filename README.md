@@ -7,7 +7,7 @@ Licensed under the MIT license (See COPYING file for details)
 
 Author: Andrew Berkeley (andrew.berkeley.is@googlemail.com)
 
-Homepage: https://github.com/spatchcock/quantify
+Homepage: https://github.com/spatchcock/quantify 
 
 
 Quick introduction
