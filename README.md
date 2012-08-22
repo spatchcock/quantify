@@ -15,54 +15,23 @@ Quick introduction
 ```ruby
 # Operating on quantities
 
-12.feet + 12.feet                   #=> "24.0 feet"
+12.feet + 12.feet                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "24.0 feet"
 
-6.m ** 2                            #=> "36.0 m²"
+6.m ** 2                            #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "36.0 m²"
 
-100.km / 2.h                        #=> "50 kilometers per hour"
+100.km / 2.h                        #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "50 kilometers per hour"
 
-5000.L.to_bbl                       #=> "31.4490528488754 barrels"
+5000.L.to_bbl                       #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "31.4490528488754 barrels"
 
-1.5.lb.to_si.round(2)               #=> "0.68 kg"
+1.5.lb.to_si.round(2)               #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "0.68 kg"
 
-Unit.ratio(:kg, :ton)               #=> "1016.047 kilograms per long ton"
-```
-
-Note: these results are string representations of the actual objects
-which result from these operations, using the Quantity#to_s method which
-renders quantities using either the unit name or symbol.
-
-```ruby
-# Handling units
-
-Unit.ton.name                       #=> "long ton"
-
-Unit.ton.label                      #=> "ton_uk"
-
-Unit.ton.measures                   #=> "mass"
-
-Unit.ton.alternatives(:name)        #=> [ "kilogram",
-                                          "gram",
-                                          "carat",
-                                          "electron mass",
-                                          "grain",
-                                          "hundredweight long",
-                                          "hundredweight short",
-                                          "ounce",
-                                          "pennyweight",
-                                          "pound",
-                                          "short ton",
-                                          "stone",
-                                          "tonne",
-                                          "unified atomic mass" ]
- 
- Unit.ton.si_unit                    #=> 'kg'
-
- Unit.ton.dimensions                 #=> <Quantify::Dimensions:0xb75467c8 ... >
-
- Unit.ton.dimensions.describe        #=> "mass"
-
- Unit.ton.dimensions.mass            #=> 1
+Unit.ratio(:kg, :ton)               #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "1016.047 kilograms per long ton"
 ```
     
 General introduction
@@ -89,6 +58,8 @@ mass = "100 lb".to_q                  #=> <Quantify::Quantity:0xb7332bbc ... >
 
 Quantity object can be insterrogated for a range of attributes
 ```ruby
+mass = 100.pound                      #=> <Quantify::Quantity:0xb7332bbc ... >
+
 mass.value                            #=> 100.0
 mass.unit                             #=> <Quantify::Unit::NonSI:0xb7332b08 ... >
 mass.unit.name                        #=> "pound"
@@ -100,6 +71,30 @@ mass.to_s                             #=> "100 lb"
 mass.to_s(:name)                      #=> "100 pounds"
 
 mass.represents                       #=> "mass" # Describe the physical quantity represented by the quantity
+mass.unit.measures                    #=> "mass" # Describe the physical quantity described by the unit
+
+mass.unit.alternatives(:name)         #=> [ "kilogram",
+                                      #     "gram",
+                                      #     "carat",
+                                      #     "electron mass",
+                                      #     "grain",
+                                      #     "hundredweight long",
+                                      #     "hundredweight short",
+                                      #     "ounce",
+                                      #     "pennyweight",
+                                      #     "pound",
+                                      #     "short ton",
+                                      #     "stone",
+                                      #     "tonne",
+                                      #     "unified atomic mass" ]
+ 
+mass.unit.si_unit                     #=> 'kg'
+
+mass.unit.dimensions                  #=> <Quantify::Dimensions:0xb75467c8 ... >
+
+mass.unit.dimensions.describe         #=> "mass"
+
+mass.unit.dimensions.mass             #=> 1  # index of base dimension 'mass'
 ```
 
 Convert a quantity to a different unit
