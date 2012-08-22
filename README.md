@@ -91,59 +91,70 @@ mass.unit.alternatives(:name)         #=> [ "kilogram",
 mass.unit.si_unit                     #=> 'kg'
 
 mass.unit.dimensions                  #=> <Quantify::Dimensions:0xb75467c8 ... >
-
 mass.unit.dimensions.describe         #=> "mass"
-
 mass.unit.dimensions.mass             #=> 1  # index of base dimension 'mass'
 ```
 
 Convert a quantity to a different unit
 ```ruby
-energy = 100.kWh                      #=> "100 kilowatt hours"
+energy = 100.kWh                      #=> <Quantify::Quantity:0xb7332bbc ... >
+energy.to_s                           #=> "100 kilowatt hours"
   
-new_energy = energy.to_megajoules     #=> "360.0 MJ"
+new_energy = energy.to_megajoules     #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
   
-new_energy = energy.to_MJ             #=> "360.0 MJ"
+new_energy = energy.to_MJ             #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
   
-new_energy = energy.to(:MJ)           #=> "360.0 MJ"
+new_energy = energy.to(:MJ)           #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
 
 # Initialize a unit object and pass as conversion argument
 unit = Unit.MJ                        #=> <Quantify::Unit::SI:0xb75c9718 ... >
-new_energy = energy.to(unit)          #=> "360.0 MJ"
+new_energy = energy.to(unit)          #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
 ```
 
 Convert the units of a quantity with a compound unit
 ```ruby
-speed = 70.mi/1.h                     #=> "70.0 mi/h"
+speed = 70.mi/1.h                     #=> <Quantify::Quantity:0xb7332bbc ... >
+speed.to_s                            #=> "70.0 mi/h"
 
-speed_in_kms = speed.to_km            #=> "112.65408 km/h"
+speed_in_kms = speed.to_km            #=> <Quantify::Quantity:0xb7332bbc ... >
+speed_in_kms.to_s                     #=> "112.65408 km/h"
 
-speed_in_mins = speed_in_kms.to_min   #=> "1.877568 km/min"
+speed_in_mins = speed_in_kms.to_min   #=> <Quantify::Quantity:0xb7332bbc ... >
+speed_in_mins.to_s                    #=> "1.877568 km/min"
 ```
 
 Convert a quantity to the corresponding SI unit
 ```ruby
-energy = 100.kWh                      #=> "100 kWh"
-si = quantity.to_si                   #=> "360000000.0 J"
+energy = 100.kWh                      #=> <Quantify::Quantity:0xb7332bbc ... >
+energy.to_s                           #=> "100 kWh"
+
+si = quantity.to_si                   #=> <Quantify::Quantity:0xb7332bbc ... >
+si.to_s                               #=> "360000000.0 J"
 ```
 
 Operate on a quantity
 ```ruby
-mass = 10.kg * 3                      #=> "30.0 kg"
+mass = 10.kg * 3                      #=> <Quantify::Quantity:0xb7332bbc ... >
+mass.to_s                             #=> "30.0 kg"
 
-distance = 100.light_years / 20       #=> "5.0 ly"
+distance = 100.light_years / 20       #=> <Quantify::Quantity:0xb7332bbc ... >
+distance.to_s                         #=> "5.0 ly"
 
-area = 10.m * 10.m                    #=> "100.0 square metres"
+area = 10.m * 10.m                    #=> <Quantify::Quantity:0xb7332bbc ... >
+area.to_s                             #=> "100.0 square metres"
 
-speed = 250.mi / 3.h                  #=> "83.3333333333333 miles per hour"
+speed = 250.mi / 3.h                  #=> <Quantify::Quantity:0xb7332bbc ... >
+speed.to_s                            #=> "83.3333333333333 miles per hour"
 
 speed = 70.mi/1.h                     #=> <Quantify::Quantity:0xb7332bbc ... >
 time = 0.5.h                          #=> <Quantify::Quantity:3xf3472hjc ... >
 distance = speed * time               #=> <Quantify::Quantity:7d7f8g9d5g ... >
 distance.to_s                         #=> "35.0 mi"
 ```
-
-Note: all of the above results are string representations of the actual objects which result from these operations.
 
 Additional operations
 ---------------------
@@ -159,21 +170,21 @@ Where units representing the same physical quantity appear together, they can be
 area = 12.yd * 36.ft                  #=> <Quantify::Quantity:0xb7332bbc ... >
 area.to_s                             #=> "432.0 yd ft"
 
-area = area.to_yd
+area = area.to_yd                     #=> <Quantify::Quantity:0xb7332bbc ... >
 area.to_s                             #=> "144.0 yd²"
 ```
 
 Alternatively, all units within the numerator and denominator respectively can be standardized:
 ```ruby
-quantity = (12.ft*8.mi)/(1.s*8.min)
-quantity.to_s                         #=> 12.0 ft mi/s min
+quantity = (12.ft*8.mi)/(1.s*8.min)   #=> <Quantify::Quantity:0xb7332bbc ... >
+quantity.to_s                         #=> "12.0 ft mi/s min"
 quantity.rationalize_units!
-quantity.to_s                         #=> 1056.0 ft²/s²
+quantity.to_s                         #=> "1056.0 ft²/s²"
 ```
 
 A quantity with arbitrary cancelable units can be cancelled manually:
 ```ruby
-quantity = (12.m**6) / 2.m**2
+quantity = (12.m**6) / 2.m**2         #=> <Quantify::Quantity:0xb7332bbc ... >
 quantity.to_s                         #=> "746496.0 m^6/m²"
 quantity.cancel_base_units! :m
 quantity.to_s                         #=> "746496.0 m^4"
