@@ -3,8 +3,6 @@ Quantify
 
 A gem to support physical quantities and unit conversions in Ruby
 
-Licensed under the MIT license (See COPYING file for details)
-
 Author: Andrew Berkeley (andrew.berkeley.is@googlemail.com)
 
 Homepage: https://github.com/spatchcock/quantify
@@ -178,3 +176,21 @@ A quantity with arbitrary cancelable units can be cancelled manually:
     quantity.to_s                         #=> "746496.0 m^4"
 
 Note: there are more comprehensive and flexible methods for manupulating compound units available as part of of the class Unit::Compound. These can be used to convert a conpound unit into the precise form required. If such an approach is used, any quantity object can be converted to the new form by simply passing the new unit object into the Quantity#to method.
+
+Contributing
+============
+
+If you find a bug or think that you improve on the code, feel free to contribute.
+
+You can:
+
+* Send the author a message ("andrew.berkeley.is@googlemail.com":mailto:andrew.berkeley.is@googlemail.com)
+* Create an issue
+* Fork the project and submit a pull request.
+
+License
+=======
+
+© Copyright 2012 Andrew Berkeley.
+
+Licensed under the MIT license (See COPYING file for details)
