@@ -196,7 +196,7 @@ If you find a bug or think that you improve on the code, feel free to contribute
 
 You can:
 
-* Send the author a message ("andrew.berkeley.is@googlemail.com":mailto:andrew.berkeley.is@googlemail.com)
+* Send the author a message (andrew.berkeley.is@googlemail.com:mailto:andrew.berkeley.is@googlemail.com)
 * Create an issue
 * Fork the project and submit a pull request.
 
