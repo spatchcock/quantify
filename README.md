@@ -28,6 +28,8 @@ _.to_s                              #=> "31.4490528488754 barrels"
 1.5.lb.to_si.round(2)               #=> <Quantify::Quantity:0xb7332bbc ... >
 _.to_s                              #=> "0.68 kg"
 
+1.kg < 1.g                          #=> false
+
 Unit.ratio(:kg, :ton)               #=> <Quantify::Quantity:0xb7332bbc ... >
 _.to_s                              #=> "1016.047 kilograms per long ton"
 ```
@@ -152,6 +154,15 @@ speed = 70.mi/1.h                     #=> <Quantify::Quantity:0xb7332bbc ... >
 time = 0.5.h                          #=> <Quantify::Quantity:3xf3472hjc ... >
 distance = speed * time               #=> <Quantify::Quantity:7d7f8g9d5g ... >
 distance.to_s                         #=> "35.0 mi"
+```
+
+Compare quantities
+```ruby
+1.kg < 1.g                          #=> false
+1.kg > 1.g                          #=> true
+
+# Comparisons only valid if quantities are of same dimension
+1.kg < 1.m                          #=> <Quantify::Exceptions::InvalidArgumentError ... >
 ```
 
 Additional operations
