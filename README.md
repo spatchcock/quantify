@@ -48,12 +48,15 @@ In all cases the results of operations are a changes to the Quantity instance or
 
 There are several ways to initialize a quantity object
 ```ruby
+long_text = "I travelled 220 miles driving my car and using 0.13 UK gallons per mile of diesel"
+
 mass = Quantity.new(100,:lb)          #=> <Quantify::Quantity:0xb7332bbc ... >
 mass = Quantity.new(100,'pound')      #=> <Quantify::Quantity:0xb7332bbc ... >
 mass = 100.lb                         #=> <Quantify::Quantity:0xb7332bbc ... >
 mass = 100.pound                      #=> <Quantify::Quantity:0xb7332bbc ... >
-mass = Quantity.parse "100 lb"        #=> <Quantify::Quantity:0xb7332bbc ... >
-mass = "100 lb".to_q                  #=> <Quantify::Quantity:0xb7332bbc ... >
+mass = Quantity.parse "100 lb"        #=> [<Quantify::Quantity:0xb7332bbc ... >]
+mass = Quantity.parse long_text       #=> [<Quantify::Quantity:0xb7332bbc ... >, <Quantify::Quantity:0xc564321c ... >]
+mass = "100 lb".to_q                  #=> [<Quantify::Quantity:0xb7332bbc ... >]
 ```
 
 Quantity object can be insterrogated for a range of attributes
