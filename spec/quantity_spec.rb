@@ -369,6 +369,11 @@ describe Quantity do
     (20.metre / 5).to_s.should == "4.0 m"
   end
 
+  it "should throw ZeroDivisionError error when dividing a quantity by '0'" do
+    lambda{2.kg / 0}.should raise_error ZeroDivisionError
+  end
+
+
   it "should successfully divide a quantity by a scalar" do
     (2.kg / 0.5).round.to_s.should == "4 kg"
   end

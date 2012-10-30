@@ -313,6 +313,7 @@ module Quantify
 
     def multiply_or_divide!(operator,other)
       if other.kind_of? Numeric
+        raise ZeroDivisionError if other.to_f == 0.0
         @value = @value.send(operator,other)
         return self
       elsif other.kind_of? Quantity
