@@ -4,6 +4,14 @@ include Quantify
 
 describe Quantity do
 
+  describe "#initialize" do
+    specify { Quantity.new(1).should eq(Quantity.new(1,'unity')) }
+    specify { Quantity.new(nil,nil).should eq(Quantity.new(nil,'unity')) }
+    specify { Quantity.new(nil,nil).should eq(Quantity.new(nil,'unity')) }
+    specify { Quantity.new(nil,'unity').should eq(Quantity.new(nil,'unity')) }
+    specify { Quantity.new(nil).should eq(Quantity.new(nil,'unity')) }
+  end
+
   it "should create a valid instance with nil values" do
     quantity = Quantity.new nil, nil
     quantity.value.should be_nil
@@ -561,29 +569,65 @@ describe Quantity do
   end
 
   context "comparing nil quantities" do
-    specify "greater than" do
-      lambda{Quantity.new(nil,nil) > 1.m}.should raise_error
+
+    context "when comparing with non-nil quantities" do
+      specify "greater than" do
+        lambda{Quantity.new(nil,nil) > 1.m}.should raise_error
+      end
+
+      specify "greater than or equals" do
+        lambda{Quantity.new(nil,nil) >= 1.m}.should raise_error
+      end
+
+      specify "less than" do
+        lambda{Quantity.new(nil,nil) < 1.m}.should raise_error
+      end
+
+      specify "less than or equals" do
+        lambda{Quantity.new(nil,nil) <= 1.m}.should raise_error
+      end
+
+      specify "equals" do
+        lambda{Quantity.new(nil,nil) == 1.m}.should raise_error
+      end
+
+      specify "between" do
+        lambda{Quantity.new(nil,nil).between? 1.ft,10.m}.should raise_error NoMethodError
+        lambda{Quantity.new(nil,nil).between? Quantity.new(nil,nil),Quantity.new(nil,nil)}.should raise_error NoMethodError
+      end
+
+      specify "range" do
+        expect{(Quantity.new(nil)..1.kg)}.to raise_error
+        expect{(1.kg..Quantity.new(nil))}.to raise_error
+      end
     end
 
-    specify "greater than or equals" do
-      lambda{Quantity.new(nil,nil) >= 1.m}.should raise_error
+    context "when comparing with another nil quantity" do
+      specify "greater than" do
+        (Quantity.new(nil) > Quantity.new(nil)).should be_false
+      end
+
+      specify "greater than or equals" do
+        (Quantity.new(nil) >= Quantity.new(nil)).should be_true
+      end
+
+      specify "less than" do
+        (Quantity.new(nil) < Quantity.new(nil)).should be_false
+      end
+
+      specify "less than or equals" do
+        (Quantity.new(nil) <= Quantity.new(nil)).should be_true
+      end
+
+      specify "equals" do
+        (Quantity.new(nil) == Quantity.new(nil)).should be_true
+      end
+
+      specify "range" do
+        (Quantity.new(nil)..Quantity.new(nil)).should eq(Quantity.new(nil,'unity')..Quantity.new(nil, 'unity'))
+      end
     end
 
-    specify "less than" do
-      lambda{Quantity.new(nil,nil) < 1.m}.should raise_error
-    end
-
-    specify "less than or equals" do
-      lambda{Quantity.new(nil,nil) <= 1.m}.should raise_error
-    end
-
-    specify "equals" do
-      lambda{Quantity.new(nil,nil) == 1.m}.should raise_error
-    end
-
-    specify "between" do
-      lambda{Quantity.new(nil,nil).between? 1.ft,10.m}.should raise_error
-    end
   end
 
   it "should be greater than" do
@@ -650,13 +694,12 @@ describe Quantity do
     lambda{20.ft === (1.ft..3)}.should raise_error
   end
 
-  specify "a range with nil quantities raises an error" do
-    lambda{Quantity.new(nil,nil)..Quantity.new(nil,nil)}.should raise_error
-    lambda{Quantity.new(nil,nil)..20.ft}.should raise_error
+  specify "a range with one nil quantity raises an error" do
+    lambda{Quantity.new(nil)..20.ft}.should raise_error
   end
 
   specify "cover? with nil quantities raises an error" do
-    lambda{(2.ft..20.ft).cover?(Quantity.new(nil,nil))}.should raise_error
+    lambda{(2.ft..20.ft).cover?(Quantity.new(nil))}.should raise_error
   end
 
   it "should return unit consolidation setting" do
