@@ -45,7 +45,9 @@ module Quantify
     # subseqent unit name, symbol or JScience label. Returns an array containing
     # quantity objects for each quantity recognised.
     def self.parse(string,options={})
-      
+
+      return [Quantity.new(nil, nil)] unless string != nil && string.strip.length > 0
+
       quantities   = []
       remainder    = []
       words        = string.words
@@ -121,8 +123,16 @@ module Quantify
     # JScience label of a known (or derivable through know units and prefixes)
     # unit
     def initialize(value, unit)
-      @value = value.to_f
-      @unit = Unit.for(unit)
+      if value
+        @value = value.to_f
+      else
+        @value = nil
+      end
+      if unit
+        @unit = Unit.for(unit)
+      else
+        @unit = Unit.for('unity')
+      end
     end
 
     # Returns a description of what the quantity describes, based upon the physica

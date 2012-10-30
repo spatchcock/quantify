@@ -32,6 +32,11 @@ _.to_s                              #=> "0.68 kg"
 
 Unit.ratio(:kg, :ton)               #=> <Quantify::Quantity:0xb7332bbc ... >
 _.to_s                              #=> "1016.047 kilograms per long ton"
+
+Quantity.new(nil, nil)              #=> <Quantify::Quantity:0xb7332bbc ... >
+_.value                             #=> nil
+_.unit                              #=> <Quantify::Unit::Base:0x007ff622bd9320 ...>
+_.unit.name                         #=> "unity" #== 'unitless' unit
 ```
     
 General introduction
