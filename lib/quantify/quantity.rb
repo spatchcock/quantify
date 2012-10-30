@@ -313,13 +313,15 @@ module Quantify
 
     def multiply_or_divide!(operator,other)
       if other.kind_of? Numeric
-        raise ZeroDivisionError if other.to_f == 0.0
+        raise ZeroDivisionError if (other.to_f == 0.0 && operator == :/)
         @value = @value.send(operator,other)
+
         return self
       elsif other.kind_of? Quantity
         @unit = @unit.send(operator,other.unit).or_equivalent
         @unit.consolidate_base_units! if @unit.is_compound_unit? && Quantity.auto_consolidate_units?
         @value = @value.send(operator,other.value)
+        
         return self
       else
         raise Quantify::Exceptions::InvalidArgumentError, "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"

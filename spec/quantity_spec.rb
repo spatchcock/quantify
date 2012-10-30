@@ -373,6 +373,13 @@ describe Quantity do
     lambda{2.kg / 0}.should raise_error ZeroDivisionError
   end
 
+  it "should NOT throw ZeroDivisionError error when multiplying a quantity by '0'" do
+    lambda{2.kg * 0}.should_not raise_error ZeroDivisionError
+  end
+
+  it "should multiply a quantity by '0'" do
+    (2.kg * 0).to_s.should == "0.0 kg"
+  end
 
   it "should successfully divide a quantity by a scalar" do
     (2.kg / 0.5).round.to_s.should == "4 kg"
