@@ -35,13 +35,6 @@ Jeweler::Tasks.new do |gem|
 end
 Jeweler::RubygemsDotOrgTasks.new
 
-require 'rcov/rcovtask'
-desc "Generate code coverage"
-RSpec::Core::RakeTask.new(:coverage) do |t|
-  t.rcov = true
-  t.rcov_opts = ['--exclude', 'spec']
-end
-
 require 'rdoc/task'
 RDoc::Task.new do |rd|
   rd.title = "Quantify"
