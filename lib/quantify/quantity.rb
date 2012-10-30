@@ -122,7 +122,7 @@ module Quantify
     # a unit. The unit can be a an instance of Unit::Base or the name, symbol or
     # JScience label of a known (or derivable through know units and prefixes)
     # unit
-    def initialize(value, unit)
+    def initialize(value, unit = 'unity')
       if value
         @value = value.to_f
       else
@@ -291,6 +291,8 @@ module Quantify
     def <=>(other)
       raise Exceptions::InvalidArgumentError unless other.is_a? Quantity
       raise Exceptions::InvalidArgumentError unless other.unit.is_alternative_for?(unit)
+      return 0 if @value.nil? && (other.nil? || other.value.nil?)
+
       other = other.to @unit
       @value.to_f <=> other.value.to_f
     end
@@ -298,6 +300,11 @@ module Quantify
     def ===(range)
       raise Exceptions::InvalidArgumentError unless range.is_a? Range
       range.cover? self
+    end
+
+    def between?(min, max)
+      raise NoMethodError if @value.nil?
+      super(min,max)
     end
 
     protected
