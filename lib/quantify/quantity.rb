@@ -130,6 +130,11 @@ module Quantify
       end
       if unit
         @unit = Unit.for(unit)
+        #TODO: Actually this is a bad hack. Unit should raise an error in the first place
+        #instead of returning nil. But I did not manage to quickly solve this issue as
+        #the specs seem to explode as soon as we swtich from Unit.for(...) to Unit.parse
+        #(Unit.parse() should raise errors but seems to have problems on its own)
+        raise ArgumentError, "Unit '#{unit}' is not a valid unit" if @unit.nil? && unit != nil
       else
         @unit = Unit.for('unity')
       end

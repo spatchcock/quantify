@@ -12,6 +12,14 @@ describe Quantity do
     specify { Quantity.new(nil).should eq(Quantity.new(nil,'unity')) }
   end
 
+  it "should fail fast on invalid value input" do
+    expect{ Quantity.new('invalid', 'kg') }.to raise_error ArgumentError
+  end
+
+  it "should fail fast on invalid unit input" do
+    expect{ Quantity.new(1, 'invalid unit') }.to raise_error ArgumentError
+  end
+
   it "should create a valid instance with nil values" do
     quantity = Quantity.new nil, nil
     quantity.value.should be_nil
