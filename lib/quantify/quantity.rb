@@ -124,7 +124,7 @@ module Quantify
     # unit
     def initialize(value, unit = 'unity')
       if value
-        @value = value.to_f
+        @value = Float(value)
       else
         @value = nil
       end

@@ -217,12 +217,16 @@ module Quantify
     #
     def self.for(name_symbol_label_or_object)
       return name_symbol_label_or_object.clone if name_symbol_label_or_object.is_a? Unit::Base
+
       return nil if name_symbol_label_or_object.nil? ||
         ( name_symbol_label_or_object.is_a?(String) && name_symbol_label_or_object.empty? )
+      
       name_symbol_or_label = name_symbol_label_or_object
+      
       unless name_symbol_or_label.is_a?(String) || name_symbol_or_label.is_a?(Symbol)
         raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
       end
+      
       if unit = Unit.match(name_symbol_or_label)
         return unit
       elsif unit = Unit.parse(name_symbol_or_label)
@@ -230,10 +234,9 @@ module Quantify
       elsif unit = Unit.parse(name_symbol_or_label, :iterative => true)
         return unit
       else
-        return nil
+        raise Exceptions::InvalidUnitError, "Unit '#{name_symbol_or_label}' not known"
       end
-    rescue Exceptions::InvalidUnitError
-      return nil
+      
     end
 
     def self.match(name_symbol_or_label)
