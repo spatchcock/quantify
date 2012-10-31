@@ -17,7 +17,7 @@ describe Quantity do
   end
 
   it "should fail fast on invalid unit input" do
-    expect{ Quantity.new(1, 'invalid unit') }.to raise_error ArgumentError
+    expect{ Quantity.new(1, 'invalid unit') }.to raise_error Quantify::Exceptions::InvalidUnitError
   end
 
   it "should create a valid instance with nil values" do
