@@ -185,6 +185,7 @@ Unit::SI.configure do
   (metre/second).load
   (metre/second**2).load
 
+
   (1/centimetre).configure do |unit|
     unit.name = 'inverse centimetre'
   end.load
@@ -213,7 +214,7 @@ Unit::SI.configure do
 
   # Declare unit which are to act as equivalent units, prevailing over equivalent
   # compound units
-  
+
   si_base_units.each { |unit| unit.acts_as_equivalent_unit = true }
 
   joule.acts_as_equivalent_unit = true
@@ -243,7 +244,6 @@ Unit::NonSI.configure do
   load :name => 'barn',                                  :physical_quantity => 'area',                      :factor => 100e-30,          :symbol => 'b',           :label => 'b'
   load :name => 'biot',                                  :physical_quantity => 'electric current',          :factor => 10.0,             :symbol => 'Bi',          :label => 'Bi'
   load :name => 'boiler horsepower',                     :physical_quantity => 'power',                     :factor => 9.80950e3,        :symbol => 'bhp',         :label => 'bhp'
-  load :name => 'british thermal unit (59 °F)',          :physical_quantity => 'energy',                    :factor => 1054.804,         :symbol => 'BTU',         :label => 'BTU_FiftyNineF'
   load :name => 'british thermal unit (39 °F)',          :physical_quantity => 'energy',                    :factor => 1059.67,          :symbol => 'BTU',         :label => 'BTU_ThirtyNineF'
   load :name => 'british thermal unit (60 °F)',          :physical_quantity => 'energy',                    :factor => 1054.68,          :symbol => 'BTU',         :label => 'BTU_SixtyF'
   load :name => 'british thermal unit (63 °F)',          :physical_quantity => 'energy',                    :factor => 1054.6,           :symbol => 'BTU',         :label => 'BTU_SixtyThreeF'
@@ -251,6 +251,7 @@ Unit::NonSI.configure do
   load :name => 'british thermal unit (IT)',             :physical_quantity => 'energy',                    :factor => 1055.05585262,    :symbol => 'BTU',         :label => 'BTU_IT'
   load :name => 'british thermal unit (mean)',           :physical_quantity => 'energy',                    :factor => 1055.87,          :symbol => 'BTU',         :label => 'BTU_Mean'
   load :name => 'british thermal unit (thermochemical)', :physical_quantity => 'energy',                    :factor => 1054.35026444,    :symbol => 'BTU',         :label => 'BTU_Thermochemical'
+  load :name => 'british thermal unit (59 °F)',          :physical_quantity => 'energy',                    :factor => 1054.804,         :symbol => 'BTU',         :label => 'BTU_FiftyNineF'
   load :name => 'US bushel',                             :physical_quantity => 'volume',                    :factor => 36.36872e-3,      :symbol => 'bu (Imp)',    :label => 'bu_imp'
   load :name => 'UK bushel',                             :physical_quantity => 'volume',                    :factor => 35.23907e-3,      :symbol => 'bu (US lvl)', :label => 'bu_us'
   load :name => 'byte',                                  :physical_quantity => 'information',               :factor => 8,                :symbol => 'byte',        :label => 'byte'

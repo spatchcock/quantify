@@ -265,7 +265,7 @@ module Quantify
     #   Dimensions.length.units :symbol     #=> [ 'm', 'ft', 'yd', ... ]
     #
     def units(by=nil)
-      Unit.units.select { |unit| unit.dimensions == self }.map(&by).to_a
+      Unit.units.values.select { |unit| unit.dimensions == self }.map(&by).to_a
     end
 
     # Returns the SI unit for the physical quantity described by self.
@@ -286,12 +286,13 @@ module Quantify
     #
     def si_unit
       return Unit.steridian if describe == 'solid angle'
-      return Unit.radian if describe == 'plane angle' 
+      return Unit.radian    if describe == 'plane angle' 
+
       return si_base_units.inject(Unit.unity) do |compound,unit|
         compound * unit
       end.or_equivalent
-    rescue
-      return nil
+    # rescue
+    #   return nil
     end
 
     # Returns an array representing the base SI units for the physical quantity
@@ -316,7 +317,9 @@ module Quantify
     #
     def si_base_units(by=nil)
       self.to_hash.map do |dimension,index|
+
         Unit.base_quantity_si_units.select do |unit|
+
           unit.measures == dimension.remove_underscores
         end.first.clone ** index
       end.map(&by).to_a

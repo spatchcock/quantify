@@ -55,6 +55,7 @@ module Quantify
             raise Exceptions::InvalidArgumentError, "#{unit} does not represent a valid base unit"
           end
         end
+        
         @acts_as_alternative_unit = true
         @acts_as_equivalent_unit = false
         block.call(self) if block_given?
@@ -109,7 +110,7 @@ module Quantify
       #                                #=> "joule"
       #
       def equivalent_known_unit
-        Unit.units.find do |unit|
+        Unit.units.values.find do |unit|
           self.is_equivalent_to?(unit) && !unit.is_compound_unit?
         end
       end

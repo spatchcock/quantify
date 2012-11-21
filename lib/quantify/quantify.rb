@@ -16,13 +16,15 @@ module Quantify
     def method_missing(method, *args, &block)
       if method.to_s =~ /((si|non_si|compound)_)?(non_(prefixed)_)?((base|derived|benchmark)_)?units(_by_(name|symbol|label))?/
         if $2 || $4 || $6
+
           conditions = []
-          conditions << "unit.is_#{$2}_unit?" if $2
+          conditions << "unit.is_#{$2}_unit?"     if $2
           conditions << "!unit.is_prefixed_unit?" if $4
-          conditions << "unit.is_#{$6}_unit?" if $6
-          units = Unit.units.select { |unit| instance_eval(conditions.join(" and ")) }
+          conditions << "unit.is_#{$6}_unit?"     if $6
+
+          units = Unit.units.values.select { |unit| instance_eval(conditions.join(" && ")) }
         else
-          units = Unit.units
+          units = Unit.units.values
         end
         return_format = ( $8 ? $8.to_sym : nil )
         units.map(&return_format).to_a

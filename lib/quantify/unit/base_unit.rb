@@ -19,10 +19,13 @@ module Quantify
       end
       
       def self.initialize_prefixed_version(prefix,unit)
+
         prefix, unit = Prefix.for(prefix), Unit.for(unit)
+
         raise Exceptions::InvalidArgumentError, "Prefix is not known" if prefix.nil?
         raise Exceptions::InvalidArgumentError, "Unit is not known" if unit.nil?
         raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{unit.prefix.name}" if unit.prefix
+        
         self.new &self.block_for_prefixed_version(prefix,unit)
       end
 

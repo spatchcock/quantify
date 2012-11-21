@@ -149,6 +149,7 @@ module Quantify
     def self.use_superscript_characters=(true_or_false)
       raise Exceptions::InvalidArgumentError,
         "Argument must be true or false" unless true_or_false == true || true_or_false == false
+
       @use_superscript_characters = true_or_false
       refresh_all_unit_attributes!
     end
@@ -157,9 +158,7 @@ module Quantify
     # configured system for superscripts.
     #
     def self.refresh_all_unit_attributes!
-      Unit.units.replace(
-        Unit.units.map { |unit| unit.refresh_attributes; unit }
-      )
+      Unit.units.values.each { |unit| unit.refresh_attributes; unit }
     end
 
     def self.all_descriptors
@@ -173,9 +172,10 @@ module Quantify
 
     # Load a new unit into they system of known units
     def self.load(unit)
+
       if unit.is_a? Unit::Base
         @units[unit.label] = unit
-        @unit_names[unit.name] = unit.label
+        @unit_names[unit.name.downcase] = unit.label
         @unit_symbols[unit.symbol] = unit.label
       end
     end
@@ -185,7 +185,7 @@ module Quantify
       [unloaded_units].flatten.each do |unloaded_unit|
         unloaded_unit = Unit.for(unloaded_unit) 
         @units.delete(unloaded_unit.label)
-        @unit_aliases.delete_if { |k,v| v == unloaded_unit.label}
+        #@unit_aliases.delete_if { |k,v| v == unloaded_unit.label}
       end
     end
 
@@ -238,12 +238,16 @@ module Quantify
     #
     def self.for(name_symbol_label_or_object)
       return name_symbol_label_or_object.clone if name_symbol_label_or_object.is_a? Unit::Base
+
       return nil if name_symbol_label_or_object.nil? ||
         ( name_symbol_label_or_object.is_a?(String) && name_symbol_label_or_object.empty? )
+
       name_symbol_or_label = name_symbol_label_or_object
+
       unless name_symbol_or_label.is_a?(String) || name_symbol_or_label.is_a?(Symbol)
         raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
       end
+
       if unit = Unit.match(name_symbol_or_label)
         return unit
       elsif unit = Unit.parse(name_symbol_or_label)
@@ -253,16 +257,17 @@ module Quantify
       else
         return nil
       end
+
     rescue Exceptions::InvalidUnitError
       return nil
     end
 
     def self.match(name_symbol_or_label)
-      puts name_symbol_or_label
+
       return name_symbol_or_label.clone if name_symbol_or_label.is_a? Unit::Base
-      Unit.match_known_unit_or_prefixed_variant(:label, name_symbol_or_label) or
-      Unit.match_known_unit_or_prefixed_variant(:name, name_symbol_or_label) or
-      Unit.match_known_unit_or_prefixed_variant(:symbol, name_symbol_or_label)
+
+      Unit.match_known_unit(name_symbol_or_label) ||
+      Unit.match_prefixed_variant(name_symbol_or_label) 
     end
     
     # Parse complex strings into unit.
@@ -292,55 +297,67 @@ module Quantify
     # versions of the same unit
     #
     def self.base_quantity_si_units
-      @units.select {|unit| unit.is_base_quantity_si_unit? }
+      @units.values.select {|unit| unit.is_base_quantity_si_unit? }
     end
     
     # This can be replicated by method missing approach, but explicit method provided
     # given importance in #match (and #for) methods regexen
     #
     def self.non_prefixed_units
-      @units.select {|unit| !unit.is_prefixed_unit? }
+      @units.values.select {|unit| !unit.is_prefixed_unit? }
     end
 
     # This can be replicated by method missing approach, but explicit method provided
     # given importance in #match (and #for) methods regexen
     #
     def self.si_non_prefixed_units
-      @units.select {|unit| unit.is_si_unit? && !unit.is_prefixed_unit? }
+      @units.values.select {|unit| unit.is_si_unit? && !unit.is_prefixed_unit? }
     end
 
     # This can be replicated by method missing approach, but explicit method provided
     # given importance in #match (and #for) methods regexen
     #
     def self.non_si_non_prefixed_units
-      @units.select {|unit| unit.is_non_si_unit? && !unit.is_prefixed_unit? }
+      @units.values.select {|unit| unit.is_non_si_unit? && !unit.is_prefixed_unit? }
     end
     
     protected
     
-    def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
-      Unit.match_known_unit(attribute, string_or_symbol) or
-      Unit.match_prefixed_variant(attribute, string_or_symbol)
-    end
+    # def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
+    #   Unit.match_known_unit(attribute, string_or_symbol) or
+    #   Unit.match_prefixed_variant(attribute, string_or_symbol)
+    # end
     
-    def self.match_known_unit(attribute, string_or_symbol)
-      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      if attribute == :label
-        @units[string_or_symbol]
-      elsif attribute == :symbol
-        @units[@unit_symbols[string_or_symbol]]
-      elsif attribute == :name
-        @units[@unit_names[string_or_symbol]]
+    def self.match_known_unit(string_or_symbol)
+
+      descriptor_as_label = Unit.format_unit_attribute(:label, string_or_symbol)
+      if unit = @units[descriptor_as_label]
+        return unit
+      end
+
+      descriptor_as_symbol = Unit.format_unit_attribute(:symbol, string_or_symbol)
+      if label = @unit_symbols[descriptor_as_symbol]
+        return @units[label]
+      end
+
+      descriptor_as_name = Unit.format_unit_attribute(:name, string_or_symbol)
+      if label = @unit_names[descriptor_as_name]
+        return @units[label]
       end
     rescue
       nil
     end
     
-    def self.match_prefixed_variant(attribute, string_or_symbol)
-      string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
-      if string_or_symbol =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(.*)\z/
-        return Unit.for($2).with_prefix($1).clone
+    def self.match_prefixed_variant(string_or_symbol)
+      [:label, :symbol, :name].each do |attribute|
+        string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+
+        if string_or_symbol =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(#{Unit.terms_for_regex(Unit,:non_prefixed_units,attribute)})\z/
+          return Unit.for($2).with_prefix($1).clone
+        end
       end
+
+      return nil
     rescue
       nil
     end

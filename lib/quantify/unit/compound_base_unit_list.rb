@@ -85,6 +85,7 @@ module Quantify
       #
       def consolidate!
         new_base_units = []
+
         while size > 0 do
           new_base = shift
           next if new_base.unit.is_dimensionless?
@@ -97,6 +98,7 @@ module Quantify
           end
           new_base_units << new_base unless new_base.is_dimensionless?
         end
+        
         replace(new_base_units)
       end
 

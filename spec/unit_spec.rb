@@ -15,7 +15,7 @@ describe Unit do
     end
 
     it "should set superscript usage to true" do
-      Unit.use_superscript_characters=true
+      Unit.use_superscript_characters = true
       Unit.use_superscript_characters?.should be_true
     end
 

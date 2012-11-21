@@ -363,6 +363,7 @@ module Quantify
         unit = @unit.base_units.find do |base|
           !base.is_base_quantity_si_unit?
         end.unit
+
         self.convert_compound_unit_to_non_equivalent_unit!(unit.si_unit)
       end
       return self
