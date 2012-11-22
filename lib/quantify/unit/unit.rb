@@ -255,25 +255,21 @@ module Quantify
       elsif unit = Unit.parse(name_symbol_or_label, :iterative => true)
         return unit
       else
-        return nil
+        raise Exceptions::InvalidUnitError, "Unit '#{name_symbol_or_label}' not known"
       end
-
-    rescue Exceptions::InvalidUnitError
-      return nil
     end
 
     def self.match(name_symbol_or_label)
-
       return name_symbol_or_label.clone if name_symbol_or_label.is_a? Unit::Base
 
-      Unit.match_known_unit(name_symbol_or_label) ||
-      Unit.match_prefixed_variant(name_symbol_or_label) 
+      Unit.match_known_unit(name_symbol_or_label) || Unit.match_prefixed_variant(name_symbol_or_label) 
     end
     
     # Parse complex strings into unit.
     #
     def self.parse(string, options={})
       string = string.remove_underscores.without_superscript_characters
+
       if options[:iterative] == true
         units = Unit.iterative_parse(string, options) 
         units, remainder = units if options[:remainder] == true
@@ -289,7 +285,7 @@ module Quantify
         units = Unit::Compound.new(*units)
       end
 
-      options[:iterative] == true && options[:iterative] == true ? [units, remainder] : units
+      options[:iterative] == true && options[:remainder] == true ? [units, remainder] : units
     end
     
     # This returns the suite of units which represents THE SI units for each of
@@ -323,27 +319,23 @@ module Quantify
     
     protected
     
-    # def self.match_known_unit_or_prefixed_variant(attribute, string_or_symbol)
-    #   Unit.match_known_unit(attribute, string_or_symbol) or
-    #   Unit.match_prefixed_variant(attribute, string_or_symbol)
-    # end
-    
     def self.match_known_unit(string_or_symbol)
 
       descriptor_as_label = Unit.format_unit_attribute(:label, string_or_symbol)
       if unit = @units[descriptor_as_label]
-        return unit
+        return unit.clone
       end
 
       descriptor_as_symbol = Unit.format_unit_attribute(:symbol, string_or_symbol)
       if label = @unit_symbols[descriptor_as_symbol]
-        return @units[label]
+        return @units[label].clone
       end
 
       descriptor_as_name = Unit.format_unit_attribute(:name, string_or_symbol)
       if label = @unit_names[descriptor_as_name]
-        return @units[label]
+        return @units[label].clone
       end
+
     rescue
       nil
     end
@@ -366,18 +358,26 @@ module Quantify
       if string.scan(UNIT_DENOMINATOR_REGEX).size > 1
         raise Exceptions::InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
       end
+
       units = []
       numerator, per, denominator = string.split(UNIT_DENOMINATOR_REGEX)
+
       units += Unit.parse_numerator_units(numerator)
       units += Unit.parse_denominator_units(denominator) unless denominator.nil?
+
+      puts units
+
       return units
     end
     
     def self.iterative_parse(string, options={})
       units=[]
+
       is_denominator = false
       current_exponent = nil
-      while term = string.starts_with_valid_unit_term? do  
+      
+      while term = string.starts_with_valid_unit_term? do
+
         if term =~ /^#{UNIT_PREFIX_TERMS_REGEX}$/
           current_exponent = Unit.exponent_term_to_number(term)
         elsif term =~ /^#{UNIT_SUFFIX_TERMS_REGEX}$/ 
@@ -385,6 +385,7 @@ module Quantify
         elsif term =~ /^#{UNIT_DENOMINATOR_REGEX}/
           is_denominator = true
         else
+
           unit = Unit.send("parse_#{is_denominator ? 'denominator' : 'numerator'}_units".to_sym, term).first
           unit.index *= current_exponent if current_exponent
           units << unit
@@ -394,14 +395,17 @@ module Quantify
         match_length = term.size
         string = string[match_length, string.length-match_length].strip
       end
+
       return [units, string] if options[:remainder] == true
       return units
     end
     
     def self.parse_unit_and_index(string)
       string.scan(WORD_WITH_INDEX_REGEX)
+      
       index = ($2.nil? || $2.empty? ? 1 : $2.to_i)
-      unit = Unit.match($1.to_s)
+      unit  = Unit.match($1.to_s)
+
       if unit.is_a? Compound
         return unit.base_units.each {|base_unit| base_unit.index = base_unit.index * index}
       else
@@ -416,6 +420,7 @@ module Quantify
       else
         num_units = Unit.escape_multi_word_units(string).split(" ")
       end
+
       num_units.map! do |substring|
         Unit.parse_unit_and_index(substring)
       end.flatten
@@ -434,11 +439,12 @@ module Quantify
     def self.format_unit_attribute(attribute, string_or_symbol)
       string_or_symbol = case attribute
         when :symbol then string_or_symbol.remove_underscores
-        when :name then string_or_symbol.remove_underscores.singularize.downcase
+        when :name   then string_or_symbol.remove_underscores.singularize.downcase
         else string_or_symbol.to_s
       end
+
       Unit.use_superscript_characters? ?
-      string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
+        string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
     end
     
     # Return a list of unit names which are multi-word
@@ -461,8 +467,12 @@ module Quantify
     #
     def self.escape_multi_word_units(string)
       (multi_word_unit_symbols + multi_word_unit_pluralized_names + multi_word_unit_names).each do |id|
-        string.gsub!(id, id.gsub(" ","_")) if /#{id}/.match(string)
+
+        if /#{id}/i.match(string)
+          string.gsub!(/#{id}/i, id.gsub(" ","_"))
+        end
       end
+
       string
     end
     

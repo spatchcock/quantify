@@ -86,6 +86,7 @@ module Quantify
       end.compact
       return [quantities, remainders] if options[:remainder] == true
       return quantities
+      
     rescue Quantify::Exceptions::InvalidArgumentError
       raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
     end

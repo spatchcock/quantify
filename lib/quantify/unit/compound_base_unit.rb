@@ -14,8 +14,11 @@ module Quantify
       attr_accessor :unit, :index
 
       def initialize(unit,index=1)
-        @unit = Unit.match(unit) || raise(Exceptions::InvalidUnitError, "Base unit not known: #{unit}")
+        @unit = Unit.match(unit)
+
+        raise Exceptions::InvalidUnitError, "Base unit not known: #{unit}"      if @unit.nil?
         raise Exceptions::InvalidUnitError, "Base unit cannot be compound unit" if @unit.is_a? Compound
+
         @index = index
       end
 
