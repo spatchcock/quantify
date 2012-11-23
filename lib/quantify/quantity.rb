@@ -45,13 +45,16 @@ module Quantify
     # subseqent unit name, symbol or JScience label. Returns an array containing
     # quantity objects for each quantity recognised.
     def self.parse(string,options={})
-      
+
+      return [Quantity.new(nil, nil)] unless string != nil && string.strip.length > 0
+
       quantities   = []
       remainder    = []
       words        = string.words
 
       until words.empty? do
         word = words.shift
+
         if word.starts_with_number?
           if (Unit::QUANTITY_REGEX).match(word)
             word, other = $1, $2
@@ -65,14 +68,14 @@ module Quantify
             quantities.last << word
           end
         end
-      end      
+      end
 
       remainders = []
       remainders << remainder.join(" ")
 
       quantities.map! do |words|
 
-        value = words.shift
+        value  = words.shift
         string = words.join(" ")
 
         # Parse string for unit references
@@ -121,9 +124,18 @@ module Quantify
     # a unit. The unit can be a an instance of Unit::Base or the name, symbol or
     # JScience label of a known (or derivable through know units and prefixes)
     # unit
-    def initialize(value, unit)
-      @value = value.to_f
-      @unit = Unit.for(unit)
+    def initialize(value, unit = 'unity')
+      if value
+        @value = Float(value)
+      else
+        @value = nil
+      end
+      
+      if unit
+        @unit = Unit.for(unit)
+      else
+        @unit = Unit.for('unity')
+      end
     end
 
     # Returns a description of what the quantity describes, based upon the physica
@@ -282,6 +294,8 @@ module Quantify
     def <=>(other)
       raise Exceptions::InvalidArgumentError unless other.is_a? Quantity
       raise Exceptions::InvalidArgumentError unless other.unit.is_alternative_for?(unit)
+      return 0 if @value.nil? && (other.nil? || other.value.nil?)
+
       other = other.to @unit
       @value.to_f <=> other.value.to_f
     end
@@ -289,6 +303,11 @@ module Quantify
     def ===(range)
       raise Exceptions::InvalidArgumentError unless range.is_a? Range
       range.cover? self
+    end
+
+    def between?(min, max)
+      raise NoMethodError if @value.nil?
+      super(min,max)
     end
 
     protected
@@ -314,12 +333,15 @@ module Quantify
 
     def multiply_or_divide!(operator,other)
       if other.kind_of? Numeric
+        raise ZeroDivisionError if (other.to_f == 0.0 && operator == :/)
         @value = @value.send(operator,other)
+
         return self
       elsif other.kind_of? Quantity
         @unit = @unit.send(operator,other.unit).or_equivalent
         @unit.consolidate_base_units! if @unit.is_compound_unit? && Quantity.auto_consolidate_units?
         @value = @value.send(operator,other.value)
+        
         return self
       else
         raise Quantify::Exceptions::InvalidArgumentError, "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"

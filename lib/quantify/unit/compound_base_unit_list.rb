@@ -9,10 +9,12 @@ module Quantify
       #
       def self.attribute_string(units,attribute,unit_delimiter,reciprocal=false)
         string = ""
+
         units.each do |base|
           string << unit_delimiter unless string.empty?
           string << base.send(attribute,reciprocal)
         end
+
         return string
       end
 
@@ -60,17 +62,20 @@ module Quantify
       def cancel!(*units)
         units.each do |unit|
           raise Exceptions::InvalidArgumentError, "Cannot cancel by a compound unit" if unit.is_a? Unit::Compound
+
           unit = Unit.for unit unless unit.is_a? Unit::Base
 
-          numerator_unit = numerator_units.find { |base| unit.is_equivalent_to? base.unit }
+          numerator_unit   = numerator_units.find   { |base| unit.is_equivalent_to? base.unit }
           denominator_unit = denominator_units.find { |base| unit.is_equivalent_to? base.unit }
 
           if numerator_unit && denominator_unit
             cancel_value = [numerator_unit.index,denominator_unit.index].min.abs
-            numerator_unit.index -= cancel_value
+
+            numerator_unit.index   -= cancel_value
             denominator_unit.index += cancel_value
           end
         end
+
         consolidate_numerator_and_denominator!
       end
 
@@ -96,6 +101,7 @@ module Quantify
             delete other_base
             index += other_base.index
           end
+
           new_base_units << new_base unless new_base.is_dimensionless?
         end
         
@@ -126,6 +132,7 @@ module Quantify
             find { |other_base| other_base.unit.dimensions == base.unit.dimensions }.unit
           base.unit = new_unit
         end
+
         consolidate_numerator_and_denominator!
       end
 
@@ -216,19 +223,21 @@ module Quantify
       #
       def attribute_string_with_denominator_syntax(attribute,denominator_delimiter,unit_delimiter,plural=false)
 
-        attribute = attribute.to_sym
-        numerator_string = ""
+        attribute          = attribute.to_sym
+        numerator_string   = ""
         denominator_string = ""
-        numerator_units = self.numerator_units
-        denominator_units = self.denominator_units
+        numerator_units    = self.numerator_units
+        denominator_units  = self.denominator_units
 
         unless numerator_units.empty?
           numerator_units_size = numerator_units.size
+
           # Handle pluralisation of last unit if pluralised form required, e.g.
           # tonne kilometres per hour
           last_unit = numerator_units.pop if attribute == :name && plural == true
           numerator_string << CompoundBaseUnitList.attribute_string(numerator_units,attribute,unit_delimiter)
           numerator_string << unit_delimiter + last_unit.pluralized_name if last_unit
+
           if Unit.use_symbol_parentheses?
             if numerator_units_size > 1 && !denominator_units.empty?
               numerator_string = "(#{numerator_string.strip})"
@@ -238,9 +247,11 @@ module Quantify
         
         unless denominator_units.empty?
           # If no numerator exists then indices should be reciprocalized since
-          # they do NOT occur after the denominator delimeter (e.g. "/")
+          # they do NOT occur after the denominator delimiter (e.g. "/")
+
           reciprocal = !numerator_string.empty?
           denominator_string << CompoundBaseUnitList.attribute_string(denominator_units,attribute,unit_delimiter,reciprocal)
+          
           if Unit.use_symbol_parentheses?
             if denominator_units.size > 1 && !numerator_string.empty?
               denominator_string = "(#{denominator_string.strip})"
@@ -249,6 +260,7 @@ module Quantify
         end
 
         string = numerator_string
+        
         if (!denominator_string.empty? && !numerator_string.empty?) ||
             (!denominator_string.empty? && numerator_string.empty? && attribute == :name)
           string << denominator_delimiter

@@ -4,6 +4,28 @@ include Quantify
 
 describe Quantity do
 
+  describe "#initialize" do
+    specify { Quantity.new(1).should eq(Quantity.new(1,'unity')) }
+    specify { Quantity.new(nil,nil).should eq(Quantity.new(nil,'unity')) }
+    specify { Quantity.new(nil,nil).should eq(Quantity.new(nil,'unity')) }
+    specify { Quantity.new(nil,'unity').should eq(Quantity.new(nil,'unity')) }
+    specify { Quantity.new(nil).should eq(Quantity.new(nil,'unity')) }
+  end
+
+  it "should fail fast on invalid value input" do
+    expect{ Quantity.new('invalid', 'kg') }.to raise_error ArgumentError
+  end
+
+  it "should fail fast on invalid unit input" do
+    expect{ Quantity.new(1, 'invalid unit') }.to raise_error Quantify::Exceptions::InvalidUnitError
+  end
+
+  it "should create a valid instance with nil values" do
+    quantity = Quantity.new nil, nil
+    quantity.value.should be_nil
+    quantity.unit.should == (Unit.for('unity'))
+  end
+
   it "should create a valid instance with standard create and unit name" do
     quantity = Quantity.new 10.0, 'metre'
     quantity.value.should == 10
@@ -114,6 +136,13 @@ describe Quantity do
     quantities = Quantity.parse "100km"
     quantities.first.value.should == 100
     quantities.first.unit.name.should == 'kilometre'
+  end
+
+
+  it "should create a valid instance with unity unit from an empty string" do
+    quantities = Quantity.parse " "
+    quantities.first.value.should == nil
+    quantities.first.unit.name.should == ''
   end
 
   it "should create valid instances from complex string, no space and two-digit symbol" do
@@ -329,6 +358,10 @@ describe Quantity do
     lambda{1.metre + 5.kg}.should raise_error
   end
 
+  it "should throw error when adding nil quantities" do
+    lambda{Quantity.new(nil,nil) + 5.kg}.should raise_error
+  end
+
   it "should subtract quantities correctly with different units of same dimension" do
     result = (125.4.kelvin - -211.85.degree_celsius)
     result.value.should be_within(0.00000001).of(64.1)
@@ -347,6 +380,10 @@ describe Quantity do
     lambda{1.metre - 5.kg}.should raise_error
   end
 
+  it "should throw error when subtracting nil quantities" do
+    lambda{Quantity.new(nil,nil) - 5.kg}.should raise_error
+  end
+
   it "should successfully multiply a quantity by a scalar" do
     (20.metre * 3).to_s.should == "60.0 m"
   end
@@ -359,7 +396,12 @@ describe Quantity do
     lambda{20.metre * '3'}.should raise_error
   end
 
-  it "should two quantities" do
+  it "should raise error when multiplying by nil quantity" do
+    lambda{Quantity.new(nil,nil) * 5.kg}.should raise_error
+    lambda{5.kg * Quantity.new(nil,nil)}.should raise_error
+  end
+
+  it "should multiply two quantities" do
     quantity = (20.metre * 1.metre)
     quantity.value.should == 20
     quantity.unit.measures.should == 'area'
@@ -369,8 +411,25 @@ describe Quantity do
     (20.metre / 5).to_s.should == "4.0 m"
   end
 
+  it "should throw ZeroDivisionError error when dividing a quantity by '0'" do
+    lambda{2.kg / 0}.should raise_error ZeroDivisionError
+  end
+
+  it "should NOT throw ZeroDivisionError error when multiplying a quantity by '0'" do
+    lambda{2.kg * 0}.should_not raise_error ZeroDivisionError
+  end
+
+  it "should multiply a quantity by '0'" do
+    (2.kg * 0).to_s.should == "0.0 kg"
+  end
+
   it "should successfully divide a quantity by a scalar" do
     (2.kg / 0.5).round.to_s.should == "4 kg"
+  end
+
+  it "should throw error when dividing nil quantities" do
+    lambda{Quantity.new(nil,nil) / 5.kg}.should raise_error
+    lambda{5.kg / Quantity.new(nil,nil)}.should raise_error
   end
 
   it "should calculate speed from distance and time quantities" do
@@ -417,6 +476,14 @@ describe Quantity do
     quantity.unit.pluralized_name.should eql "kilograms"
   end
 
+  specify "converting a nil quantity to another unit yields nil" do
+    Quantity.new(nil,nil).to_kg.should be_nil
+  end
+
+  it "should raise error when trying to round a nil quantity" do
+    lambda{Quantity.new(nil,nil).round(2)}.should raise_error
+  end
+
   it "should convert compound units correctly" do
     speed = Quantity.new 100, (Unit.km/Unit.h)
     speed.to_mi.round(2).to_s.should == "62.14 mi/h"
@@ -454,6 +521,11 @@ describe Quantity do
     (50.square_metres/10.m).to_s.should == "5.0 m"
     (1.kg*20.m*2.m/4.s/5.s).to_s(:name).should == '2.0 joules'
     (80.kg/2.m/4.s/5.s).to_s(:name).should == '2.0 pascals'
+  end
+
+  it "should raise error when trying to raise a nil quantity to a power" do
+    lambda{Quantity.new(nil,nil) ** 2}.should raise_error
+    lambda{Quantity.new(nil,nil).pow(2)}.should raise_error
   end
 
   it "should raise a quantity to a power correctly" do
@@ -502,6 +574,68 @@ describe Quantity do
     quantity.rationalize_units!
     quantity.value.should be_within(0.0000001).of(144)
     quantity.unit.symbol.should eql  "yd²"
+  end
+
+  context "comparing nil quantities" do
+
+    context "when comparing with non-nil quantities" do
+      specify "greater than" do
+        lambda{Quantity.new(nil,nil) > 1.m}.should raise_error
+      end
+
+      specify "greater than or equals" do
+        lambda{Quantity.new(nil,nil) >= 1.m}.should raise_error
+      end
+
+      specify "less than" do
+        lambda{Quantity.new(nil,nil) < 1.m}.should raise_error
+      end
+
+      specify "less than or equals" do
+        lambda{Quantity.new(nil,nil) <= 1.m}.should raise_error
+      end
+
+      specify "equals" do
+        lambda{Quantity.new(nil,nil) == 1.m}.should raise_error
+      end
+
+      specify "between" do
+        lambda{Quantity.new(nil,nil).between? 1.ft,10.m}.should raise_error NoMethodError
+        lambda{Quantity.new(nil,nil).between? Quantity.new(nil,nil),Quantity.new(nil,nil)}.should raise_error NoMethodError
+      end
+
+      specify "range" do
+        expect{(Quantity.new(nil)..1.kg)}.to raise_error
+        expect{(1.kg..Quantity.new(nil))}.to raise_error
+      end
+    end
+
+    context "when comparing with another nil quantity" do
+      specify "greater than" do
+        (Quantity.new(nil) > Quantity.new(nil)).should be_false
+      end
+
+      specify "greater than or equals" do
+        (Quantity.new(nil) >= Quantity.new(nil)).should be_true
+      end
+
+      specify "less than" do
+        (Quantity.new(nil) < Quantity.new(nil)).should be_false
+      end
+
+      specify "less than or equals" do
+        (Quantity.new(nil) <= Quantity.new(nil)).should be_true
+      end
+
+      specify "equals" do
+        (Quantity.new(nil) == Quantity.new(nil)).should be_true
+      end
+
+      specify "range" do
+        (Quantity.new(nil)..Quantity.new(nil)).should eq(Quantity.new(nil,'unity')..Quantity.new(nil, 'unity'))
+      end
+    end
+
   end
 
   it "should be greater than" do
@@ -566,6 +700,14 @@ describe Quantity do
 
   it "range comparison with non quantity should raise error" do
     lambda{20.ft === (1.ft..3)}.should raise_error
+  end
+
+  specify "a range with one nil quantity raises an error" do
+    lambda{Quantity.new(nil)..20.ft}.should raise_error
+  end
+
+  specify "cover? with nil quantities raises an error" do
+    lambda{(2.ft..20.ft).cover?(Quantity.new(nil))}.should raise_error
   end
 
   it "should return unit consolidation setting" do

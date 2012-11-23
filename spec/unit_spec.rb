@@ -15,7 +15,7 @@ describe Unit do
     end
 
     it "should set superscript usage to true" do
-      Unit.use_superscript_characters = true
+      Unit.use_superscript_characters=true
       Unit.use_superscript_characters?.should be_true
     end
 
@@ -341,9 +341,12 @@ describe Unit do
       lambda{Unit.centimetre.with_prefix :kilo}.should raise_error
     end
 
-    it "explicit get should raise nil if not known" do
-      Unit.for(:MMm).should be_nil
-      Unit.for(:andrew).should be_nil
+    it "explicit get should raise error if not known" do
+      expect{Unit.for(:MMm)}.to raise_error ::Exceptions::InvalidUnitError
+      expect{Unit.for(:andrew)}.to raise_error ::Exceptions::InvalidUnitError
+    end
+
+    it "should return nil if passed nil" do
       Unit.for(nil).should be_nil
     end
 

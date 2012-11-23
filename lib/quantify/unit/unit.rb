@@ -43,12 +43,9 @@ module Quantify
     end
 
     # Instance variable containing system of known units
-    #
-    #
-    #
-    @units                 = {}
-    @unit_names            = {}
-    @unit_symbols          = {}
+    @units        = {}
+    @unit_names   = {}
+    @unit_symbols = {}
 
     def self.configure(&block)
       self.class_eval(&block) if block
@@ -147,8 +144,9 @@ module Quantify
     # false. If not set, superscript characters are used by default.
     #
     def self.use_superscript_characters=(true_or_false)
-      raise Exceptions::InvalidArgumentError,
-        "Argument must be true or false" unless true_or_false == true || true_or_false == false
+      unless true_or_false == true || true_or_false == false
+        raise Exceptions::InvalidArgumentError, "Argument must be true or false" 
+      end
 
       @use_superscript_characters = true_or_false
       refresh_all_unit_attributes!
@@ -161,22 +159,13 @@ module Quantify
       Unit.units.values.each { |unit| unit.refresh_attributes; unit }
     end
 
-    def self.all_descriptors
-      @units.
-      merge(@unit_names).
-      merge(@unit_symbols).
-      merge(@prefixed_units).
-      merge(@prefixed_unit_names).
-      merge(@prefixed_unit_symbols)
-    end
-
     # Load a new unit into they system of known units
     def self.load(unit)
-
       if unit.is_a? Unit::Base
-        @units[unit.label] = unit
+
+        @units[unit.label]              = unit
         @unit_names[unit.name.downcase] = unit.label
-        @unit_symbols[unit.symbol] = unit.label
+        @unit_symbols[unit.symbol]      = unit.label
       end
     end
 
@@ -184,8 +173,11 @@ module Quantify
     def self.unload(*unloaded_units)
       [unloaded_units].flatten.each do |unloaded_unit|
         unloaded_unit = Unit.for(unloaded_unit) 
+
         @units.delete(unloaded_unit.label)
-        #@unit_aliases.delete_if { |k,v| v == unloaded_unit.label}
+
+        @unit_names.delete_if   { |k,v| v == unloaded_unit.label}
+        @unit_symbols.delete_if { |k,v| v == unloaded_unit.label}
       end
     end
 
@@ -201,13 +193,16 @@ module Quantify
     # of the other.
     #
     def self.ratio(unit,other_unit)
-      unit = Unit.for unit
+      unit       = Unit.for unit
       other_unit = Unit.for other_unit
+
       unless unit.is_alternative_for? other_unit
         raise Exceptions::InvalidUnitError, "Units do not represent the same physical quantity"
       end
+
       new_unit = (unit / other_unit)
-      value = 1/new_unit.factor
+      value    = 1/new_unit.factor
+
       Quantity.new(value, new_unit)
     end
 
@@ -236,33 +231,35 @@ module Quantify
     # will return a Unit::SI object with attributes representing a centimetre
     # based on the initialized Unit for :metre and Prefix :centi.
     #
-    def self.for(name_symbol_label_or_object)
-      return name_symbol_label_or_object.clone if name_symbol_label_or_object.is_a? Unit::Base
+    def self.for(unit_descriptor)
+      if unit_descriptor.is_a? Unit::Base
+        return unit_descriptor.clone 
+      end
 
-      return nil if name_symbol_label_or_object.nil? ||
-        ( name_symbol_label_or_object.is_a?(String) && name_symbol_label_or_object.empty? )
+      if unit_descriptor.nil? || ( unit_descriptor.is_a?(String) && unit_descriptor.empty? )
+        return nil 
+      end
 
-      name_symbol_or_label = name_symbol_label_or_object
-
-      unless name_symbol_or_label.is_a?(String) || name_symbol_or_label.is_a?(Symbol)
+      unless unit_descriptor.is_a?(String) || unit_descriptor.is_a?(Symbol)
         raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
       end
-
-      if unit = Unit.match(name_symbol_or_label)
+      
+      if unit = Unit.match(unit_descriptor)
         return unit
-      elsif unit = Unit.parse(name_symbol_or_label)
+      elsif unit = Unit.parse(unit_descriptor)
         return unit
-      elsif unit = Unit.parse(name_symbol_or_label, :iterative => true)
+      elsif unit = Unit.parse(unit_descriptor, :iterative => true)
         return unit
       else
-        raise Exceptions::InvalidUnitError, "Unit '#{name_symbol_or_label}' not known"
+        raise Exceptions::InvalidUnitError, "Unit '#{unit_descriptor}' not known"
       end
+
     end
 
-    def self.match(name_symbol_or_label)
-      return name_symbol_or_label.clone if name_symbol_or_label.is_a? Unit::Base
+    def self.match(unit)
+      return unit.clone if unit.is_a? Unit::Base
 
-      Unit.match_known_unit(name_symbol_or_label) || Unit.match_prefixed_variant(name_symbol_or_label) 
+      Unit.match_known_unit(unit) || Unit.match_prefixed_variant(unit) 
     end
     
     # Parse complex strings into unit.
@@ -319,20 +316,20 @@ module Quantify
     
     protected
     
-    def self.match_known_unit(string_or_symbol)
+    def self.match_known_unit(unit_descriptor)
 
-      descriptor_as_label = Unit.format_unit_attribute(:label, string_or_symbol)
-      if unit = @units[descriptor_as_label]
+      descriptor = Unit.format_unit_attribute(:label, unit_descriptor)
+      if unit = @units[descriptor]
         return unit.clone
       end
 
-      descriptor_as_symbol = Unit.format_unit_attribute(:symbol, string_or_symbol)
-      if label = @unit_symbols[descriptor_as_symbol]
+      descriptor = Unit.format_unit_attribute(:symbol, unit_descriptor)
+      if label = @unit_symbols[descriptor]
         return @units[label].clone
       end
 
-      descriptor_as_name = Unit.format_unit_attribute(:name, string_or_symbol)
-      if label = @unit_names[descriptor_as_name]
+      descriptor = Unit.format_unit_attribute(:name, unit_descriptor)
+      if label = @unit_names[descriptor]
         return @units[label].clone
       end
 
@@ -340,11 +337,11 @@ module Quantify
       nil
     end
     
-    def self.match_prefixed_variant(string_or_symbol)
+    def self.match_prefixed_variant(unit_descriptor)
       [:label, :symbol, :name].each do |attribute|
-        string_or_symbol = Unit.format_unit_attribute(attribute, string_or_symbol)
+        formatted_descriptor = Unit.format_unit_attribute(attribute, unit_descriptor)
 
-        if string_or_symbol =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(#{Unit.terms_for_regex(Unit,:non_prefixed_units,attribute)})\z/
+        if formatted_descriptor =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(#{Unit.terms_for_regex(Unit,:non_prefixed_units,attribute)})\z/
           return Unit.for($2).with_prefix($1).clone
         end
       end
@@ -365,15 +362,13 @@ module Quantify
       units += Unit.parse_numerator_units(numerator)
       units += Unit.parse_denominator_units(denominator) unless denominator.nil?
 
-      puts units
-
       return units
     end
     
     def self.iterative_parse(string, options={})
       units=[]
 
-      is_denominator = false
+      is_denominator   = false
       current_exponent = nil
       
       while term = string.starts_with_valid_unit_term? do
@@ -386,18 +381,24 @@ module Quantify
           is_denominator = true
         else
 
-          unit = Unit.send("parse_#{is_denominator ? 'denominator' : 'numerator'}_units".to_sym, term).first
+          if is_denominator
+            unit = Unit.parse_denominator_units(term).first
+          else
+            unit = Unit.parse_numerator_units(term).first
+          end
+
           unit.index *= current_exponent if current_exponent
+          
           units << unit
           current_exponent = nil
         end
+
         # Remove matched pattern from string for next iteration
         match_length = term.size
-        string = string[match_length, string.length-match_length].strip
+        string       = string[match_length, string.length - match_length].strip
       end
 
-      return [units, string] if options[:remainder] == true
-      return units
+      options[:remainder] == true ? [units, string]: units
     end
     
     def self.parse_unit_and_index(string)
@@ -407,14 +408,18 @@ module Quantify
       unit  = Unit.match($1.to_s)
 
       if unit.is_a? Compound
-        return unit.base_units.each {|base_unit| base_unit.index = base_unit.index * index}
+        unit.base_units.each do |base_unit| 
+          base_unit.index = base_unit.index * index
+        end
       else
-        return CompoundBaseUnit.new($1.to_s, index)
+        CompoundBaseUnit.new($1.to_s, index)
       end
     end
     
     def self.parse_numerator_units(string)
-      # If no middot then names parsed by whitespace
+      # If no middot then units parsed by whitespace
+      # Need to escape multi-word units with underscores
+
       if string =~ /·/
         num_units = string.split("·")
       else
@@ -436,30 +441,30 @@ module Quantify
     # standardize query strings or symbols into canonical form for unit names,
     # symbols and labels
     #
-    def self.format_unit_attribute(attribute, string_or_symbol)
-      string_or_symbol = case attribute
-        when :symbol then string_or_symbol.remove_underscores
-        when :name   then string_or_symbol.remove_underscores.singularize.downcase
-        else string_or_symbol.to_s
+    def self.format_unit_attribute(attribute, unit_descriptor)
+      unit_descriptor = case attribute
+        when :symbol then unit_descriptor.remove_underscores
+        when :name   then unit_descriptor.remove_underscores.singularize.downcase
+        else              unit_descriptor.to_s
       end
 
       Unit.use_superscript_characters? ?
-        string_or_symbol.with_superscript_characters : string_or_symbol.without_superscript_characters
+        unit_descriptor.with_superscript_characters : unit_descriptor.without_superscript_characters
     end
     
     # Return a list of unit names which are multi-word
     def self.multi_word_unit_names
-      Unit.unit_names.keys.map {|name| name if name.word_count > 1 }.compact
+      Unit.unit_names.keys.map { |name| name if name.word_count > 1 }.compact
     end
     
     # Return a list of pluralised unit names which are multi-word
     def self.multi_word_unit_pluralized_names
-      multi_word_unit_names.map {|name| name.pluralize }
+      multi_word_unit_names.map { |name| name.pluralize }
     end
     
     # Return a list of unit symbols which are multi-word
     def self.multi_word_unit_symbols
-      Unit.unit_symbols.keys.map {|symbol| symbol if symbol.word_count > 1 }.compact
+      Unit.unit_symbols.keys.map { |symbol| symbol if symbol.word_count > 1 }.compact
     end
     
     # Underscore any parts of string which represent multi-word unit identifiers
@@ -484,9 +489,14 @@ module Quantify
     # Returns a list of "|" separated unit identifiers for use as regex
     # alternatives. Lists are constructed by calling 
     def self.terms_for_regex(klass,method,attribute)
-      list = klass.send(method).map { |item| item.send(attribute).gsub("/","\\/").gsub("^","\\^")  }
+
+      # Don't include the unity unit as it has blank name/symbol
+      list = klass.send(method).map do |item| 
+        item.send(attribute).gsub("/","\\/").gsub("^","\\^") unless item.label == 'unity'
+      end.compact
+
       list.map! { |item| item.downcase } if attribute == :name
-      list.sort {|x, y| y.size <=> x.size }.join("|")
+      list.sort { |x, y| y.size <=> x.size }.join("|")
     end
     
     def self.unit_label_regex

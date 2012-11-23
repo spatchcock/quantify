@@ -3,67 +3,41 @@ Quantify
 
 A gem to support physical quantities and unit conversions in Ruby
 
-Licensed under the MIT license (See COPYING file for details)
-
 Author: Andrew Berkeley (andrew.berkeley.is@googlemail.com)
 
-Homepage: https://github.com/spatchcock/quantify
+Homepage: https://github.com/spatchcock/quantify 
 
 
 Quick introduction
 ------------------
+```ruby
+# Operating on quantities
 
-    # Operating on quantities
+12.feet + 12.feet                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "24.0 feet"
 
-    12.feet + 12.feet                   #=> "24.0 feet"
+6.m ** 2                            #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "36.0 m²"
 
-    6.m ** 2                            #=> "36.0 m²"
+100.km / 2.h                        #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "50 kilometers per hour"
 
-    100.km / 2.h                        #=> "50 kilometers per hour"
+5000.L.to_bbl                       #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "31.4490528488754 barrels"
 
-    5000.L.to_bbl                       #=> "31.4490528488754 barrels"
+1.5.lb.to_si.round(2)               #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "0.68 kg"
 
-    1.5.lb.to_si.round(2)               #=> "0.68 kg"
+1.kg < 1.g                          #=> false
 
-    Unit.ratio :kg, :ton                #=> "1016.047 kilograms per long ton"
+Unit.ratio(:kg, :ton)               #=> <Quantify::Quantity:0xb7332bbc ... >
+_.to_s                              #=> "1016.047 kilograms per long ton"
 
-Note: these results are string representations of the actual objects
-which result from these operations, using the Quantity#to_s method which
-renders quantities using either the unit name or symbol.
-
-    # Handling units
-
-    Unit.ton.name                       #=> "long ton"
-
-    Unit.ton.label                      #=> "ton_uk"
-
-    Unit.ton.measures                   #=> "mass"
-
-    Unit.ton.alternatives :name         #=> [ "kilogram",
-                                              "gram",
-                                              "carat",
-                                              "electron mass",
-                                              "grain",
-                                              "hundredweight long",
-                                              "hundredweight short",
-                                              "ounce",
-                                              "pennyweight",
-                                              "pound",
-                                              "short ton",
-                                              "stone",
-                                              "tonne",
-                                              "unified atomic mass" ]
- 
-    Unit.ton.si_unit                    #=> 'kg'
-
-    Unit.ton.dimensions                 #=> <Quantify::Dimensions:0xb75467c8 ... >
-
-    Unit.ton.dimensions.describe        #=> "mass"
-
-    Unit.ton.dimensions.mass            #=> 1
-
-    Unit.ton.dimensions.length          #=> nil
-
+Quantity.new(nil, nil)              #=> <Quantify::Quantity:0xb7332bbc ... >
+_.value                             #=> nil
+_.unit                              #=> <Quantify::Unit::Base:0x007ff622bd9320 ...>
+_.unit.name                         #=> "unity" #== 'unitless' unit
+```
     
 General introduction
 --------------------
@@ -78,74 +52,126 @@ Quantities can be manipulated and operated on, in all of the ways that might be 
 In all cases the results of operations are a changes to the Quantity instance or a new instance of a Quantity object. The new value or unit can be accessed using the #value and #unit attributes, or the #to_s method which renders the quantity in string form.
 
 There are several ways to initialize a quantity object
+```ruby
+long_text = "I travelled 220 miles driving my car and using 0.13 UK gallons per mile of diesel"
 
-    mass = Quantity.new(100,:lb)          #=> <Quantify::Quantity:0xb7332bbc ... >
-    mass = Quantity.new(100,'pound')      #=> <Quantify::Quantity:0xb7332bbc ... >
-    mass = 100.lb                         #=> <Quantify::Quantity:0xb7332bbc ... >
-    mass = 100.pound                      #=> <Quantify::Quantity:0xb7332bbc ... >
-    mass = Quantity.parse "100 lb"        #=> <Quantify::Quantity:0xb7332bbc ... >
-    mass = "100 lb".to_q                  #=> <Quantify::Quantity:0xb7332bbc ... >
+mass = Quantity.new(100,:lb)          #=> <Quantify::Quantity:0xb7332bbc ... >
+mass = Quantity.new(100,'pound')      #=> <Quantify::Quantity:0xb7332bbc ... >
+mass = 100.lb                         #=> <Quantify::Quantity:0xb7332bbc ... >
+mass = 100.pound                      #=> <Quantify::Quantity:0xb7332bbc ... >
+mass = Quantity.parse "100 lb"        #=> [<Quantify::Quantity:0xb7332bbc ... >]
+mass = Quantity.parse long_text       #=> [<Quantify::Quantity:0xb7332bbc ... >, <Quantify::Quantity:0xc564321c ... >]
+mass = "100 lb".to_q                  #=> [<Quantify::Quantity:0xb7332bbc ... >]
+```
 
 Quantity object can be insterrogated for a range of attributes
+```ruby
+mass = 100.pound                      #=> <Quantify::Quantity:0xb7332bbc ... >
 
-    mass.value                            #=> 100.0
-    mass.unit                             #=> <Quantify::Unit::NonSI:0xb7332b08 ... >
-    mass.unit.name                        #=> "pound"
-    mass.unit.symbol                      #=> "lb"
+mass.value                            #=> 100.0
+mass.unit                             #=> <Quantify::Unit::NonSI:0xb7332b08 ... >
+mass.unit.name                        #=> "pound"
+mass.unit.symbol                      #=> "lb"
 
-    # unique identifier, follows JScience
-    mass.unit.label                       #=> "lb"
-    mass.unit.pluralized_name             #=> "pounds"
-    mass.to_s                             #=> "100 lb"
-    mass.to_s(:name)                      #=> "100 pounds"
+mass.unit.label                       #=> "lb" # unique identifier, follows JScience
+mass.unit.pluralized_name             #=> "pounds"
+mass.to_s                             #=> "100 lb"
+mass.to_s(:name)                      #=> "100 pounds"
 
-    # Describe the physical quantity represented by the quantity
-    mass.represents                       #=> "mass"
+mass.represents                       #=> "mass" # Describe the physical quantity represented by the quantity
+mass.unit.measures                    #=> "mass" # Describe the physical quantity described by the unit
+
+mass.unit.alternatives(:name)         #=> [ "kilogram",
+                                      #     "gram",
+                                      #     "carat",
+                                      #     "electron mass",
+                                      #     "grain",
+                                      #     "hundredweight long",
+                                      #     "hundredweight short",
+                                      #     "ounce",
+                                      #     "pennyweight",
+                                      #     "pound",
+                                      #     "short ton",
+                                      #     "stone",
+                                      #     "tonne",
+                                      #     "unified atomic mass" ]
+ 
+mass.unit.si_unit                     #=> 'kg'
+
+mass.unit.dimensions                  #=> <Quantify::Dimensions:0xb75467c8 ... >
+mass.unit.dimensions.describe         #=> "mass"
+mass.unit.dimensions.mass             #=> 1  # index of base dimension 'mass'
+```
 
 Convert a quantity to a different unit
+```ruby
+energy = 100.kWh                      #=> <Quantify::Quantity:0xb7332bbc ... >
+energy.to_s                           #=> "100 kilowatt hours"
+  
+new_energy = energy.to_megajoules     #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
+  
+new_energy = energy.to_MJ             #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
+  
+new_energy = energy.to(:MJ)           #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
 
-    energy = 100.kWh                      #=> "100 kilowatt hours"
-  
-    new_energy = energy.to_megajoules     #=> "360.0 MJ"
-  
-    new_energy = energy.to_MJ             #=> "360.0 MJ"
-  
-    new_energy = energy.to(:MJ)           #=> "360.0 MJ"
-
-    # Initialize a unit object and pass as conversion argument
-    unit = Unit.MJ                        #=> <Quantify::Unit::SI:0xb75c9718 ... >
-    new_energy = energy.to(unit)          #=> "360.0 MJ"
+# Initialize a unit object and pass as conversion argument
+unit = Unit.MJ                        #=> <Quantify::Unit::SI:0xb75c9718 ... >
+new_energy = energy.to(unit)          #=> <Quantify::Quantity:0xb7332bbc ... >
+new_energy.to_s                       #=> "360.0 MJ"
+```
 
 Convert the units of a quantity with a compound unit
+```ruby
+speed = 70.mi/1.h                     #=> <Quantify::Quantity:0xb7332bbc ... >
+speed.to_s                            #=> "70.0 mi/h"
 
-    speed = 70.mi/1.h                     #=> "70.0 mi/h"
+speed_in_kms = speed.to_km            #=> <Quantify::Quantity:0xb7332bbc ... >
+speed_in_kms.to_s                     #=> "112.65408 km/h"
 
-    speed_in_kms = speed.to_km            #=> "112.65408 km/h"
-
-    speed_in_mins = speed_in_kms.to_min   #=> "1.877568 km/min"
+speed_in_mins = speed_in_kms.to_min   #=> <Quantify::Quantity:0xb7332bbc ... >
+speed_in_mins.to_s                    #=> "1.877568 km/min"
+```
 
 Convert a quantity to the corresponding SI unit
+```ruby
+energy = 100.kWh                      #=> <Quantify::Quantity:0xb7332bbc ... >
+energy.to_s                           #=> "100 kWh"
 
-    energy = 100.kWh                      #=> "100 kWh"
-    si = quantity.to_si                   #=> "360000000.0 J"
+si = quantity.to_si                   #=> <Quantify::Quantity:0xb7332bbc ... >
+si.to_s                               #=> "360000000.0 J"
+```
 
 Operate on a quantity
+```ruby
+mass = 10.kg * 3                      #=> <Quantify::Quantity:0xb7332bbc ... >
+mass.to_s                             #=> "30.0 kg"
 
-    mass = 10.kg * 3                      #=> "30.0 kg"
+distance = 100.light_years / 20       #=> <Quantify::Quantity:0xb7332bbc ... >
+distance.to_s                         #=> "5.0 ly"
 
-    distance = 100.light_years / 20       #=> "5.0 ly"
+area = 10.m * 10.m                    #=> <Quantify::Quantity:0xb7332bbc ... >
+area.to_s                             #=> "100.0 square metres"
 
-    area = 10.m * 10.m                    #=> "100.0 square metres"
+speed = 250.mi / 3.h                  #=> <Quantify::Quantity:0xb7332bbc ... >
+speed.to_s                            #=> "83.3333333333333 miles per hour"
 
-    speed = 250.mi / 3.h                  #=> "83.3333333333333 miles per hour"
+speed = 70.mi/1.h                     #=> <Quantify::Quantity:0xb7332bbc ... >
+time = 0.5.h                          #=> <Quantify::Quantity:3xf3472hjc ... >
+distance = speed * time               #=> <Quantify::Quantity:7d7f8g9d5g ... >
+distance.to_s                         #=> "35.0 mi"
+```
 
-    speed = 70.mi/1.h                     #=> <Quantify::Quantity:0xb7332bbc ... >
-    time = 0.5.h                          #=> <Quantify::Quantity:3xf3472hjc ... >
-    distance = speed * time               #=> <Quantify::Quantity:7d7f8g9d5g ... >
-    distance.to_s                         #=> "35.0 mi"
+Compare quantities
+```ruby
+1.kg < 1.g                          #=> false
+1.kg > 1.g                          #=> true
 
-Note: all of the above results are string representations of the actual
-objects which result from these operations.
+# Comparisons only valid if quantities are of same dimension
+1.kg < 1.m                          #=> <Quantify::Exceptions::InvalidArgumentError ... >
+```
 
 Additional operations
 ---------------------
@@ -157,18 +183,21 @@ Units are not automatically cancelled or rationalized (made consistent). This is
 and the user may not necessarily prefer a conversion into consistent mass units (e.g. g/g or t/t). Therefore, the following methods are available...
 
 Where units representing the same physical quantity appear together, they can be made consistent by simply converting to the unit which is desired:
-    
-    area = 12.yd * 36.ft                  #=> <Quantify::Quantity:0xb7332bbc ... >
-    area.to_s                             #=> "432.0 yd ft"
-    area.to_yd
-    area.to_s                             #=> "144.0 yd²"
+```ruby
+area = 12.yd * 36.ft                  #=> <Quantify::Quantity:0xb7332bbc ... >
+area.to_s                             #=> "432.0 yd ft"
+
+area = area.to_yd                     #=> <Quantify::Quantity:0xb7332bbc ... >
+area.to_s                             #=> "144.0 yd²"
+```
 
 Alternatively, all units within the numerator and denominator respectively can be standardized:
-
-    quantity = (12.ft*8.mi)/(1.s*8.min)
-    quantity.to_s                         #=> 12.0 ft mi/s min
-    quantity.rationalize_units!
-    quantity.to_s                         #=> 1056.0 ft²/s²
+```ruby
+quantity = (12.ft*8.mi)/(1.s*8.min)   #=> <Quantify::Quantity:0xb7332bbc ... >
+quantity.to_s                         #=> "12.0 ft mi/s min"
+quantity.rationalize_units!
+quantity.to_s                         #=> "1056.0 ft²/s²"
+```
 
 A quantity with arbitrary cancelable units can be cancelled manually:
 
@@ -178,3 +207,21 @@ A quantity with arbitrary cancelable units can be cancelled manually:
     quantity.to_s                         #=> "746496.0 m^4"
 
 Note: there are more comprehensive and flexible methods for manupulating compound units available as part of of the class Unit::Compound. These can be used to convert a conpound unit into the precise form required. If such an approach is used, any quantity object can be converted to the new form by simply passing the new unit object into the Quantity#to method.
+
+Contributing
+============
+
+If you find a bug or think that you improve on the code, feel free to contribute.
+
+You can:
+
+* Send the author a message (andrew.berkeley.is@googlemail.com)
+* Create an issue
+* Fork the project and submit a pull request.
+
+License
+=======
+
+© Copyright 2012 Andrew Berkeley.
+
+Licensed under the MIT license (See COPYING file for details)

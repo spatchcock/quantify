@@ -74,7 +74,7 @@ module Quantify
         class_eval(&block) if block
       end
       
-      attr_reader :name, :symbol, :label, :factor, :dimensions
+      attr_reader :name, :symbol, :label, :j_science, :factor, :dimensions
       attr_reader :acts_as_alternative_unit, :acts_as_equivalent_unit
       attr_accessor :base_unit, :prefix
 
@@ -112,20 +112,22 @@ module Quantify
       #
       def initialize(options=nil,&block)
         @acts_as_alternative_unit = true
-        @acts_as_equivalent_unit = false
-        self.factor = 1.0
-        self.symbol = nil
-        self.label = nil
-        self.name = nil
+        @acts_as_equivalent_unit  = false
+        self.factor    = 1.0
+        self.symbol    = nil
+        self.label     = nil
+        self.name      = nil
         self.base_unit = nil
-        self.prefix = nil
+        self.prefix    = nil
+
         if options.is_a? Hash
           self.dimensions = options[:dimensions] || options[:physical_quantity] if options[:dimensions] || options[:physical_quantity] 
-          self.factor = options[:factor] if options[:factor]
-          self.name = options[:name] if options[:name]
-          self.symbol = options[:symbol] if options[:symbol]
-          self.label = options[:label] if options[:label]
+          self.factor     = options[:factor] if options[:factor]
+          self.name       = options[:name]   if options[:name]
+          self.symbol     = options[:symbol] if options[:symbol]
+          self.label      = options[:label]  if options[:label]
         end
+
         block.call(self) if block_given?
         valid?
       end
@@ -182,13 +184,19 @@ module Quantify
         @label = Unit.use_superscript_characters? ? label.with_superscript_characters : label.without_superscript_characters
       end
 
+      def j_science=(j_science)
+        j_science = j_science.to_s.gsub(" ","_")
+        @j_science = Unit.use_superscript_characters? ? j_science.with_superscript_characters : j_science.without_superscript_characters
+      end
+
       # Refresh the name, symbol and label attributes of self with respect to the
       # configuration found in Quantify.use_superscript_characters?
       #
       def refresh_attributes
-        self.name = name
-        self.symbol = symbol
-        self.label = label
+        self.name      = name
+        self.symbol    = symbol
+        self.label     = label
+        self.j_science = j_science
       end
 
       def factor=(factor)
@@ -377,6 +385,7 @@ module Quantify
           self.send(attr) == other.send(attr)
         end
       end
+      alias :== :is_equivalent_to?
 
       # Check if unit has the identity as another, i.e. the same label. This is
       # used to determine if a unit with the same accessors already exists in
