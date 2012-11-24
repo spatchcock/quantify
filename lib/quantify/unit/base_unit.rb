@@ -113,19 +113,22 @@ module Quantify
       def initialize(options=nil,&block)
         @acts_as_alternative_unit = true
         @acts_as_equivalent_unit  = false
+
         self.factor    = 1.0
         self.symbol    = nil
         self.label     = nil
         self.name      = nil
+        self.j_science = nil
         self.base_unit = nil
         self.prefix    = nil
 
         if options.is_a? Hash
-          self.dimensions = options[:dimensions] || options[:physical_quantity] if options[:dimensions] || options[:physical_quantity] 
-          self.factor     = options[:factor] if options[:factor]
-          self.name       = options[:name]   if options[:name]
-          self.symbol     = options[:symbol] if options[:symbol]
-          self.label      = options[:label]  if options[:label]
+          self.dimensions = options[:dimensions] if options[:dimensions]
+          self.factor     = options[:factor]     if options[:factor]
+          self.name       = options[:name]       if options[:name]
+          self.symbol     = options[:symbol]     if options[:symbol]
+          self.label      = options[:label]      if options[:label]
+          self.j_science  = options[:j_science]  if options[:j_science]
         end
 
         block.call(self) if block_given?
@@ -153,7 +156,7 @@ module Quantify
       # case sensitive (retrieving units by name can use any or mixed cases).
       #
       def name=(name)
-        name = name.to_s.remove_underscores.singularize
+        name  = name.to_s.remove_underscores.singularize
         @name = Unit.use_superscript_characters? ? name.with_superscript_characters : name.without_superscript_characters
       end
 
@@ -166,7 +169,7 @@ module Quantify
       # therefore symbols ARE case senstive.
       #
       def symbol=(symbol)
-        symbol = symbol.to_s.remove_underscores
+        symbol  = symbol.to_s.remove_underscores
         @symbol = Unit.use_superscript_characters? ? symbol.with_superscript_characters : symbol.without_superscript_characters
       end
 
@@ -180,8 +183,7 @@ module Quantify
       # Labels are a unique consistent reference and are therefore case senstive.
       #
       def label=(label)
-        label = label.to_s.gsub(" ","_")
-        @label = Unit.use_superscript_characters? ? label.with_superscript_characters : label.without_superscript_characters
+        @label = label.to_s.gsub(" ","_").without_superscript_characters.to_sym
       end
 
       def j_science=(j_science)
@@ -434,12 +436,15 @@ module Quantify
 
       def valid?
         return true if valid_descriptors? && valid_dimensions?
-        raise Exceptions::InvalidArgumentError, "Unit definition must include a name, a symbol, a label and physical quantity"
+        raise Exceptions::InvalidArgumentError, "Unit definition must include a name, a symbol, a label and dimension"
       end
 
       def valid_descriptors?
         return true if is_dimensionless?
-        [:name, :symbol, :label].all? do |attr|
+        #
+        return false unless label.is_a?(Symbol)
+
+        [:name, :symbol].all? do |attr|
           attribute = send(attr)
           attribute.is_a?(String) && !attribute.empty?
         end
@@ -569,6 +574,7 @@ module Quantify
           new_unit.factor     = prefix.factor * unit.factor
           new_unit.symbol     = "#{prefix.symbol}#{unit.symbol}"
           new_unit.label      = "#{prefix.symbol}#{unit.label}"
+          new_unit.j_science  = "#{prefix.symbol}#{unit.j_science}"
         end
       end
 

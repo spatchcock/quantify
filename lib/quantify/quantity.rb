@@ -124,7 +124,7 @@ module Quantify
     # a unit. The unit can be a an instance of Unit::Base or the name, symbol or
     # JScience label of a known (or derivable through know units and prefixes)
     # unit
-    def initialize(value, unit = 'unity')
+    def initialize(value, unit = nil)
       if value
         @value = Float(value)
       else
@@ -134,7 +134,7 @@ module Quantify
       if unit
         @unit = Unit.for(unit)
       else
-        @unit = Unit.for('unity')
+        @unit = Unit.dimensionless
       end
     end
 
@@ -155,14 +155,15 @@ module Quantify
     # Returns a string representation of the quantity, using the unit symbol
     def to_s format=:symbol
       if format == :name
-        if @value == 1 || @value == -1
-          "#{@value} #{@unit.name}"
-        else
-          "#{@value} #{@unit.pluralized_name}"
-        end
+        unit_string = @value == 1 || @value == -1 ? @unit.name : @unit.pluralized_name 
       else
-        "#{@value} #{@unit.send format}"
+        unit_string = @unit.send format 
       end
+
+      string =  "#{@value}"
+      string += " #{unit_string}" unless unit_string.empty?
+
+      string
     end
     
     def inspect

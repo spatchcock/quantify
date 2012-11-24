@@ -34,32 +34,48 @@ describe Unit do
         Unit.use_superscript_characters?.should be_true
       end
 
-      it "should use superspt characters for powers of 2 and 3 by default" do
+      it "should use superscript characters for powers of 2 and 3 by default" do
         Unit.use_superscript_characters?.should be_true
-        Unit.cubic_metre.label.should eql 'm³'
-        Unit.square_metre.label.should eql 'm²'
-        (Unit.m**2).label.should eql 'm²'
-        (Unit.kg**3).label.should eql 'kg³'
+        Unit.cubic_metre.label.should eql :"m^3"
+        Unit.square_metre.label.should eql :"m^2"
+        (Unit.m**2).label.should eql :"m^2"
+        (Unit.kg**3).label.should eql :"kg^3"
+
+        Unit.cubic_metre.j_science.should eql 'm³'
+        Unit.square_metre.j_science.should eql 'm²'
+        (Unit.m**2).j_science.should eql 'm²'
+        (Unit.kg**3).j_science.should eql 'kg³'
+
         unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
-        unit.label.should eql 'm²·K²/s³'
+        unit.label.should eql :'m^2·K^2/s^3'
+        unit.j_science.should eql 'm²·K²/s³'
+
         unit = unit*Unit.m
-        unit.label.should eql 'm³·K²/s³'
+        unit.label.should eql :'m^3·K^2/s^3'
+        unit.j_science.should eql 'm³·K²/s³'
+        
         unit = unit*Unit.m
-        unit.label.should eql 'm^4·K²/s³'
+        unit.label.should eql :'m^4·K^2/s^3'
+        unit.j_science.should eql 'm^4·K²/s³'
       end
       
       it "should recognize and get unit with alternative syntax" do
-        Unit.for("m^2").label.should eql 'm²'
-        Unit.for("km^2").label.should eql 'km²'
-        Unit.for("Gg^3").label.should eql 'Gg³'
-        (Unit.Gg**3).label.should eql 'Gg³'
+        Unit.for("m^2").j_science.should eql 'm²'
+        Unit.for("km^2").j_science.should eql 'km²'
+        Unit.for("Gg^3").j_science.should eql 'Gg³'
+        (Unit.Gg**3).j_science.should eql 'Gg³'
       end
 
       it "parsing complex unit strings with any syntax should work" do
-        Unit.parse("m^4·K²/s³").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K²/s³").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K^2/s^3").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K^2 s^-3").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4·K²/s³").label.should eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K²/s³").label.should eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K^2/s^3").label.should eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K^2 s^-3").label.should eql :'m^4·K^2/s^3'
+
+        Unit.parse("m^4·K²/s³").j_science.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K²/s³").j_science.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2/s^3").j_science.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2 s^-3").j_science.should eql 'm^4·K²/s³'
 
         Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K²/s³'
         Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K²/s³'
@@ -77,7 +93,7 @@ describe Unit do
     describe "explicitly turning off superscript characters" do
 
       before :all do
-        Unit.use_superscript_characters=false
+        Unit.use_superscript_characters = false
       end
 
       after :all do
@@ -89,40 +105,60 @@ describe Unit do
       end
 
       it "should NOT use superscript characters for powers of 2 and 3" do
-        Unit.cubic_metre.label.should eql 'm^3'
-        Unit.square_metre.label.should eql 'm^2'
-        (Unit.m**2).label.should eql 'm^2'
-        (Unit.kg**3).label.should eql 'kg^3'
+        Unit.cubic_metre.label.should eql :'m^3'
+        Unit.square_metre.label.should eql :'m^2'
+        (Unit.m**2).label.should eql :'m^2'
+        (Unit.kg**3).label.should eql :'kg^3'
+
+        Unit.cubic_metre.j_science.should eql 'm^3'
+        Unit.square_metre.j_science.should eql 'm^2'
+        (Unit.m**2).j_science.should eql 'm^2'
+        (Unit.kg**3).j_science.should eql 'kg^3'
+        
         unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
-        unit.label.should eql 'm^2·K^2/s^3'
+        unit.label.should eql :'m^2·K^2/s^3'
+        unit.j_science.should eql 'm^2·K^2/s^3'
+        
         unit = unit*Unit.m
-        unit.label.should eql 'm^3·K^2/s^3'
+        unit.label.should eql :'m^3·K^2/s^3'
+        unit.j_science.should eql 'm^3·K^2/s^3'
+        
         unit = unit*Unit.m
-        unit.label.should eql 'm^4·K^2/s^3'
+        unit.label.should eql :'m^4·K^2/s^3'
+        unit.j_science.should eql 'm^4·K^2/s^3'
       end
 
       it "should recognize and get unit with alternative syntax" do
-        Unit.for("m²").label.should eql "m^2"
-        Unit.for('km²').label.should eql "km^2"
-        Unit.for('Gg³').label.should eql "Gg^3"
-        (Unit.Gg**3).label.should eql "Gg^3"
+        Unit.for("m²").label.should  eql :"m^2"
+        Unit.for('km²').label.should eql :"km^2"
+        Unit.for('Gg³').label.should eql :"Gg^3"
+        (Unit.Gg**3).label.should    eql :"Gg^3"
+
+        Unit.for("m²").j_science.should  eql "m^2"
+        Unit.for('km²').j_science.should eql "km^2"
+        Unit.for('Gg³').j_science.should eql "Gg^3"
+        (Unit.Gg**3).j_science.should    eql "Gg^3"
       end
 
       it "parsing complex unit strings with any syntax should work" do
-        Unit.parse("m^4·K²/s³").label.should eql "m^4·K^2/s^3"
-        Unit.parse("m^4 K²/s³").label.should eql "m^4·K^2/s^3"
-        Unit.parse("m^4 K^2/s^3").label.should eql "m^4·K^2/s^3"
-        Unit.parse("m^4 K^2 s^-3").label.should eql "m^4·K^2/s^3"
+        Unit.parse("m^4·K²/s³").label.should    eql :"m^4·K^2/s^3"
+        Unit.parse("m^4 K²/s³").label.should    eql :"m^4·K^2/s^3"
+        Unit.parse("m^4 K^2/s^3").label.should  eql :"m^4·K^2/s^3"
+        Unit.parse("m^4 K^2 s^-3").label.should eql :"m^4·K^2/s^3"
 
+        Unit.parse("m^4·K²/s³").j_science.should    eql "m^4·K^2/s^3"
+        Unit.parse("m^4 K²/s³").j_science.should    eql "m^4·K^2/s^3"
+        Unit.parse("m^4 K^2/s^3").j_science.should  eql "m^4·K^2/s^3"
+        Unit.parse("m^4 K^2 s^-3").j_science.should eql "m^4·K^2/s^3"
 
-        Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K^2/s^3'
-        Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K^2/s^3'
-        Unit.parse("m^4 K^2/s^3").symbol.should eql 'm^4 K^2/s^3'
+        Unit.parse("m^4·K²/s³").symbol.should    eql 'm^4 K^2/s^3'
+        Unit.parse("m^4 K²/s³").symbol.should    eql 'm^4 K^2/s^3'
+        Unit.parse("m^4 K^2/s^3").symbol.should  eql 'm^4 K^2/s^3'
         Unit.parse("m^4 K^2 s^-3").symbol.should eql 'm^4 K^2/s^3'
 
-        Unit.parse("m^4·K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
-        Unit.parse("m^4 K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
-        Unit.parse("m^4 K^2/s^3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4·K²/s³").name.should    eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K²/s³").name.should    eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2/s^3").name.should  eql 'metre to the 4th power square kelvin per cubic second'
         Unit.parse("m^4 K^2 s^-3").name.should eql 'metre to the 4th power square kelvin per cubic second'
       end
 
@@ -140,39 +176,60 @@ describe Unit do
       end
 
       it "should use superscript characters for powers of 2 and 3" do
-        Unit.cubic_metre.label.should eql 'm³'
-        Unit.square_metre.label.should eql 'm²'
-        (Unit.m**2).label.should eql 'm²'
-        (Unit.kg**3).label.should eql 'kg³'
+        Unit.cubic_metre.label.should  eql :'m^3'
+        Unit.square_metre.label.should eql :'m^2'
+        (Unit.m**2).label.should       eql :'m^2'
+        (Unit.kg**3).label.should      eql :'kg^3'
+
+        Unit.cubic_metre.j_science.should  eql 'm³'
+        Unit.square_metre.j_science.should eql 'm²'
+        (Unit.m**2).j_science.should       eql 'm²'
+        (Unit.kg**3).j_science.should      eql 'kg³'
+
         unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
-        unit.label.should eql 'm²·K²/s³'
+        unit.label.should eql :'m^2·K^2/s^3'
+        unit.j_science.should eql 'm²·K²/s³'
+
         unit = unit*Unit.m
-        unit.label.should eql 'm³·K²/s³'
+        unit.label.should eql :'m^3·K^2/s^3'
+        unit.j_science.should eql 'm³·K²/s³'
+
         unit = unit*Unit.m
-        unit.label.should eql 'm^4·K²/s³'
+        unit.label.should eql :'m^4·K^2/s^3'
+        unit.j_science.should eql 'm^4·K²/s³'
       end
       
       it "should recognize and get unit with alternative syntax" do
-        Unit.for("m^2").label.should eql 'm²'
-        Unit.for("km^2").label.should eql 'km²'
-        Unit.for("Gg^3").label.should eql 'Gg³'
-        (Unit.Gg**3).label.should eql 'Gg³'
+        Unit.for("m^2").label.should  eql :'m^2'
+        Unit.for("km^2").label.should eql :'km^2'
+        Unit.for("Gg^3").label.should eql :'Gg^3'
+        (Unit.Gg**3).label.should     eql :'Gg^3'
+
+        Unit.for("m^2").j_science.should  eql "m²"
+        Unit.for('km^2').j_science.should eql "km²"
+        Unit.for('Gg^3').j_science.should eql "Gg³"
+        (Unit.Gg**3).j_science.should     eql "Gg³"
       end
 
       it "parsing complex unit strings with any syntax should work" do
-        Unit.parse("m^4·K²/s³").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K²/s³").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K^2/s^3").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K^2 s^-3").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4·K²/s³").label.should    eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K²/s³").label.should    eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K^2/s^3").label.should  eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K^2 s^-3").label.should eql :'m^4·K^2/s^3'
 
-        Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K²/s³'
-        Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K²/s³'
-        Unit.parse("m^4 K^2/s^3").symbol.should eql 'm^4 K²/s³'
+        Unit.parse("m^4·K²/s³").j_science.should    eql 'm^4·K²/s³'
+        Unit.parse("m^4 K²/s³").j_science.should    eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2/s^3").j_science.should  eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2 s^-3").j_science.should eql 'm^4·K²/s³'
+
+        Unit.parse("m^4·K²/s³").symbol.should    eql 'm^4 K²/s³'
+        Unit.parse("m^4 K²/s³").symbol.should    eql 'm^4 K²/s³'
+        Unit.parse("m^4 K^2/s^3").symbol.should  eql 'm^4 K²/s³'
         Unit.parse("m^4 K^2 s^-3").symbol.should eql 'm^4 K²/s³'
 
-        Unit.parse("m^4·K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
-        Unit.parse("m^4 K²/s³").name.should eql 'metre to the 4th power square kelvin per cubic second'
-        Unit.parse("m^4 K^2/s^3").name.should eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4·K²/s³").name.should    eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K²/s³").name.should    eql 'metre to the 4th power square kelvin per cubic second'
+        Unit.parse("m^4 K^2/s^3").name.should  eql 'metre to the 4th power square kelvin per cubic second'
         Unit.parse("m^4 K^2 s^-3").name.should eql 'metre to the 4th power square kelvin per cubic second'
       end
 
@@ -190,30 +247,51 @@ describe Unit do
       end
 
       it "should use superscript characters for powers of 2 and 3" do
-        Unit.cubic_metre.label.should eql 'm³'
-        Unit.square_metre.label.should eql 'm²'
-        (Unit.m**2).label.should eql 'm²'
-        (Unit.kg**3).label.should eql 'kg³'
+        Unit.cubic_metre.label.should  eql :'m^3'
+        Unit.square_metre.label.should eql :'m^2'
+        (Unit.m**2).label.should       eql :'m^2'
+        (Unit.kg**3).label.should      eql :'kg^3'
+
+        Unit.cubic_metre.j_science.should  eql 'm³'
+        Unit.square_metre.j_science.should eql 'm²'
+        (Unit.m**2).j_science.should       eql 'm²'
+        (Unit.kg**3).j_science.should      eql 'kg³'
+
         unit = (Unit.m*Unit.m*Unit.K*Unit.K)/(Unit.s**3)
-        unit.label.should eql 'm²·K²/s³'
+        unit.label.should eql :'m^2·K^2/s^3'
+        unit.j_science.should eql 'm²·K²/s³'
+
         unit = unit*Unit.m
-        unit.label.should eql 'm³·K²/s³'
+        unit.label.should eql :'m^3·K^2/s^3'
+        unit.j_science.should eql 'm³·K²/s³'
+        
         unit = unit*Unit.m
-        unit.label.should eql 'm^4·K²/s³'
+        unit.label.should eql :'m^4·K^2/s^3'
+        unit.j_science.should eql 'm^4·K²/s³'
       end
 
       it "should recognize and get unit with alternative syntax" do
-        Unit.for("m^2").label.should eql 'm²'
-        Unit.for("km^2").label.should eql 'km²'
-        Unit.for("Gg^3").label.should eql 'Gg³'
-        (Unit.Gg**3).label.should eql 'Gg³'
+        Unit.for("m^2").label.should  eql :'m^2'
+        Unit.for("km^2").label.should eql :'km^2'
+        Unit.for("Gg^3").label.should eql :'Gg^3'
+        (Unit.Gg**3).label.should     eql :'Gg^3'
+
+        Unit.for("m^2").j_science.should  eql 'm²'
+        Unit.for("km^2").j_science.should eql 'km²'
+        Unit.for("Gg^3").j_science.should eql 'Gg³'
+        (Unit.Gg**3).j_science.should     eql 'Gg³'
       end
 
       it "parsing complex unit strings with any syntax should work" do
-        Unit.parse("m^4·K²/s³").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K²/s³").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K^2/s^3").label.should eql 'm^4·K²/s³'
-        Unit.parse("m^4 K^2 s^-3").label.should eql 'm^4·K²/s³'
+        Unit.parse("m^4·K²/s³").label.should    eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K²/s³").label.should    eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K^2/s^3").label.should  eql :'m^4·K^2/s^3'
+        Unit.parse("m^4 K^2 s^-3").label.should eql :'m^4·K^2/s^3'
+
+        Unit.parse("m^4·K²/s³").j_science.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K²/s³").j_science.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2/s^3").j_science.should eql 'm^4·K²/s³'
+        Unit.parse("m^4 K^2 s^-3").j_science.should eql 'm^4·K²/s³'
 
         Unit.parse("m^4·K²/s³").symbol.should eql 'm^4 K²/s³'
         Unit.parse("m^4 K²/s³").symbol.should eql 'm^4 K²/s³'
@@ -231,13 +309,13 @@ describe Unit do
     describe "identifier case" do
 
       it "should ignore case when initialising units by name" do
-        Unit.METRE.label.should eql 'm'
-        Unit.metre.label.should eql 'm'
-        Unit.KiLoMeTrE.label.should eql 'km'
+        Unit.METRE.label.should eql :m
+        Unit.metre.label.should eql :m
+        Unit.KiLoMeTrE.label.should eql :km
       end
 
       it "should NOT ignore case when initialising units by symbol" do
-        Unit.m.label.should eql 'm'
+        Unit.m.label.should eql :'m'
         lambda{Unit.M}.should raise_error
         
         Unit.Gg.name.should eql 'gigagram'
@@ -245,7 +323,7 @@ describe Unit do
       end
 
       it "should NOT ignore case when initialising units by label" do
-        Unit.ton_us.label.should eql 'ton_us'
+        Unit.ton_us.label.should eql :ton_us
         lambda{Unit.TON_US}.should raise_error
       end
 
@@ -515,11 +593,6 @@ describe Unit do
       Unit.psi.loaded?.should == true
     end
 
-    it "should allow dimensions to be specified with :physical_quantity key" do
-      unit = Unit::Base.new :physical_quantity => :mass, :name => 'gigapile', :symbol => 'Gpl', :label => 'Gpl'
-      unit.class.should == Quantify::Unit::Base
-    end
-
     it "should allow dimensions to be specified with :dimensions key" do
       unit = Unit::Base.new :dimensions => :mass, :name => 'gigapile', :symbol => 'Gpl', :label => 'Gpl'
       unit.class.should == Quantify::Unit::Base
@@ -604,10 +677,10 @@ describe Unit do
 
     it "should change the label of canonical unit representation" do
       unit = Unit.cubic_metre
-      unit.label.should eql "m³"
+      unit.label.should eql :"m^3"
       unit.canonical_label = "m3"
-      unit.label.should eql "m3"
-      Unit.cubic_metre.label.should eql "m3"
+      unit.label.should eql :m3
+      Unit.cubic_metre.label.should eql :m3
     end
 
     it "should configure on canonical unit" do
@@ -628,9 +701,9 @@ describe Unit do
       unit = Unit.barn.configure_as_canonical do |unit|
         unit.label = 'BARN'
       end
-      unit.label.should eql 'BARN'
+      unit.label.should eql :BARN
       unit.symbol.should eql 'b'
-      Unit.barn.label.should eql 'BARN'
+      Unit.barn.label.should eql :BARN
       (Unit.BARN).should be_a Unit::Base
 
       unit = Unit.barn.configure_as_canonical do |unit|
@@ -642,9 +715,9 @@ describe Unit do
       unit = Unit.barn.configure_as_canonical do |unit|
         unit.canonical_label = 'BARN'
       end
-      unit.label.should eql 'BARN'
+      unit.label.should eql :BARN
       unit.symbol.should eql 'b'
-      Unit.barn.label.should eql 'BARN'
+      Unit.barn.label.should eql :BARN
       (Unit.BARN).should be_a Unit::Base
 
       unit = Unit.barn.configure_as_canonical do |unit|
@@ -657,19 +730,19 @@ describe Unit do
   describe "unit initialization" do
 
     it "should load self into module variable with instance method" do
-      unit = Unit::Base.new :physical_quantity => :mass, :name => 'megalump', :symbol => 'Mlp', :label => 'Mlp'
+      unit = Unit::Base.new :dimensions => :mass, :name => 'megalump', :symbol => 'Mlp', :label => 'Mlp'
       unit.load
       Unit.units_by_symbol.should include 'Mlp'
       Unit.units_by_name.should include 'megalump'
     end
 
     it "should create unit" do
-      unit = Unit::NonSI.new :name => 'a name', :physical_quantity => :energy, :factor => 10, :symbol => 'anm', :label => 'a_name'
+      unit = Unit::NonSI.new :name => 'a name', :dimensions => :energy, :factor => 10, :symbol => 'anm', :label => 'a_name'
       unit.class.should == Unit::NonSI
     end
 
     it "should throw error when creating unit with no name" do
-      lambda{unit = Unit::NonSI.new :physical_quantity => :energy, :factor => 10}.should raise_error
+      lambda{unit = Unit::NonSI.new :dimensions => :energy, :factor => 10}.should raise_error
     end
 
     it "should throw error when creating unit with no physical quantity" do
@@ -677,7 +750,7 @@ describe Unit do
     end
 
     it "should load unit into module array with class method" do
-      unit = Unit::NonSI.load :name => 'a name', :physical_quantity => :energy, :factor => 10, :symbol => 'anm', :label => 'a_name'
+      unit = Unit::NonSI.load :name => 'a name', :dimensions => :energy, :factor => 10, :symbol => 'anm', :label => 'a_name'
       Unit.non_si_units_by_name.should include 'a name'
       Unit.unload(unit)
     end

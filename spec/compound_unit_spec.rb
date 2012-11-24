@@ -112,17 +112,20 @@ describe Unit do
 
     it "should derive correct label for compound unit" do
       unit = (Unit.kg/(Unit.t*Unit.km))
-      unit.label.should == "kg/t·km"
+      unit.label.should == :"kg/t·km"
+      unit.j_science.should == "kg/t·km"
     end
 
     it "should derive correct label for compound unit" do
       unit = 1/Unit.m
-      unit.label.should == "m^-1"
+      unit.label.should == :"m^-1"
+      unit.j_science.should == "m^-1"
     end
 
     it "should derive correct label for compound unit" do
       unit = Unit.MJ*(Unit.m**3)/(Unit.kg**2)
-      unit.label.should == "MJ·m³/kg²"
+      unit.label.should == :"MJ·m^3/kg^2"
+      unit.j_science.should == "MJ·m³/kg²"
     end
 
   end
@@ -261,26 +264,31 @@ describe Unit do
 
     it "should rationalize base units with automatically" do
       unit = Unit.yard*Unit.foot
-      unit.rationalize_base_units!.label.should eql 'yd²'
+      unit.rationalize_base_units!.label.should eql :'yd^2'
+
       unit = Unit.metre*Unit.centimetre/Unit.inch
-      unit.rationalize_base_units!.label.should eql 'm²/m'
-      unit.consolidate_base_units!.label.should eql 'm'
+      unit.rationalize_base_units!.label.should eql :'m^2/m'
+      unit.consolidate_base_units!.label.should eql :m
     end
 
     it "should rationalize base units with specified unit" do
       unit = Unit.yard*Unit.foot
-      unit.rationalize_numerator_and_denominator_units!(:yd).label.should eql 'yd²'
+      unit.rationalize_numerator_and_denominator_units!(:yd).label.should eql :'yd^2'
+
       unit = Unit.metre*Unit.centimetre/Unit.inch
-      unit.rationalize_base_units!(:cm).label.should eql 'cm²/cm'
-      unit.consolidate_base_units!.label.should eql 'cm'
+
+      unit.rationalize_base_units!(:cm).label.should eql :'cm^2/cm'
+      unit.consolidate_base_units!.label.should eql :cm
     end
 
     it "should rationalize only numerator and denominator base units" do
       unit = Unit.yard*Unit.foot
-      unit.rationalize_numerator_and_denominator_units!.label.should eql 'yd²'
+      unit.rationalize_numerator_and_denominator_units!.label.should eql :'yd^2'
+
       unit = Unit.metre*Unit.centimetre/Unit.inch
-      unit.rationalize_numerator_and_denominator_units!.label.should eql 'm²/in'
-      unit.consolidate_base_units!.label.should eql 'm²/in'
+
+      unit.rationalize_numerator_and_denominator_units!.label.should eql :'m^2/in'
+      unit.consolidate_base_units!.label.should eql :'m^2/in'
     end
     
   end

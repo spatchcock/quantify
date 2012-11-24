@@ -27,11 +27,12 @@ class String
   
   def starts_with_valid_unit_term?
     return false unless 
-    term = /\A#{Unit.unit_label_regex}#{Unit::INDEX_REGEX}?/.match(self) || 
+    term = /\A#{Unit.unit_label_regex}#{Unit::INDEX_REGEX}?/.match(self)  || 
            /\A#{Unit.unit_symbol_regex}#{Unit::INDEX_REGEX}?/.match(self) || 
-           /\A#{Unit.unit_name_regex}#{Unit::INDEX_REGEX}?/.match(self)  || 
-           /\A#{Unit::UNIT_DENOMINATOR_REGEX}/.match(self) || 
+           /\A#{Unit.unit_name_regex}#{Unit::INDEX_REGEX}?/.match(self)   || 
+           /\A#{Unit::UNIT_DENOMINATOR_REGEX}/.match(self)                || 
            /\A(#{Unit::UNIT_PREFIX_TERMS_REGEX}|#{Unit::UNIT_SUFFIX_TERMS_REGEX})/i.match(self) 
+           
     return term[0]
   end
 

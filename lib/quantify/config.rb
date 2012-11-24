@@ -16,95 +16,215 @@ Dimensions.configure do
 
   # Base quantities
   load :physical_quantity => 'length',              :length => 1
+
   load :physical_quantity => 'mass',                :mass => 1
+  
   load :physical_quantity => 'time',                :time => 1
+  
   load :physical_quantity => 'electric current',    :electric_current => 1
+  
   load :physical_quantity => 'temperature',         :temperature => 1
+  
   load :physical_quantity => 'luminous intensity',  :luminous_intensity => 1
+  
   load :physical_quantity => 'amount of substance', :amount_of_substance => 1
+  
   load :physical_quantity => 'information',         :information => 1
+  
   load :physical_quantity => 'currency',            :currency => 1
+  
   load :physical_quantity => 'item',                :item => 1
+  
   load :physical_quantity => 'dimensionless'
 
   # Derived quantities
   load :physical_quantity => 'acceleration',                  :length => 1,               :time => -2
+  
   load :physical_quantity => 'area',                          :length => 2
+  
   load :physical_quantity => 'action',                        :length => 2,  :mass => 1,  :time => -1
+  
   load :physical_quantity => 'angular monentum',              :length => 2,  :mass => 1,  :time => -1
+  
   load :physical_quantity => 'conductivity',                  :length => -3, :mass => -1, :time => 3,  :electric_current => 2
+  
   load :physical_quantity => 'density',                       :length => -3, :mass => 1
+  
   load :physical_quantity => 'electric charge',                                           :time => 1,  :electric_current => 1
+  
   load :physical_quantity => 'electric charge_density',       :length => -3,              :time => 1,  :electric_current => 1
+  
   load :physical_quantity => 'electric conductance',          :length => -2, :mass => -1, :time => 3,  :electric_current => 2
+  
   load :physical_quantity => 'electric displacement',         :length => -2,              :time => 1,  :electric_current => 1
+  
   load :physical_quantity => 'electric field strength',       :length => 1,  :mass => 1,  :time => -3, :electric_current => -1
+  
   load :physical_quantity => 'electric polarisability',                      :mass => -1, :time => 4,  :electric_current => 2
+  
   load :physical_quantity => 'electric polarisation',         :length => -2,              :time => 1,  :electric_current => 1
+  
   load :physical_quantity => 'electric potential difference', :length => 2,  :mass => 1,  :time => -3, :electric_current => -1
+  
   load :physical_quantity => 'electric resistance',           :length => 2,  :mass => 1,  :time => -3, :electric_current => -2
+  
   load :physical_quantity => 'electrical capacitance',        :length => -2, :mass => -1, :time => 4,  :electric_current => 2
+  
   load :physical_quantity => 'energy',                        :length => 2,  :mass => 1,  :time => -2
+  
   load :physical_quantity => 'entropy',                       :length => 2,  :mass => 1,  :time => -2, :temperature => -1
+  
   load :physical_quantity => 'force',                         :length => 1,  :mass => 1,  :time => -2
+  
   load :physical_quantity => 'frequency',                                                 :time => -1
+  
   load :physical_quantity => 'heat capacity',                 :length => 2,  :mass => 1,  :time => -2, :temperature => -1
+  
   load :physical_quantity => 'illuminance',                   :length => -2,                           :luminous_intensity => 1
+  
   load :physical_quantity => 'impedance',                     :length => 2,  :mass => 1,  :time => -3, :electric_current => -2
+  
   load :physical_quantity => 'inductance',                    :length => 2,  :mass => 1,  :time => -2, :electric_current => -2
+  
   load :physical_quantity => 'irradiance',                                   :mass => 1,  :time => -3
+  
   load :physical_quantity => 'luminous flux',                                                          :luminous_intensity => 1
+  
   load :physical_quantity => 'magnetic field strength',       :length => -1,                           :electric_current => 1
+  
   load :physical_quantity => 'magnetic flux',                 :length => 2,  :mass => 1,  :time => -2, :electric_current => -1
+  
   load :physical_quantity => 'magnetic flux density',                        :mass => 1,  :time => -2, :electric_current => -1
+  
   load :physical_quantity => 'magnetic dipole moment',        :length => 2,                            :electric_current => 1
+  
   load :physical_quantity => 'magnetic vector potential',     :length => 1,  :mass => 1,  :time => -2, :electric_current => -1
+  
   load :physical_quantity => 'magnetisation',                 :length => -1,                           :electric_current => 1
+  
   load :physical_quantity => 'moment of inertia',             :length => 2,  :mass => 1
+  
   load :physical_quantity => 'momentum',                      :length => 1,  :mass => 1,  :time => -1
+  
   load :physical_quantity => 'number density',                :length => -3,                                                                                                  :item => 1
+  
   load :physical_quantity => 'permeability',                  :length => 1,  :mass => 1,  :time => -2, :electric_current => -2
+  
   load :physical_quantity => 'permittivity',                  :length => -3, :mass => -1, :time => 4,  :electric_current => 2
+  
   load :physical_quantity => 'plane angle'                    # length / length = physical_quantityless
+  
   load :physical_quantity => 'power',                         :length => 2,  :mass => 1,  :time => -3
+  
   load :physical_quantity => 'pressure',                      :length => -1, :mass => 1,  :time => -2
+  
   load :physical_quantity => 'radiation absorbed dose',       :length => 2,               :time => -2
+  
   load :physical_quantity => 'radiation dose equivalent',     :length => 2,               :time => -2
+  
   load :physical_quantity => 'radioactivity',                                             :time => -1
+  
   load :physical_quantity => 'solid angle'                    # area / area = dimensionless
+  
   load :physical_quantity => 'surface tension',                              :mass => 1,  :time => -2
+  
   load :physical_quantity => 'velocity',                      :length => 1,               :time => -1
+  
   load :physical_quantity => 'dynamic viscosity',             :length => -1, :mass => 1,  :time => -1
+  
   load :physical_quantity => 'kinematic viscosity',           :length => 2,               :time => -1
+  
   load :physical_quantity => 'volume',                        :length => 3
+  
   load :physical_quantity => 'energy density',                :length => -1, :mass => 1,  :time => -2
+  
   load :physical_quantity => 'thermal resistance',                           :mass => -1, :time => 3,  :temperature => 1
+  
   load :physical_quantity => 'catalytic activity',                                        :time => -1, :amount_of_substance => 1
 
 end
 
 Unit::Prefix::SI.configure do
 
-  load :name => 'deca',  :symbol => 'da', :factor => 1e1
-  load :name => 'hecto', :symbol => 'h',  :factor => 1e2
-  load :name => 'kilo',  :symbol => 'k',  :factor => 1e3
-  load :name => 'mega',  :symbol => 'M',  :factor => 1e6
-  load :name => 'giga',  :symbol => 'G',  :factor => 1e9
-  load :name => 'tera',  :symbol => 'T',  :factor => 1e12
-  load :name => 'peta',  :symbol => 'P',  :factor => 1e15
-  load :name => 'exa',   :symbol => 'E',  :factor => 1e18
-  load :name => 'zetta', :symbol => 'Z',  :factor => 1e21
-  load :name => 'yotta', :symbol => 'Y',  :factor => 1e24
-  load :name => 'deci',  :symbol => 'd',  :factor => 1e-1
-  load :name => 'centi', :symbol => 'c',  :factor => 1e-2
-  load :name => 'milli', :symbol => 'm',  :factor => 1e-3
-  load :name => 'micro', :symbol => 'μ',  :factor => 1e-6
-  load :name => 'nano',  :symbol => 'n',  :factor => 1e-9
-  load :name => 'pico',  :symbol => 'p',  :factor => 1e-12
-  load :name => 'femto', :symbol => 'f',  :factor => 1e-15
-  load :name => 'atto',  :symbol => 'a',  :factor => 1e-18
-  load :name => 'zepto', :symbol => 'z',  :factor => 1e-21
-  load :name => 'yocto', :symbol => 'y',  :factor => 1e-24
+  load :name   => 'deca',  
+       :symbol => 'da',  
+       :factor => 1e1
+
+  load :name   => 'hecto',
+       :symbol => 'h',
+       :factor => 1e2
+
+  load :name   => 'kilo',
+       :symbol => 'k',
+       :factor => 1e3
+
+  load :name   => 'mega',
+       :symbol => 'M',
+       :factor => 1e6
+
+  load :name   => 'giga',
+       :symbol => 'G',
+       :factor => 1e9
+
+  load :name   => 'tera',
+       :symbol => 'T',
+       :factor => 1e12
+
+  load :name   => 'peta',
+       :symbol => 'P',
+       :factor => 1e15
+
+  load :name   => 'exa',
+       :symbol => 'E',
+       :factor => 1e18
+
+  load :name   => 'zetta',
+       :symbol => 'Z',
+       :factor => 1e21
+
+  load :name   => 'yotta',
+       :symbol => 'Y',
+       :factor => 1e24
+
+  load :name   => 'deci',
+       :symbol => 'd',
+       :factor => 1e-1
+
+  load :name   => 'centi',
+       :symbol => 'c',
+       :factor => 1e-2
+
+  load :name   => 'milli',
+       :symbol => 'm',
+       :factor => 1e-3
+  
+  load :name   => 'micro',
+       :symbol => 'μ',
+       :factor => 1e-6
+
+  load :name   => 'nano',
+       :symbol => 'n',
+       :factor => 1e-9
+
+  load :name   => 'pico',
+       :symbol => 'p',
+       :factor => 1e-12
+
+  load :name   => 'femto',
+       :symbol => 'f',
+       :factor => 1e-15
+
+  load :name   => 'atto',
+       :symbol => 'a',
+       :factor => 1e-18
+
+  load :name   => 'zepto',
+       :symbol => 'z',
+       :factor => 1e-21
+
+  load :name   => 'yocto',
+       :symbol => 'y',
+       :factor => 1e-24
 
 end
 
@@ -120,8 +240,17 @@ end
 
 Unit::Base.configure do
 
-  load :label => :unity,   :name => '',   :dimensions => 'dimensionless', :symbol => '', :j_science => 'unity'
-  load :label => :percent, :name => 'percent', :dimensions => 'dimensionless', :symbol => '%', :j_science => '%'
+  load :label      => :unity,   
+       :name       => '',
+       :dimensions => 'dimensionless',
+       :symbol     => '', 
+       :j_science  => 'unity'
+
+  load :label      => :percent,
+       :name       => 'percent',
+       :dimensions => 'dimensionless',
+       :symbol     => '%',
+       :j_science  => '%'
 
 end
 
@@ -335,16 +464,19 @@ Unit::SI.configure do
   # Define compound units on the basis of SI units
 
   (metre**2).load
+  
   (metre**3).load
+  
   (metre/second).load
+  
   (metre/second**2).load
-
 
   (1/centimetre).configure do |unit|
     unit.name = 'inverse centimetre'
   end.load
 
   (centimetre/second**2).configure do |unit|
+
     unit.name      = 'galileo'
     unit.symbol    = 'Gal'
     unit.label     = 'galileo'
@@ -520,14 +652,14 @@ Unit::NonSI.configure do
        :dimensions => 'energy',
        :factor     => 1054.804,
        :symbol     => 'BTU',
-       :j_science      => 'BTU_FiftyNineF'
+       :j_science  => 'BTU_FiftyNineF'
 
   load :label      => :bu_imp, 
        :name       => 'US bushel',
        :dimensions => 'volume',
        :factor     => 36.36872e-3,
        :symbol     => 'bu (Imp)',
-       :j_science      => 'bu_imp'
+       :j_science  => 'bu_imp'
 
   load :label      => :bu_us, 
        :name       => 'UK bushel',

@@ -198,12 +198,15 @@ module Quantify
         self.symbol     = @base_units.symbol
         self.factor     = @base_units.factor
         self.label      = @base_units.label
+        self.j_science  = @base_units.j_science
+        
         return self
       end
       
       def self.block_for_prefixed_version(prefix,compound)
         base = compound.base_units.first
         base.unit = base.unit.with_prefix(prefix)
+
         return Proc.new do |compound|
           compound.base_units << base
         end

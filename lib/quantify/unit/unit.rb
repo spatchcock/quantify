@@ -318,7 +318,7 @@ module Quantify
     
     def self.match_known_unit(unit_descriptor)
 
-      descriptor = Unit.format_unit_attribute(:label, unit_descriptor)
+      descriptor = Unit.format_unit_attribute(:label, unit_descriptor).to_sym
       if unit = @units[descriptor]
         return unit.clone
       end
@@ -329,8 +329,8 @@ module Quantify
       end
 
       descriptor = Unit.format_unit_attribute(:name, unit_descriptor)
-      if label = @unit_names[descriptor]
-        return @units[label].clone
+      if name = @unit_names[descriptor]
+        return @units[name].clone
       end
 
     rescue
@@ -366,7 +366,7 @@ module Quantify
     end
     
     def self.iterative_parse(string, options={})
-      units=[]
+      units = []
 
       is_denominator   = false
       current_exponent = nil
@@ -492,7 +492,7 @@ module Quantify
 
       # Don't include the unity unit as it has blank name/symbol
       list = klass.send(method).map do |item| 
-        item.send(attribute).gsub("/","\\/").gsub("^","\\^") unless item.label == 'unity'
+        item.send(attribute).to_s.gsub("/","\\/").gsub("^","\\^") unless item.label == :unity
       end.compact
 
       list.map! { |item| item.downcase } if attribute == :name

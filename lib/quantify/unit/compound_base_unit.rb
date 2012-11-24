@@ -47,7 +47,12 @@ module Quantify
       end
 
       def label(reciprocal=false)
-        @unit.label + index_as_string(reciprocal)
+        (@unit.label.to_s + index_as_string(reciprocal)).without_superscript_characters.to_sym
+      end
+
+      def j_science(reciprocal=false)
+        return nil if @unit.j_science.nil?
+        @unit.j_science + index_as_string(reciprocal)
       end
 
       def factor

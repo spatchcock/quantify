@@ -26,6 +26,13 @@ describe Quantity do
     quantity.unit.should == (Unit.for('unity'))
   end
 
+  it "should create a dimensionless quantity" do
+    quantity = Quantity.new 100
+    quantity.value.should eql 100.0
+    quantity.unit.is_dimensionless?.should be_true
+    quantity.to_s.should eql "100.0"
+  end
+
   it "should create a valid instance with standard create and unit name" do
     quantity = Quantity.new 10.0, 'metre'
     quantity.value.should == 10

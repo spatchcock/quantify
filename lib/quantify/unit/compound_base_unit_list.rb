@@ -8,11 +8,12 @@ module Quantify
       # based on <tt>attribute</tt> and <tt>unit_delimiter</tt>.
       #
       def self.attribute_string(units,attribute,unit_delimiter,reciprocal=false)
+
         string = ""
 
         units.each do |base|
           string << unit_delimiter unless string.empty?
-          string << base.send(attribute,reciprocal)
+          string << base.send(attribute,reciprocal).to_s
         end
 
         return string
@@ -192,7 +193,15 @@ module Quantify
       # are present.
       #
       def label
-        attribute_string_with_denominator_syntax(:label, "/", "·")
+        attribute_string_with_denominator_syntax(:label, "/", "·").to_sym
+      end
+
+      def j_science
+        attribute_string_with_denominator_syntax(:j_science, "/", "·") if j_science?
+      end
+
+      def j_science?
+        !any? { |base| base.unit.j_science.nil? }
       end
 
       # Derive the multiplicative factor for the unit based on those of the base
