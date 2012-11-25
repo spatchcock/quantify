@@ -478,7 +478,6 @@ Unit::SI.configure do
     unit.name      = 'galileo'
     unit.symbol    = 'Gal'
     unit.label     = 'galileo'
-    unit.j_science = 'galileo'
   end.load
 
   # add required prefixed units individually
@@ -523,8 +522,7 @@ Unit::NonSI.configure do
        :name       => 'acre',
        :dimensions => 'area',
        :factor     => 4046.8564224,
-       :symbol     => 'acre',
-       :j_science  => 'acre'
+       :symbol     => 'acre'
 
   load :label      => :angstrom,
        :name       => 'angstrom',
@@ -537,15 +535,13 @@ Unit::NonSI.configure do
        :name       => 'arcminute',
        :dimensions => 'plane angle',
        :factor     => Math::PI/10800,
-       :symbol     => '′',
-       :j_science  => '′'
+       :symbol     => '′'
 
   load :label      => :arc_sec, 
        :name       => 'arcsecond',
        :dimensions => 'plane angle',
        :factor     => Math::PI/648000,
-       :symbol     => '″',
-       :j_science  => '″'
+       :symbol     => '″'
 
   load :label      => :a, 
        :name       => 'are',
@@ -579,22 +575,19 @@ Unit::NonSI.configure do
        :name       => 'barn',
        :dimensions => 'area',
        :factor     => 100e-30,
-       :symbol     => 'b',
-       :j_science  => 'b'
+       :symbol     => 'b' 
 
   load :label      => :Bi, 
        :name       => 'biot',
        :dimensions => 'electric current',
        :factor     => 10.0,
-       :symbol     => 'Bi',
-       :j_science  => 'Bi'
+       :symbol     => 'Bi'
 
   load :label      => :bhp, 
        :name       => 'boiler horsepower',
        :dimensions => 'power',
        :factor     => 9.80950e3,
-       :symbol     => 'bhp',
-       :j_science  => 'bhp'
+       :symbol     => 'bhp'
 
   load :label      => :btu_39F, 
        :name       => 'british thermal unit (39 °F)',
@@ -648,15 +641,13 @@ Unit::NonSI.configure do
        :name       => 'US bushel',
        :dimensions => 'volume',
        :factor     => 36.36872e-3,
-       :symbol     => 'bu (Imp)',
-       :j_science  => 'bu_imp'
+       :symbol     => 'bu (Imp)'
 
   load :label      => :bu_us, 
        :name       => 'UK bushel',
        :dimensions => 'volume',
        :factor     => 35.23907e-3,
-       :symbol     => 'bu (US lvl)',
-       :j_science  => 'bu_us'
+       :symbol     => 'bu (US lvl)'
 
   load :label      => :byte, 
        :name       => 'byte',
@@ -669,64 +660,55 @@ Unit::NonSI.configure do
        :name       => 'calorie',
        :dimensions => 'energy',
        :factor     => 4.1868,
-       :symbol     => 'cal',
-       :j_science  => 'cal'
+       :symbol     => 'cal'
 
   load :label      => :cp, 
        :name       => 'candle power',
        :dimensions => 'luminous flux',
        :factor     => 4*Math::PI,
-       :symbol     => 'cp',
-       :j_science  => 'cp'
+       :symbol     => 'cp'
 
   load :label      => :kt, 
        :name       => 'carat',
        :dimensions => 'mass',
        :factor     => 200e-6,
-       :symbol     => 'kt',
-       :j_science  => 'kt'
+       :symbol     => 'kt'
 
   load :label      => :CHU, 
        :name       => 'celsius heat unit',
        :dimensions => 'energy',
        :factor     => 1.0899101e3,
-       :symbol     => 'CHU',
-       :j_science  => 'CHU'
+       :symbol     => 'CHU'
 
   load :label      => :cmHg, 
        :name       => 'centimetre of mercury',
        :dimensions => 'pressure',
        :factor     => 1.333222e3,
-       :symbol     => 'cmHg',
-       :j_science  => 'cmHg'
+       :symbol     => 'cmHg'
 
   load :label      => :cmH2O, 
        :name       => 'centimetre of water',
        :dimensions => 'pressure',
        :factor     => 98.060616,
-       :symbol     => 'cmH2O',
-       :j_science  => 'cmH2O'
+       :symbol     => 'cmH2O'
 
   load :label      => :ch, 
        :name       => 'chain',
        :dimensions => 'length',
        :factor     => 20.1168,
-       :symbol     => 'ch',
-       :j_science  => 'ch'
+       :symbol     => 'ch'
 
   load :label      => :clo, 
        :name       => 'clo',
        :dimensions => 'thermal resistance',
        :factor     => 0.155,
-       :symbol     => 'clo',
-       :j_science  => 'clo'
+       :symbol     => 'clo'
 
   load :label      => :c_us, 
        :name       => 'cup',
        :dimensions => 'volume',
        :factor     => 236.5882e-6,
-       :symbol     => 'c (US)',
-       :j_science  => 'c_us'
+       :symbol     => 'c (US)'
 
   load :label      => :Ci, 
        :name       => 'curie',
@@ -775,8 +757,7 @@ Unit::NonSI.configure do
        :name       => 'dram',
        :dimensions => 'length',
        :factor     => 1.771845e-3,
-       :symbol     => 'dram',
-       :j_science  => 'dram'
+       :symbol     => 'dram'
 
   load :label      => :dyn, 
        :name       => 'dyne',
@@ -789,15 +770,13 @@ Unit::NonSI.configure do
        :name       => 'dyne centimetre',
        :dimensions => 'energy',
        :factor     => 100e-9,
-       :symbol     => 'dyn cm',
-       :j_science  => 'dyn_cm'
+       :symbol     => 'dyn cm'
 
   load :label      => :hp_elec, 
        :name       => 'electric horsepower',
        :dimensions => 'power',
        :factor     => 746.0,
-       :symbol     => 'hp',
-       :j_science  => 'hp_elec'
+       :symbol     => 'hp'
 
   load :label      => :me, 
        :name       => 'electron mass',
@@ -817,8 +796,7 @@ Unit::NonSI.configure do
        :name       => 'ell',
        :dimensions => 'length',
        :factor     => 1.143,
-       :symbol     => 'ell',
-       :j_science  => 'ell'
+       :symbol     => 'ell'
 
   load :label      => :erg, 
        :name       => 'erg',
@@ -838,15 +816,13 @@ Unit::NonSI.configure do
        :name       => 'fathom',
        :dimensions => 'length',
        :factor     => 1.828804,
-       :symbol     => 'ftm',
-       :j_science  => 'ftm'
+       :symbol     => 'ftm'
 
   load :label      => :fm, 
        :name       => 'fermi',
        :dimensions => 'length',
        :factor     => 1e-15,
-       :symbol     => 'fm',
-       :j_science  => 'fm'
+       :symbol     => 'fm'
 
   load :label      => :ft, 
        :name       => 'foot',
@@ -859,15 +835,13 @@ Unit::NonSI.configure do
        :name       => 'footcandle',
        :dimensions => 'illuminance',
        :factor     => 10.76391,
-       :symbol     => 'fc',
-       :j_science  => 'fc'
+       :symbol     => 'fc'
 
   load :label      => :ftH2O, 
        :name       => 'foot of water',
        :dimensions => 'pressure',
        :factor     => 2.988887e3,
-       :symbol     => 'ftH2O',
-       :j_science  => 'ftH2O'
+       :symbol     => 'ftH2O'
 
   load :label      => :Fr, 
        :name       => 'franklin',
@@ -880,15 +854,13 @@ Unit::NonSI.configure do
        :name       => 'furlong',
        :dimensions => 'length',
        :factor     => 201.168,
-       :symbol     => 'fur',
-       :j_science  => 'fur'
+       :symbol     => 'fur'
 
   load :label      => :γ, 
        :name       => 'gamma',
        :dimensions => 'magnetic flux density',
        :factor     => 1e-9,
-       :symbol     => 'γ',
-       :j_science  => 'γ'
+       :symbol     => 'γ'
 
   load :label      => :gauss, 
        :name       => 'gauss',
@@ -908,15 +880,13 @@ Unit::NonSI.configure do
        :name       => 'grain',
        :dimensions => 'mass',
        :factor     => 64.79891e-6,
-       :symbol     => 'gr',
-       :j_science  => 'gr'
+       :symbol     => 'gr'
 
   load :label      => :Eh, 
        :name       => 'hartree',
        :dimensions => 'energy',
        :factor     => 4.359748e-18,
-       :symbol     => 'Eh',
-       :j_science  => 'Eh'
+       :symbol     => 'Eh'
 
   load :label      => :ha, 
        :name       => 'hectare',
@@ -929,8 +899,7 @@ Unit::NonSI.configure do
        :name       => 'hogshead',
        :dimensions => 'volume',
        :factor     => 238.6697e-3,
-       :symbol     => 'hhd',
-       :j_science  => 'hhd'
+       :symbol     => 'hhd'
 
   load :label      => :h, 
        :name       => 'hour',
@@ -943,15 +912,13 @@ Unit::NonSI.configure do
        :name       => 'hundredweight long',
        :dimensions => 'mass',
        :factor     => 50.802345,
-       :symbol     => 'cwt',
-       :j_science  => 'cwt_long'
+       :symbol     => 'cwt'
 
   load :label      => :cwt_short, 
        :name       => 'hundredweight short',
        :dimensions => 'mass',
        :factor     => 45.359237,
-       :symbol     => 'cwt',
-       :j_science  => 'cwt_short'
+       :symbol     => 'cwt'
 
   load :label      => :in, 
        :name       => 'inch',
@@ -971,15 +938,13 @@ Unit::NonSI.configure do
        :name       => 'inch of water',
        :dimensions => 'pressure',
        :factor     => 249.0740,
-       :symbol     => 'inH2O',
-       :j_science  => 'inH2O'
+       :symbol     => 'inH2O'
 
   load :label      => :kcal, 
        :name       => 'kilocalorie',
        :dimensions => 'energy',
        :factor     => 4.1868e3,
-       :symbol     => 'kcal',
-       :j_science  => 'kcal'
+       :symbol     => 'kcal'
 
   load :label      => :kgf, 
        :name       => 'kilogram force',
@@ -1013,15 +978,13 @@ Unit::NonSI.configure do
        :name       => 'line',
        :dimensions => 'length',
        :factor     => 2.116667e-3,
-       :symbol     => 'ln',
-       :j_science  => 'ln'
+       :symbol     => 'ln'
 
   load :label      => :lnk, 
        :name       => 'link',
        :dimensions => 'length',
        :factor     => 201.168e-3,
-       :symbol     => 'lnk',
-       :j_science  => 'lnk'
+       :symbol     => 'lnk'
 
   load :label      => :L, 
        :name       => 'litre',
@@ -1048,8 +1011,7 @@ Unit::NonSI.configure do
        :name       => 'metric horsepower',
        :dimensions => 'power',
        :factor     => 735.4988,
-       :symbol     => 'hp',
-       :j_science  => 'hp'
+       :symbol     => 'hp'
 
   load :label      => :mi, 
        :name       => 'mile',
@@ -1062,8 +1024,7 @@ Unit::NonSI.configure do
        :name       => 'millibar',
        :dimensions => 'pressure',
        :factor     => 100,
-       :symbol     => 'mbar',
-       :j_science  => 'mbar'
+       :symbol     => 'mbar'
 
   load :label      => :mmHg, 
        :name       => 'millimetre of mercury',
@@ -1090,8 +1051,7 @@ Unit::NonSI.configure do
        :name       => 'nautical league',
        :dimensions => 'length',
        :factor     => 5.556e3,
-       :symbol     => 'nl',
-       :j_science  => 'nl'
+       :symbol     => 'nl'
 
   load :label      => :nmi, 
        :name       => 'nautical mile',
@@ -1118,15 +1078,13 @@ Unit::NonSI.configure do
        :name       => 'pennyweight',
        :dimensions => 'mass',
        :factor     => 1.555174e-3,
-       :symbol     => 'dwt',
-       :j_science  => 'dwt'
+       :symbol     => 'dwt'
 
   load :label      => :bbl, 
        :name       => 'petroleum barrel',
        :dimensions => 'volume',
        :factor     => 158.9873e-3,
-       :symbol     => 'bbl',
-       :j_science  => 'bbl'
+       :symbol     => 'bbl'
 
   load :label      => :pt, 
        :name       => 'point',
@@ -1139,8 +1097,7 @@ Unit::NonSI.configure do
        :name       => 'poncelot',
        :dimensions => 'power',
        :factor     => 980.665,
-       :symbol     => 'p',
-       :j_science  => 'p'
+       :symbol     => 'p'
 
   load :label      => :lb, 
        :name       => 'pound',
@@ -1153,8 +1110,7 @@ Unit::NonSI.configure do
        :name       => 'poundal',
        :dimensions => 'force',
        :factor     => 138.255,
-       :symbol     => 'pdl',
-       :j_science  => 'pdl'
+       :symbol     => 'pdl'
 
   load :label      => :lbf, 
        :name       => 'pound force',
@@ -1167,15 +1123,13 @@ Unit::NonSI.configure do
        :name       => 'pound mole',
        :dimensions => 'amount_of_substance',
        :factor     => 453.59237,
-       :symbol     => 'lbmol',
-       :j_science  => 'lbmol'
+       :symbol     => 'lbmol'
 
   load :label      => :quad, 
        :name       => 'quad',
        :dimensions => 'energy',
        :factor     => 1.055056e18,
-       :symbol     => 'quad',
-       :j_science  => 'quad'
+       :symbol     => 'quad'
 
   load :label      => :rd, 
        :name       => 'rad',
@@ -1202,15 +1156,13 @@ Unit::NonSI.configure do
        :name       => 'reyn',
        :dimensions => 'dynamic viscosity',
        :factor     => 689.5e3,
-       :symbol     => 'reyn',
-       :j_science  => 'reyn'
+       :symbol     => 'reyn'
 
   load :label      => :rood, 
        :name       => 'rood',
        :dimensions => 'area',
        :factor     => 1.011714e3,
-       :symbol     => 'rood',
-       :j_science  => 'rood'
+       :symbol     => 'rood'
 
   load :label      => :Rd, 
        :name       => 'rutherford',
@@ -1223,8 +1175,7 @@ Unit::NonSI.configure do
        :name       => 'rydberg',
        :dimensions => 'energy',
        :factor     => 2.179874e-18,
-       :symbol     => 'Ry',
-       :j_science  => 'Ry'
+       :symbol     => 'Ry'
 
   load :label      => :ton_us, 
        :name       => 'short ton',
@@ -1251,8 +1202,7 @@ Unit::NonSI.configure do
        :name       => 'statute league',
        :dimensions => 'length',
        :factor     => 4.828032e3,
-       :symbol     => 'lea',
-       :j_science  => 'lea'
+       :symbol     => 'lea'
 
   load :label      => :sphere, 
        :name       => 'sphere',
@@ -1265,43 +1215,37 @@ Unit::NonSI.configure do
        :name       => 'sthene',
        :dimensions => 'force',
        :factor     => 1e3,
-       :symbol     => 'sn',
-       :j_science  => 'sn'
+       :symbol     => 'sn'
 
   load :label      => :St, 
-       :name       => 'stokes',
+       :name       => 'stoke',
        :dimensions => 'kinematic viscosity',
        :factor     => 100e-6,
-       :symbol     => 'St',
-       :j_science  => 'St'
+       :symbol     => 'St'
 
   load :label      => :st, 
        :name       => 'stone',
        :dimensions => 'mass',
        :factor     => 6.350293,
-       :symbol     => 'st',
-       :j_science  => 'st'
+       :symbol     => 'st'
 
   load :label      => :thm, 
        :name       => 'therm',
        :dimensions => 'energy',
        :factor     => 105.506e6,
-       :symbol     => 'thm',
-       :j_science  => 'thm'
+       :symbol     => 'thm'
 
   load :label      => :th, 
        :name       => 'thermie',
        :dimensions => 'energy',
        :factor     => 4.185407e6,
-       :symbol     => 'th',
-       :j_science  => 'th'
+       :symbol     => 'th'
 
   load :label      => :tog, 
        :name       => 'tog',
        :dimensions => 'thermal resistance',
        :factor     => 0.1,
-       :symbol     => 'tog',
-       :j_science  => 'tog'
+       :symbol     => 'tog'
 
   load :label      => :t, 
        :name       => 'tonne',
@@ -1321,8 +1265,7 @@ Unit::NonSI.configure do
        :name       => 'UK barrel',
        :dimensions => 'volume',
        :factor     => 163.6592e-3,
-       :symbol     => 'bl (Imp)',
-       :j_science  => 'bbl_imp'
+       :symbol     => 'bl (Imp)'
 
   load :label      => :oz_fl_uk, 
        :name       => 'UK fluid ounce',
@@ -1342,15 +1285,13 @@ Unit::NonSI.configure do
        :name       => 'UK gill',
        :dimensions => 'volume',
        :factor     => 142.0654e-6,
-       :symbol     => 'gi',
-       :j_science  => 'gi_uk'
+       :symbol     => 'gi'
 
   load :label      => :hp_uk, 
        :name       => 'UK horsepower',
        :dimensions => 'power',
        :factor     => 745.6999,
-       :symbol     => 'hp',
-       :j_science  => 'hp_uk'
+       :symbol     => 'hp'
 
   load :label      => :gallon_dry_us, 
        :name       => 'US dry gallon',
@@ -1363,8 +1304,7 @@ Unit::NonSI.configure do
        :name       => 'US dry barrel',
        :dimensions => 'volume',
        :factor     => 115.6271e-3,
-       :symbol     => 'bl (US)',
-       :j_science  => 'bbl_dry_us'
+       :symbol     => 'bl (US)'
 
   load :label      => :oz_fl, 
        :name       => 'US fluid ounce',
@@ -1377,15 +1317,13 @@ Unit::NonSI.configure do
        :name       => 'US gill',
        :dimensions => 'volume',
        :factor     => 118.2941e-6,
-       :symbol     => 'gi',
-       :j_science  => 'gi_us'
+       :symbol     => 'gi'
 
   load :label      => :bbl_fl_us, 
        :name       => 'US liquid barrel',
        :dimensions => 'volume',
        :factor     => 119.2405e-3,
-       :symbol     => 'fl bl (US)',
-       :j_science  => 'bbl_fl_us'
+       :symbol     => 'fl bl (US)'
 
   load :label      => :gal, 
        :name       => 'US liquid gallon',
@@ -1426,7 +1364,6 @@ Unit::NonSI.configure do
   construct_and_load(kW*h) do |unit|
     unit.symbol    = 'kWh'
     unit.label     = 'kWh'
-    unit.j_science = 'kWh'
   end
 
   construct_and_load(pound_force/(inch**2)) do |unit|
