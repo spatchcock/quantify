@@ -1131,6 +1131,10 @@ describe Unit do
       lambda{Unit.kilometre.with_prefix :giga}.should raise_error
     end
 
+    it "should throw error when trying to add prefix to kilogram" do
+      lambda{Unit.kilogram.with_prefix :giga}.should raise_error
+    end
+
     it "should add prefix with explicit method" do
       Unit.metre.with_prefix(:c).name.should == 'centimetre'
     end    

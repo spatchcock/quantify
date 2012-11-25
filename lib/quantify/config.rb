@@ -243,8 +243,7 @@ Unit::Base.configure do
   load :label      => :unity,   
        :name       => '',
        :dimensions => 'dimensionless',
-       :symbol     => '', 
-       :j_science  => 'unity'
+       :symbol     => ''
 
   load :label      => :percent,
        :name       => 'percent',
@@ -274,8 +273,7 @@ Unit::SI.configure do
   load :label      => :η, 
        :name       => 'amagat',    
        :dimensions => 'number_density',
-       :symbol     => 'η',   
-       :j_science  => 'η'
+       :symbol     => 'η' 
 
   load :label      => :bit, 
        :name       => 'bit',

@@ -23,9 +23,15 @@ module Quantify
         prefix, unit = Prefix.for(prefix), Unit.for(unit)
 
         raise Exceptions::InvalidArgumentError, "Prefix is not known" if prefix.nil?
-        raise Exceptions::InvalidArgumentError, "Unit is not known" if unit.nil?
-        raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{unit.prefix.name}" if unit.prefix
-        
+        raise Exceptions::InvalidArgumentError, "Unit is not known"   if unit.nil?
+
+        # Kilogram is defined as a non-prefixed unit since it is the base SI unit for mass
+        # Therefore we need a special condition to ensure it receives no additional prefix
+        #
+        if unit.prefix || unit.label == :kg
+          raise Exceptions::InvalidArgumentError, "Cannot add prefix where one already exists: #{unit.prefix.name}"
+        end
+
         self.new &self.block_for_prefixed_version(prefix,unit)
       end
 
