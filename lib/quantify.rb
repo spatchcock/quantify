@@ -4,8 +4,6 @@
 # subtracted, multiplied, etc. or converted into alternative units
 #
 
-require 'pp'
-require 'rubygems'
 require 'active_support/inflector'
 require 'quantify/quantify'
 require 'quantify/core_extensions/string'

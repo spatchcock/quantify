@@ -535,14 +535,14 @@ Unit::NonSI.configure do
        :symbol     => 'Å',
        :j_science  => 'Å'
 
-  load :label      => :arcminute, 
+  load :label      => :arc_min, 
        :name       => 'arcminute',
        :dimensions => 'plane angle',
        :factor     => Math::PI/10800,
        :symbol     => '′',
        :j_science  => '′'
 
-  load :label      => :arcsecond, 
+  load :label      => :arc_sec, 
        :name       => 'arcsecond',
        :dimensions => 'plane angle',
        :factor     => Math::PI/648000,
@@ -598,61 +598,53 @@ Unit::NonSI.configure do
        :symbol     => 'bhp',
        :j_science  => 'bhp'
 
-  load :label      => :BTU_ThirtyNineF, 
+  load :label      => :btu_39F, 
        :name       => 'british thermal unit (39 °F)',
        :dimensions => 'energy',
        :factor     => 1059.67,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_ThirtyNineF'
+       :symbol     => 'BTU'
 
-  load :label      => :BTU_SixtyF, 
+  load :label      => :btu_60f, 
        :name       => 'british thermal unit (60 °F)',
        :dimensions => 'energy',
        :factor     => 1054.68,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_SixtyF'
+       :symbol     => 'BTU'
 
-  load :label      => :BTU_SixtyThreeF, 
+  load :label      => :btu_63f, 
        :name       => 'british thermal unit (63 °F)',
        :dimensions => 'energy',
        :factor     => 1054.6,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_SixtyThreeF'
+       :symbol     => 'BTU'
 
-  load :label      => :BTU_ISO, 
+  load :label      => :btu_iso, 
        :name       => 'british thermal unit (ISO)',
        :dimensions => 'energy',
        :factor     => 1055.056,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_ISO'
+       :symbol     => 'BTU'
 
-  load :label      => :BTU_IT, 
+  load :label      => :btu_it, 
        :name       => 'british thermal unit (IT)',
        :dimensions => 'energy',
        :factor     => 1055.05585262,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_IT'
+       :symbol     => 'BTU'
 
-  load :label      => :BTU_Mean, 
+  load :label      => :btu_mean, 
        :name       => 'british thermal unit (mean)',
        :dimensions => 'energy',
        :factor     => 1055.87,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_Mean'
+       :symbol     => 'BTU'
 
-  load :label      => :BTU_Thermochemical, 
+  load :label      => :btu_thermo, 
        :name       => 'british thermal unit (thermochemical)',
        :dimensions => 'energy',
        :factor     => 1054.35026444,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_Thermochemical'
+       :symbol     => 'BTU'
 
-  load :label      => :BTU_FiftyNineF, 
+  load :label      => :btu_59f, 
        :name       => 'british thermal unit (59 °F)',
        :dimensions => 'energy',
        :factor     => 1054.804,
-       :symbol     => 'BTU',
-       :j_science  => 'BTU_FiftyNineF'
+       :symbol     => 'BTU'
 
   load :label      => :bu_imp, 
        :name       => 'US bushel',
@@ -759,14 +751,14 @@ Unit::NonSI.configure do
        :symbol     => '°',
        :j_science  => '°'
 
-  load :label      => :degree_celsius, 
+  load :label      => :deg_c, 
        :name       => 'degree celsius',
        :dimensions => 'temperature',
        :symbol     => '°C',
        :j_science  => '°C',
        :scaling    => 273.15
 
-  load :label      => :degree_farenheit, 
+  load :label      => :deg_f, 
        :name       => 'degree farenheit',
        :dimensions => 'temperature',
        :factor     => 5.0/9.0,
@@ -774,7 +766,7 @@ Unit::NonSI.configure do
        :j_science  => '°F',
        :scaling    => 459.67
 
-  load :label      => :degree_rankine, 
+  load :label      => :deg_r, 
        :name       => 'degree rankine',
        :dimensions => 'temperature',
        :factor     => 5.0/9.0,

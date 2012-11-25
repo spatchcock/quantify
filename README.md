@@ -73,7 +73,8 @@ mass.unit                             #=> <Quantify::Unit::NonSI:0xb7332b08 ... 
 mass.unit.name                        #=> "pound"
 mass.unit.symbol                      #=> "lb"
 
-mass.unit.label                       #=> "lb" # unique identifier, follows JScience
+mass.unit.label                       #=> :lb  # unique identifier
+mas.unit,j_science                    #=> 'lb' # Unit reference for integration with JScience
 mass.unit.pluralized_name             #=> "pounds"
 mass.to_s                             #=> "100 lb"
 mass.to_s(:name)                      #=> "100 pounds"

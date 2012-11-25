@@ -48,6 +48,7 @@ module Quantify
 
       return [Quantity.new(nil, nil)] unless string != nil && string.strip.length > 0
 
+      # Split the string into groups of words starting with a number
       quantities   = []
       remainder    = []
       words        = string.words
@@ -73,6 +74,7 @@ module Quantify
       remainders = []
       remainders << remainder.join(" ")
 
+      # Iterate through word groups and parse units following each number
       quantities.map! do |words|
 
         value  = words.shift
@@ -87,6 +89,7 @@ module Quantify
         Quantity.new(value,unit)
           
       end.compact
+
       return [quantities, remainders] if options[:remainder] == true
       return quantities
       
@@ -105,14 +108,14 @@ module Quantify
     def self.auto_consolidate_units?
       @auto_consolidate_units.nil? ? false : @auto_consolidate_units
     end
-    #alias :auto_consolidate_units? :auto_consolidate_units
 
     protected
 
     def self.is_basic_conversion_with_scalings?(quantity,new_unit)
       return true if (quantity.unit.has_scaling? || new_unit.has_scaling?) &&
-        !quantity.unit.is_compound_unit? &&
-        !new_unit.is_compound_unit?
+                     !quantity.unit.is_compound_unit? &&
+                     !new_unit.is_compound_unit?
+
       return false
     end
     
@@ -121,9 +124,10 @@ module Quantify
     attr_accessor :value, :unit
 
     # Initialize a new Quantity object. Two arguments are required: a value and
-    # a unit. The unit can be a an instance of Unit::Base or the name, symbol or
-    # JScience label of a known (or derivable through know units and prefixes)
+    # a unit. The unit can be a an instance of Unit::Base or the label, name, symbol or
+    # JScience reference of a known (or derivable through known units and prefixes)
     # unit
+    #
     def initialize(value, unit = nil)
       if value
         @value = Float(value)
@@ -187,13 +191,17 @@ module Quantify
     # in terms of the new unit.
     #
     def to(new_unit)
-      new_unit = Unit.for new_unit
+      new_unit = Unit.for(new_unit)
+
       if Quantity.is_basic_conversion_with_scalings?(self,new_unit)
         Quantity.new(@value,@unit).conversion_with_scalings! new_unit
+
       elsif self.unit.is_alternative_for? new_unit
         Quantity.new(@value,@unit).convert_to_equivalent_unit! new_unit
+
       elsif self.unit.is_compound_unit?
         Quantity.new(@value,@unit).convert_compound_unit_to_non_equivalent_unit! new_unit
+
       else
         nil # raise? or ...
       end      
@@ -210,8 +218,10 @@ module Quantify
     
     def pow!(power)
       raise Exceptions::InvalidArgumentError, "Argument must be an integer" unless power.is_a? Integer
+
       @value = @value ** power
-      @unit = @unit ** power
+      @unit  = @unit ** power
+
       return self
     end
 
@@ -264,8 +274,10 @@ module Quantify
 
     def rationalize_units!
       rationalized_quantity = self.rationalize_units
+
       @value = rationalized_quantity.value
-      @unit = rationalized_quantity.unit
+      @unit  = rationalized_quantity.unit
+
       return self
     end
 
@@ -281,7 +293,8 @@ module Quantify
     def round!(decimal_places=0)
       factor = ( decimal_places == 0 ? 1 : 10.0 ** decimal_places )
       @value = (@value * factor).round / factor
-      self
+      
+      return self
     end
 
     # Similar to #round! but returns new Quantity instance rather than rounding
@@ -321,8 +334,10 @@ module Quantify
     def add_or_subtract!(operator,other)
       if other.is_a? Quantity
         other = other.to(@unit) if other.unit.is_alternative_for?(@unit)
+
         if @unit.is_equivalent_to? other.unit
           @value = @value.send operator, other.value
+
           return self
         else
           raise Quantify::Exceptions::InvalidObjectError, "Cannot add or subtract Quantities with different dimensions"
@@ -363,7 +378,8 @@ module Quantify
 
     def conversion_with_scalings!(new_unit)
       @value = (((@value + @unit.scaling) * @unit.factor) / new_unit.factor) - new_unit.scaling
-      @unit = new_unit
+      @unit  = new_unit
+
       return self
     end
 
@@ -384,6 +400,7 @@ module Quantify
     
     def convert_compound_unit_to_si!
       until @unit.is_base_quantity_si_unit? do
+        
         unit = @unit.base_units.find do |base|
           !base.is_base_quantity_si_unit?
         end.unit

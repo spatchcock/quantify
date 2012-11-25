@@ -400,8 +400,8 @@ describe Unit do
     it "dynamic unit retrieval with symbol should be successful" do
       Unit.m.name.should == 'metre'
       Unit.ft.symbol.should == 'ft'
-      #Unit.μm.factor.should == 0.000001
-      #Unit.°C.name.should == 'degree celsius'
+      Unit.μm.factor.should == 0.000001
+      Unit.°C.name.should == 'degree celsius'
     end
 
     it "dynamic unit retrieval with symbol and prefix should be successful" do

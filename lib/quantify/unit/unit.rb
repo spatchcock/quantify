@@ -43,9 +43,10 @@ module Quantify
     end
 
     # Instance variable containing system of known units
-    @units        = {}
-    @unit_names   = {}
-    @unit_symbols = {}
+    @units               = {}
+    @unit_names          = {}
+    @unit_symbols        = {}
+    @unit_j_science_keys = {}
 
     def self.configure(&block)
       self.class_eval(&block) if block
@@ -163,9 +164,10 @@ module Quantify
     def self.load(unit)
       if unit.is_a? Unit::Base
 
-        @units[unit.label]              = unit
-        @unit_names[unit.name.downcase] = unit.label
-        @unit_symbols[unit.symbol]      = unit.label
+        @units[unit.label]                   = unit
+        @unit_names[unit.name.downcase]      = unit.label
+        @unit_symbols[unit.symbol]           = unit.label
+        @unit_j_science_keys[unit.j_science] = unit.label if unit.j_science
       end
     end
 
@@ -176,8 +178,9 @@ module Quantify
 
         @units.delete(unloaded_unit.label)
 
-        @unit_names.delete_if   { |k,v| v == unloaded_unit.label}
-        @unit_symbols.delete_if { |k,v| v == unloaded_unit.label}
+        @unit_names.delete_if          { |k,v| v == unloaded_unit.label}
+        @unit_symbols.delete_if        { |k,v| v == unloaded_unit.label}
+        @unit_j_science_keys.delete_if { |k,v| v == unloaded_unit.label}
       end
     end
 
@@ -329,8 +332,13 @@ module Quantify
       end
 
       descriptor = Unit.format_unit_attribute(:name, unit_descriptor)
-      if name = @unit_names[descriptor]
-        return @units[name].clone
+      if label = @unit_names[descriptor]
+        return @units[label].clone
+      end
+
+      descriptor = Unit.format_unit_attribute(:j_science, unit_descriptor)
+      if label = @unit_j_science_keys[descriptor]
+        return @units[label].clone
       end
 
     rescue
@@ -338,7 +346,7 @@ module Quantify
     end
     
     def self.match_prefixed_variant(unit_descriptor)
-      [:label, :symbol, :name].each do |attribute|
+      [:label, :symbol, :name, :j_science].each do |attribute|
         formatted_descriptor = Unit.format_unit_attribute(attribute, unit_descriptor)
 
         if formatted_descriptor =~ /\A(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,attribute)})(#{Unit.terms_for_regex(Unit,:non_prefixed_units,attribute)})\z/
@@ -512,6 +520,11 @@ module Quantify
       # Double '?' (i.e. '??') makes prefix matching lazy, e.g. "centimetres of mercury" is matched fully rather than as 'centimetres'
       /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:name)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:pluralized_name)}|#{Unit.terms_for_regex(Unit,:non_prefixed_units,:name)})\b)/i
     end
+
+    def self.unit_j_science_regex
+      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:j_science)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:j_science)})\b)/
+    end
+    
     
   end
 end
