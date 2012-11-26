@@ -309,8 +309,9 @@ module Quantify
     end
 
     def <=>(other)
-      raise Exceptions::InvalidArgumentError unless other.is_a? Quantity
-      raise Exceptions::InvalidArgumentError unless other.unit.is_alternative_for?(unit)
+      raise Exceptions::InvalidArgumentError, "Argument must be another quantity" unless other.is_a? Quantity
+      raise Exceptions::InvalidArgumentError, "Argument must be of same dimensions as self" unless other.unit.is_alternative_for?(unit)
+      
       return 0 if @value.nil? && (other.nil? || other.value.nil?)
 
       other = other.to @unit
@@ -318,12 +319,12 @@ module Quantify
     end
 
     def ===(range)
-      raise Exceptions::InvalidArgumentError unless range.is_a? Range
+      raise Exceptions::InvalidArgumentError, "Argument must be a Range" unless range.is_a? Range
       range.cover? self
     end
 
     def between?(min, max)
-      raise NoMethodError if @value.nil?
+      raise NoMethodError, "Cannot compare quantities, you have a nil value" if @value.nil?
       super(min,max)
     end
 
