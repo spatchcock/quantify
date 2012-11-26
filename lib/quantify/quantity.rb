@@ -182,7 +182,10 @@ module Quantify
     #
     #   1000.kilogram.to(:tonne).to_s                   #=> "1 t"
     #
-    # The method #method_missing provides some syntactic sugar for the new unit to
+    # For compound units, it is permissable to pass in units which are same dimension of at
+    # least one base unit. 
+    #
+    # #method_missing provides some syntactic sugar for the new unit to
     # be provided as part of the method name, based around /to_(<unit>)/, e.g.
     #
     #   200.cm.to_metre.to_s                   #=> "1 t"
@@ -203,7 +206,7 @@ module Quantify
         Quantity.new(@value,@unit).convert_compound_unit_to_non_equivalent_unit! new_unit
 
       else
-        nil # raise? or ...
+        raise Exceptions::InvalidArgumentError, "Cannot convert #{self.unit.to_s} quantity into #{new_unit.to_s}. Units are incompatible"
       end      
     end
     

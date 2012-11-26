@@ -484,7 +484,11 @@ describe Quantity do
   end
 
   specify "converting a nil quantity to another unit yields nil" do
-    Quantity.new(nil,nil).to_kg.should be_nil
+    lambda{ Quantity.new(nil,nil).to_kg }.should raise_error
+  end
+
+   specify "converting a quantity to an incompatible unit raises error" do
+    lambda{ Quantity.new(20,:yd).to_kg }.should raise_error
   end
 
   it "should raise error when trying to round a nil quantity" do

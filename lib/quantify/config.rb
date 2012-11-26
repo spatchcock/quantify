@@ -14,7 +14,8 @@ Dimensions.configure do
 
   # Load the standard, widely-recognised physical quantities.
 
-  # Base quantities
+  ### Base quantities ###
+
   load :physical_quantity => 'length',              :length => 1
 
   load :physical_quantity => 'mass',                :mass => 1
@@ -37,7 +38,9 @@ Dimensions.configure do
   
   load :physical_quantity => 'dimensionless'
 
-  # Derived quantities
+
+  ### Derived quantities ###
+
   load :physical_quantity => 'acceleration',                  :length => 1,               :time => -2
   
   load :physical_quantity => 'area',                          :length => 2
@@ -589,7 +592,7 @@ Unit::NonSI.configure do
        :factor     => 9.80950e3,
        :symbol     => 'bhp'
 
-  load :label      => :btu_39F, 
+  load :label      => :btu_39f, 
        :name       => 'british thermal unit (39 °F)',
        :dimensions => 'energy',
        :factor     => 1059.67,
@@ -1184,14 +1187,14 @@ Unit::NonSI.configure do
        :symbol     => 'ton',
        :j_science  => 'ton_us'
 
-  load :label      => :day_sidereal, 
+  load :label      => :d_sid, 
        :name       => 'sidereal day',
        :dimensions => 'time',
        :factor     => 86.16409053e3,
        :symbol     => 'd',
        :j_science  => 'day_sidereal'
 
-  load :label      => :year_sidereal, 
+  load :label      => :year_sid, 
        :name       => 'sidereal year',
        :dimensions => 'time',
        :factor     => 31558823.803728,
@@ -1293,7 +1296,7 @@ Unit::NonSI.configure do
        :factor     => 745.6999,
        :symbol     => 'hp'
 
-  load :label      => :gallon_dry_us, 
+  load :label      => :gal_dry_us, 
        :name       => 'US dry gallon',
        :dimensions => 'volume',
        :factor     => 4.40488377086e-3,
