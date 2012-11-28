@@ -37,6 +37,12 @@ Quantity.new(nil, nil)              #=> <Quantify::Quantity:0xb7332bbc ... >
 _.value                             #=> nil
 _.unit                              #=> <Quantify::Unit::Base:0x007ff622bd9320 ...>
 _.unit.name                         #=> "unity" #== 'unitless' unit
+
+Quantity.new(100)                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.value                             #=> 100.0
+_.unit                              #=> <Quantify::Unit::Base:0x007ff622bd9320 ...>
+_.unit.name                         #=> "unity" #== 'unitless' unit
+_.to_si.value                       #=> 100.0 #identity transformation for unitless quantities
 ```
     
 General introduction
