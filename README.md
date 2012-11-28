@@ -186,7 +186,7 @@ Additional operations
 The result of quantity operations is commonly a new quantity with a compound unit. Unless the result is equivalent to one of the base SI units (m, kg, s, K, etc.) or one of the following, square metre, cubic metre, joule, watt, newton or pascal, then the compound unit represents appropriate combination of the units involved, albeit with any like-units within the numerator and denominator grouped under a single
 power/index.
 
-Units are not automatically cancelled or rationalized (made consistent). This is because it cannot be assumed that that is the desire of the user. For example, a quantity with units <mass> per <mass> is technically dimensionless, but the user might prefer to explicitly represent the units rather than reduce to a dimensionless quantity. In addition, this quantity might be expressed in terms of grams per tonne,
+Units are not automatically cancelled or rationalized (made consistent). This is because it cannot be assumed that that is the desire of the user. For example, a quantity with units mass per mass is technically dimensionless, but the user might prefer to explicitly represent the units rather than reduce to a dimensionless quantity. In addition, this quantity might be expressed in terms of grams per tonne,
 and the user may not necessarily prefer a conversion into consistent mass units (e.g. g/g or t/t). Therefore, the following methods are available...
 
 Where units representing the same physical quantity appear together, they can be made consistent by simply converting to the unit which is desired:
