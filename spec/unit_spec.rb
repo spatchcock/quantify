@@ -483,7 +483,11 @@ describe Unit do
     it "should recognise compound unit with multiple word pluralized name" do
       Unit.centimetres_of_mercury_per_hour_US_bushels.symbol.should eql "cmHg/h bu (Imp)"
     end
-    
+
+    it "should throw a NoMethodError when trying to inflect unit from method missing" do
+      expect { 12.ago }.to raise_error NoMethodError
+    end
+
     describe "parsing unit string" do
       
       it "should parse string into correct single unit" do
