@@ -517,6 +517,11 @@ describe Quantity do
     speed.to_si.to_s(:name).should == "44.704 metres per second"
   end
 
+  it "should convert dimensionless units to SI identity operation" do
+    unity_quantity = Quantity.new 100
+    unity_quantity.to_si.should eq(unity_quantity)
+  end
+
   it "should convert compound units to SI correctly" do
     speed = Quantity.new 100, (Unit.km/Unit.h)
     speed.to_si.value.should be_within(0.0000000000001).of(27.7777777777778)
