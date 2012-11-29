@@ -547,6 +547,11 @@ describe Quantity do
     unity_quantity.to_si.should eq(unity_quantity)
   end
 
+  it "should convert quantities with nil values to SI" do
+    nil_quantity = Quantity.new nil, 'mV'
+    nil_quantity.to_si.should eq(Quantity.new(nil, 'V'))
+  end
+
   it "should convert compound units to SI correctly" do
     speed = Quantity.new 100, (Unit.km/Unit.h)
     speed.to_si.value.should be_within(0.0000000000001).of(27.7777777777778)

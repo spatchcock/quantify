@@ -234,6 +234,9 @@ module Quantify
         Quantity.new(@value,@unit).convert_compound_unit_to_si!
       elsif @unit.is_dimensionless?
         return self
+      elsif @value.nil?
+        @unit = @unit.si_unit
+        return self
       else
         self.to(@unit.si_unit)
       end
