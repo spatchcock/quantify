@@ -1011,6 +1011,11 @@ describe Unit do
       (unit_1.is_equivalent_to? unit_2).should_not == true
     end
 
+    it "should compare to nil" do
+      unit = Unit.yard
+      (unit.is_equivalent_to? nil).should be_false
+    end
+
     it "should recognise known units from compound units based on dimensions and factor" do
       unit = Unit.kg*Unit.m*Unit.m/Unit.s/Unit.s
       unit.equivalent_known_unit.name.should == 'joule'
