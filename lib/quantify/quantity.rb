@@ -125,12 +125,20 @@ module Quantify
 
     # Float(...) ensures an error is raised if value is not representable as number
     def value=(value)
-      @value = Float(value)
+      if value.nil?
+        @value = nil
+      else
+        @value = Float(value)
+      end
     end
 
     # Unit.for(...) ensures an error is rasied if unit is not a valid unit
     def unit=(unit)
-      @unit = Unit.for(unit)
+      if unit.nil?
+        @unit = Unit.for(:unity)
+      else
+        @unit = Unit.for(unit)
+      end
     end
 
     # Initialize a new Quantity object. Two arguments are required: a value and
