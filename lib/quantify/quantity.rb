@@ -233,7 +233,7 @@ module Quantify
       if @unit.is_compound_unit?
         Quantity.new(@value,@unit).convert_compound_unit_to_si!
       elsif @unit.is_dimensionless?
-        return self.dup
+        return self.clone
       elsif @value.nil?
         return Quantity.new(nil, @unit.si_unit)
       else
@@ -351,6 +351,14 @@ module Quantify
     end
 
     protected
+
+    # Clone self and explicitly clone the associated Unit object located
+    # at @unit.
+    # 
+    def initialize_copy(source)
+      super
+      instance_variable_set("@unit", @unit.clone)
+    end
     
     # Quantities must be of the same dimension in order to operate. If they are
     # represented by different units (but represent the same physical quantity)

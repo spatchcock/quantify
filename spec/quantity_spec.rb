@@ -809,8 +809,22 @@ describe Quantity do
     quantity.to_s.should eql "100.0 km lb"
   end
 
-  it "should return consolidated units if enabled" do
-    
+  it "should clone unit instance if quantity cloned" do
+    quantity = 20.L
+    unit = quantity.unit
+
+    new_quantity = quantity.clone
+    # ensure distinct unit instances
+    new_quantity.unit.should_not eql(unit)
+  end
+
+  it "should clone unit instance if quantity dup" do
+    quantity = 20.L
+    unit = quantity.unit
+
+    new_quantity = quantity.dup
+    # ensure distinct unit instances
+    new_quantity.unit.should_not eql(unit)
   end
 end
 
