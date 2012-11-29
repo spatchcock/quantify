@@ -525,6 +525,23 @@ describe Quantity do
     speed.to_mi.round(2).to_s.should == "62.14 mi/h"
   end
 
+  specify "#to_si is non-destructive" do
+    q1 = Quantity.new(100,'mm')
+    q1.to_si.equal?(q1).should be_false
+    q1.value.should eq(100)
+    q1.unit.symbol.should eq('mm')
+
+    q2 = Quantity.new(nil,'mm')
+    q2.to_si.equal?(q2).should be_false
+    q2.value.should be_nil
+    q2.unit.symbol.should eq('mm')
+
+    q3 = Quantity.new(100)
+    q3.to_si.equal?(q3).should be_false
+    q3.value.should eq(100)
+    q3.unit.symbol.should eq('')
+  end
+
   it "should convert to SI unit correctly" do
     100.cm.to_si.to_s.should == "1.0 m"
 
