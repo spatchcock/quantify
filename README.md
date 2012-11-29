@@ -43,6 +43,12 @@ _.value                             #=> 100.0
 _.unit                              #=> <Quantify::Unit::Base:0x007ff622bd9320 ...>
 _.unit.name                         #=> "unity" #== 'unitless' unit
 _.to_si.value                       #=> 100.0 #identity transformation for unitless quantities
+
+Quantity.new(100)                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.value = 'invalid value'           #=> raises ArgumentError
+
+Quantity.new(100)                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.unit = 'invalid unit'             #=> raises InvalidUnitError
 ```
     
 General introduction

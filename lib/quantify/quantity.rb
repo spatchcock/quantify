@@ -121,7 +121,17 @@ module Quantify
     
     public
 
-    attr_accessor :value, :unit
+    attr_reader :value, :unit
+
+    # Float(...) ensures an error is raised if value is not representable as number
+    def value=(value)
+      @value = Float(value)
+    end
+
+    # Unit.for(...) ensures an error is rasied if unit is not a valid unit
+    def unit=(unit)
+      @unit = Unit.for(unit)
+    end
 
     # Initialize a new Quantity object. Two arguments are required: a value and
     # a unit. The unit can be a an instance of Unit::Base or the label, name, symbol or
