@@ -33,7 +33,7 @@ _.to_s                              #=> "0.68 kg"
 Unit.ratio(:kg, :ton)               #=> <Quantify::Quantity:0xb7332bbc ... >
 _.to_s                              #=> "1016.047 kilograms per long ton"
 
-Quantity.new(nil, nil)              #=> <Quantify::Quantity:0xb7332bbc ... >
+Quantity.new(nil)                   #=> <Quantify::Quantity:0xb7332bbc ... >
 _.value                             #=> nil
 _.unit                              #=> <Quantify::Unit::Base:0x007ff622bd9320 ...>
 _.unit.name                         #=> "unity" #== 'unitless' unit
@@ -43,6 +43,15 @@ _.value                             #=> 100.0
 _.unit                              #=> <Quantify::Unit::Base:0x007ff622bd9320 ...>
 _.unit.name                         #=> "unity" #== 'unitless' unit
 _.to_si.value                       #=> 100.0 #identity transformation for unitless quantities
+
+Quantity.new(100)                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.value = 'invalid value'           #=> raises ArgumentError
+
+Quantity.new(100)                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.value = nil                       #=> nil
+
+Quantity.new(100)                   #=> <Quantify::Quantity:0xb7332bbc ... >
+_.unit = nil                        #=> "unity" #== 'unitless' unit
 ```
     
 General introduction

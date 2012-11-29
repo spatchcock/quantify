@@ -16,12 +16,23 @@ describe Quantity do
     expect{ Quantity.new('invalid', 'kg') }.to raise_error ArgumentError
   end
 
+  it "should fail fast on invalid value assignment" do
+    quantity = Quantity.new(10, 'kg')
+    expect{ quantity.value = 'invalid' }.to raise_error ArgumentError
+  end
+
   it "should fail fast on invalid unit input" do
     expect{ Quantity.new(1, 'invalid unit') }.to raise_error Quantify::Exceptions::InvalidUnitError
   end
 
+  it "should fail fast on invalid unit assignment" do
+    quantity = Quantity.new(10, 'kg')
+    expect{ quantity.unit = 'invalid unit' }.to raise_error Quantify::Exceptions::InvalidUnitError
+  end
+
+
   it "should create a valid instance with nil values" do
-    quantity = Quantity.new nil, nil
+    quantity = Quantity.new nil
     quantity.value.should be_nil
     quantity.unit.should == (Unit.for('unity'))
   end
@@ -31,6 +42,20 @@ describe Quantity do
     quantity.value.should eql 100.0
     quantity.unit.is_dimensionless?.should be_true
     quantity.to_s.should eql "100.0"
+  end
+
+  it "sets value to nil" do
+    quantity = Quantity.new 100, 'kg'
+    quantity.value.should eq(100)
+    quantity.value = nil
+    quantity.value.should be_nil
+  end
+
+  it "sets unit to unity when assigned nil" do
+    quantity = Quantity.new 100, 'kg'
+    quantity.unit.should eq(Unit.for('kg'))
+    quantity.unit = nil
+    quantity.unit.should eq(Unit.for(:unity))
   end
 
   it "should create a valid instance with standard create and unit name" do
