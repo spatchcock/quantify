@@ -389,6 +389,7 @@ module Quantify
       #                                      #=> true
       #
       def is_equivalent_to?(other)
+        return false if other.nil?
         [:dimensions,:factor,:scaling].all? do |attr|
           self.send(attr) == other.send(attr)
         end
