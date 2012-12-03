@@ -9,7 +9,7 @@ class Numeric
   #   1000.t         is equivalent to Quantity. new 1000, :t
   #
   def method_missing(method, *args, &block)
-    return super if (method == :to_str || method == :to_ary)
+    return super if (method == :to_str || method == :to_ary || method == :to_hash)
     begin
       Quantify::Quantity.new self, method.to_s
     rescue Exception
