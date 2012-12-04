@@ -1037,6 +1037,8 @@ describe Unit do
       Unit.BTU.si_unit.name.should == 'joule'
       (Unit.ft**2).si_unit.name.should == 'square metre'
       Unit.pounds_force_per_square_inch.si_unit.name.should == 'pascal'
+      Unit.for(:percent).si_unit.name.should == 'percent'
+      Unit.for(:unity).si_unit.name.should == ''
     end
 
     it "should not return alternative if feature disabled" do
