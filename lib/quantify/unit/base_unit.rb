@@ -438,6 +438,7 @@ module Quantify
       # by self, e.g.
       #
       def si_unit
+        return self if self.dimensions.is_dimensionless?
         @dimensions.si_unit
       end
 
