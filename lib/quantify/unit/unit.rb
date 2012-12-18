@@ -508,21 +508,21 @@ module Quantify
     end
     
     def self.unit_label_regex
-      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:label)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:label)})\b)/
+      @unit_label_regex ||= /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:label)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:label)})\b)/
     end
     
     def self.unit_symbol_regex
-      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:symbol)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:symbol)})\b)/
+      @unit_symbol_regex ||= /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:symbol)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:symbol)})\b)/
     end
     
     def self.unit_name_regex
       # Specifically case insensitive
       # Double '?' (i.e. '??') makes prefix matching lazy, e.g. "centimetres of mercury" is matched fully rather than as 'centimetres'
-      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:name)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:pluralized_name)}|#{Unit.terms_for_regex(Unit,:non_prefixed_units,:name)})\b)/i
+      @unit_name_regex ||= /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:name)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:pluralized_name)}|#{Unit.terms_for_regex(Unit,:non_prefixed_units,:name)})\b)/i
     end
 
     def self.unit_j_science_regex
-      /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:j_science)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:j_science)})\b)/
+      @unit_j_science_regex ||= /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:j_science)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:j_science)})\b)/
     end
     
     
