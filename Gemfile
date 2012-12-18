@@ -11,4 +11,5 @@ group :development do
   gem 'rspec', '~> 2.6.0'
   gem 'simplecov'
   gem 'rdoc'
+  gem 'perftools.rb', :git => 'git://github.com/tmm1/perftools.rb.git'
 end
