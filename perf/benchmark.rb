@@ -42,5 +42,12 @@ Benchmark.bm do |bm|
     end
   end
 
+  puts "[ Quantity#new ]"
+  bm.report do
+    100.times do |n|
+      Quantity.new(100, 'mV')
+    end
+  end
+
 end
 
