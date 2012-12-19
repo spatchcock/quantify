@@ -26,32 +26,45 @@ require './lib/quantify/config'
 
 puts "Starting profiler"
 
-puts "[ Quantity#to_si ]"
-quantity = Quantity.new(100, 'mV')
-PerfTools::CpuProfiler.start("perf/quantity_to_si.profile") do
-  1000.times do |n|
-    quantity.to_si
-  end
-end
-
 puts "[ Unit#for 'm² kg/s³ A' ]"
-PerfTools::CpuProfiler.start("perf/unit_for_complex.profile") do
+PerfTools::CpuProfiler.start("perf/results/unit_for_complex.profile") do
   1000.times do |n|
     Unit.for("m² kg/s³ A") #si_unit for Volt
   end
 end
 
 puts "[ Unit#for 'cm' ]"
-PerfTools::CpuProfiler.start("perf/unit_for_string.profile") do
+PerfTools::CpuProfiler.start("perf/results/unit_for_string.profile") do
   1000.times do |n|
     Unit.for("cm")
   end
 end
 
 puts "[ Unit#for :cm ]"
-PerfTools::CpuProfiler.start("perf/unit_for_symbol.profile") do
+PerfTools::CpuProfiler.start("perf/results/unit_for_symbol.profile") do
   1000.times do |n|
     Unit.for(:cm)
   end
 end
 
+puts "[ Quantity#to_si ]"
+quantity = Quantity.new(100, 'mV')
+PerfTools::CpuProfiler.start("perf/results/quantity_to_si.profile") do
+  1000.times do |n|
+    quantity.to_si
+  end
+end
+
+puts "[ Quantity#new(100,'mv') ]"
+PerfTools::CpuProfiler.start("perf/results/quantity_new.profile") do
+  1000.times do |n|
+    Quantity.new(100, 'mV')
+  end
+end
+
+puts "[ Quantity#parse('100 m² kg/s³ A')]"
+PerfTools::CpuProfiler.start("perf/results/quantity_parse.profile") do
+  1000.times do |n|
+    Quantity.parse('100 m² kg/s³ A')
+  end
+end

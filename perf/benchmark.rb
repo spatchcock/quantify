@@ -29,21 +29,21 @@ Benchmark.bm do |bm|
 
   puts "[ Unit#for 'm² kg/s³ A' ]"
   bm.report do
-    100.times do |n|
+    1000.times do |n|
       Unit.for("m² kg/s³ A") #si_unit for Volt
     end
   end
 
   puts "[ Unit#for 'cm' ]"
   bm.report do
-    100.times do |n|
+    1000.times do |n|
       Unit.for("V") #si_unit for Volt
     end
   end
 
   puts "[ Unit#for :cm ]"
   bm.report do
-    100.times do |n|
+    1000.times do |n|
       Unit.for(:cm) #si_unit for Volt
     end
   end
@@ -51,21 +51,21 @@ Benchmark.bm do |bm|
   puts "[ Quantity#to_si ]"
   quantity = Quantity.new(100, 'mV')
   bm.report do
-    100.times do |n|
+    1000.times do |n|
       quantity.to_si
     end
   end
 
   puts "[ Quantity#new(100, 'mV') ]"
   bm.report do
-    100.times do |n|
+    1000.times do |n|
       Quantity.new(100, 'mV')
     end
   end
 
   puts "[ Quantity#parse('100 m² kg/s³ A') ]"
   bm.report do
-    100.times do |n|
+    1000.times do |n|
       Quantity.parse('100 m² kg/s³ A')
     end
   end
