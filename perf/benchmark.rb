@@ -27,10 +27,24 @@ puts "Starting benchmark..."
 
 Benchmark.bm do |bm|
 
-  puts "[ Unit#for ]"
+  puts "[ Unit#for 'm² kg/s³ A' ]"
   bm.report do
     100.times do |n|
       Unit.for("m² kg/s³ A") #si_unit for Volt
+    end
+  end
+
+  puts "[ Unit#for 'cm' ]"
+  bm.report do
+    100.times do |n|
+      Unit.for("V") #si_unit for Volt
+    end
+  end
+
+  puts "[ Unit#for :cm ]"
+  bm.report do
+    100.times do |n|
+      Unit.for(:cm) #si_unit for Volt
     end
   end
 

@@ -34,10 +34,24 @@ PerfTools::CpuProfiler.start("perf/quantity_to_si.profile") do
   end
 end
 
-puts "[ Unit#for ]"
-PerfTools::CpuProfiler.start("perf/unit_for.profile") do
+puts "[ Unit#for 'm² kg/s³ A' ]"
+PerfTools::CpuProfiler.start("perf/unit_for_complex.profile") do
   1000.times do |n|
     Unit.for("m² kg/s³ A") #si_unit for Volt
+  end
+end
+
+puts "[ Unit#for 'cm' ]"
+PerfTools::CpuProfiler.start("perf/unit_for_string.profile") do
+  1000.times do |n|
+    Unit.for("cm")
+  end
+end
+
+puts "[ Unit#for :cm ]"
+PerfTools::CpuProfiler.start("perf/unit_for_symbol.profile") do
+  1000.times do |n|
+    Unit.for(:cm)
   end
 end
 
