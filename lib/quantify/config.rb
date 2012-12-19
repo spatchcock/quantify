@@ -511,6 +511,8 @@ Unit::SI.configure do
 
   watt.acts_as_equivalent_unit = true
 
+  volt.acts_as_equivalent_unit = true
+
   pascal.acts_as_equivalent_unit = true
 
 end
