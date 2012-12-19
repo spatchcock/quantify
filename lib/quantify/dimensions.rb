@@ -418,6 +418,7 @@ module Quantify
     #
     def pow!(power)
       make_dimensionless if power == 0
+      return self if power == 1
       if power < 0
         self.reciprocalize!
         power *= -1
