@@ -11,9 +11,5 @@ group :development do
   gem 'simplecov'
   gem 'rdoc'
   gem 'perftools.rb', :git => 'git://github.com/tmm1/perftools.rb.git'
-  gem 'rspec',             '~> 2.11.0'
-  gem 'spork',             '~> 0.9.2'
-  gem 'guard-rspec',       '~> 2.1.0'
-  gem 'guard-spork',       '~> 1.2.1'
-  gem 'rb-fsevent',        '~> 0.9.2'
+  gem 'rspec',             '~> 2.6.0'
 end
