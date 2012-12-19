@@ -2,15 +2,21 @@
 class String
 
   def with_superscript_characters
-    self.gsub(/\^2\b/,"²").gsub(/\^3\b/,"³")
+    self.gsub!(/\^2\b/,"²")
+    self.gsub!(/\^3\b/,"³")
+    self
   end
 
   def without_superscript_characters
-    self.gsub(/¹\b/,"").gsub(/²\b/,"^2").gsub(/³\b/,"^3")
+    self.gsub!(/¹\b/,"")
+    self.gsub!(/²\b/,"^2")
+    self.gsub!(/³\b/,"^3")
+    self
   end
   
   def remove_underscores
-    self.gsub("_"," ")
+    self.gsub!("_"," ")
+    self
   end
 
   def words
