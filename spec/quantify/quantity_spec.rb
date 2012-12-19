@@ -1,6 +1,5 @@
 # encoding: UTF-8
-require 'quantify'
-include Quantify
+require 'spec_helper'
 
 describe Quantity do
 
