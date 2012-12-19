@@ -56,10 +56,17 @@ Benchmark.bm do |bm|
     end
   end
 
-  puts "[ Quantity#new ]"
+  puts "[ Quantity#new(100, 'mV') ]"
   bm.report do
     100.times do |n|
       Quantity.new(100, 'mV')
+    end
+  end
+
+  puts "[ Quantity#parse('100 m² kg/s³ A') ]"
+  bm.report do
+    100.times do |n|
+      Quantity.parse('100 m² kg/s³ A')
     end
   end
 
