@@ -390,9 +390,10 @@ module Quantify
       #
       def is_equivalent_to?(other)
         return false if other.nil?
-        [:dimensions,:factor,:scaling].all? do |attr|
-          self.send(attr) == other.send(attr)
-        end
+        return false unless self.factor == other.factor
+        return false unless self.scaling == other.scaling
+        return false unless self.dimensions == other.dimensions
+        true
       end
       alias :== :is_equivalent_to?
 

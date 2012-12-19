@@ -926,7 +926,7 @@ describe Unit do
       Unit.degree_celsius.is_prefixed_unit?.should == false
       Unit.ft.is_prefixed_unit?.should == false
       Unit.cd.is_prefixed_unit?.should == false
-      (Unit.cubic_metre/Unit.square_metre).is_derived_unit?.should == false
+      (Unit.cubic_metre/Unit.square_metre).is_prefixed_unit?.should == false
       Unit.TJ.is_prefixed_unit?.should == true
       Unit.GN.is_prefixed_unit?.should == true
       Unit.kW.is_prefixed_unit?.should == true
