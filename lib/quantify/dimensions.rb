@@ -192,6 +192,12 @@ module Quantify
       describe
     end
 
+    # Clone self and explicitly clone the associated @base_quantity_hash object
+    #
+    def initialize_copy(source)
+      super
+      instance_variable_set("@base_quantity_hash", @base_quantity_hash.clone)
+    end
     # Load an already instantiated Dimensions object into the @@dimensions class
     # array, from which it will be accessible as a universal representation of
     # that physical quantity.
@@ -247,7 +253,7 @@ module Quantify
     #
     def get_description
       similar = @@dimensions.find { |quantity| quantity == self }
-      @physical_quantity = similar.nil? ? nil : similar.physical_quantity
+      self.physical_quantity = similar.nil? ? nil : similar.physical_quantity
     end
 
     # Returns an array containing the known units which represent the physical
@@ -291,13 +297,13 @@ module Quantify
       return Unit.steridian if describe == 'solid angle'
       return Unit.radian    if describe == 'plane angle'
 
-      val = si_base_units.inject(Unit.unity) do |compound,unit|
+      val = si_base_units
+      return nil unless val
+      return val[0] if val.length == 1
+      val = val.inject(Unit.unity) do |compound,unit|
         compound * unit
       end
-      val = val.or_equivalent
-      val
-    # rescue
-    #   return nil
+      val = val.or_equivalent unless val.acts_as_equivalent_unit
     end
 
     # Returns an array representing the base SI units for the physical quantity
@@ -323,11 +329,12 @@ module Quantify
     def si_base_units(by=nil)
       val = self.to_hash.map do |dimension, index|
 
+        dimension_name = dimension.remove_underscores
         Unit.base_quantity_si_units.select do |unit|
-
-          unit.measures == dimension.remove_underscores
+          unit.measures == dimension_name
         end.first.clone ** index
-      end.map(&by)
+      end
+      val = val.map(&by) if by
       val.to_a
     end
 
@@ -423,6 +430,7 @@ module Quantify
         self.reciprocalize!
         power *= -1
       end
+      return self if power == 1 #reciprocalized self
       original_dimensions = self.clone
       (power - 1).times { self.multiply!(original_dimensions) }
       get_description
@@ -443,8 +451,7 @@ module Quantify
     #
     def reciprocalize!
       base_quantities.each do |variable|
-        new_value = @base_quantity_hash[variable] * -1
-        @base_quantity_hash[variable] = new_value
+        @base_quantity_hash[variable] *= -1
       end
       get_description
       return self
@@ -498,31 +505,32 @@ module Quantify
     #
     def init_base_quantities(options = { })
       if options.has_key?(:physical_quantity)
-        @physical_quantity = options.delete(:physical_quantity)
-        @physical_quantity = @physical_quantity.remove_underscores.downcase if @physical_quantity
+        pq = options.delete(:physical_quantity)
+        self.physical_quantity = pq.remove_underscores.downcase if pq
       end
       options.each_pair do |base_quantity, index|
         base_quantity = base_quantity.to_s.downcase.to_sym
         unless index.is_a?(Integer) && BASE_QUANTITIES.include?(base_quantity)
           raise Exceptions::InvalidDimensionError, "An invalid base quantity was specified (#{base_quantity})"
         end
-        if @base_quantity_hash[base_quantity] == nil
-          @base_quantity_hash[base_quantity] = index
-        else
+        if @base_quantity_hash.has_key?(base_quantity)
           new_index = @base_quantity_hash[base_quantity] + index
           if new_index == 0
             @base_quantity_hash.delete(base_quantity)
           else
             @base_quantity_hash[base_quantity] = new_index
           end
+        else
+          @base_quantity_hash[base_quantity] = index
         end
       end
-
-      # Make object represent a dimensionless quantity.
-      def make_dimensionless
-        @base_quantity_hash = { physical_quantity: 'dimensionless' }
-      end
-
     end
+
+    # Make object represent a dimensionless quantity.
+    def make_dimensionless
+      self.physical_quantity = 'dimensionless'
+      @base_quantity_hash = { }
+    end
+
   end
 end
