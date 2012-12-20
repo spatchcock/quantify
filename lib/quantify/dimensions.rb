@@ -1,4 +1,3 @@
-
 module Quantify
 
   # The Dimensions class represents specfic physical quantities in
@@ -34,9 +33,18 @@ module Quantify
     # 'trees per hectare' (:items => 1, :length => -2).
     #
     BASE_QUANTITIES = [
-      :mass, :length, :time, :electric_current, :temperature,
-      :luminous_intensity, :amount_of_substance, :information,
-      :currency, :item ]
+        :mass, :length, :time, :electric_current, :temperature,
+        :luminous_intensity, :amount_of_substance, :information,
+        :currency, :item]
+
+    BASE_QUANTITIES.each do |quantity_symbol|
+      define_method quantity_symbol.to_s do
+        return nil unless @base_quantity_hash
+        @base_quantity_hash[quantity_symbol]
+      end
+    end
+
+    attr_accessor :physical_quantity
 
     # Class variable which holds in memory all defined (and 'loaded') quantities
     @@dimensions = []
@@ -51,7 +59,7 @@ module Quantify
     #
     def self.base_dimensions
       @@dimensions.select do |dimensions|
-        BASE_QUANTITIES.map {|quantity| quantity.remove_underscores}.include?(dimensions.describe)
+        BASE_QUANTITIES.map { |quantity| quantity.remove_underscores }.include?(dimensions.describe)
       end
     end
 
@@ -96,7 +104,7 @@ module Quantify
     #                                               ... ]
     #
     def self.physical_quantities
-      @@dimensions.map {|dimension| dimension.physical_quantity }
+      @@dimensions.map { |dimension| dimension.physical_quantity }
     end
 
     # Retrieve a known quantity - returns a Dimensions instance, which is a
@@ -120,7 +128,7 @@ module Quantify
         if quantity = @@dimensions.find { |quantity| quantity.physical_quantity == name }
           return quantity.clone
         else
-          raise Exceptions::InvalidArgumentError, "Physical quantity not known: #{name}"
+          raise Exceptions::InvalidArgumentError, "Physical quantity not known: #{name.inspect}"
         end
       else
         raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
@@ -140,7 +148,7 @@ module Quantify
     #  end
     #
     def self.configure(&block)
-        self.class_eval(&block) if block
+      self.class_eval(&block) if block
     end
 
     # Provides a shorthand for retrieving known quantities, e.g.:
@@ -161,9 +169,6 @@ module Quantify
       super
     end
 
-    BASE_QUANTITIES.each { |quantity| attr_reader quantity }
-
-    attr_accessor :physical_quantity
 
     # Initialize a new Dimension object.
     #
@@ -181,19 +186,23 @@ module Quantify
     #                 :mass => 1,
     #                 :length => -3
     #
-    def initialize(options={})
-      if options.has_key?(:physical_quantity)
-        @physical_quantity = options.delete(:physical_quantity).remove_underscores.downcase
-      end
-      enumerate_base_quantities(options)
+    def initialize(options={ })
+      @base_quantity_hash = { }
+      init_base_quantities(options)
       describe
     end
 
+    # Clone self and explicitly clone the associated @base_quantity_hash object
+    #
+    def initialize_copy(source)
+      super
+      instance_variable_set("@base_quantity_hash", @base_quantity_hash.clone)
+    end
     # Load an already instantiated Dimensions object into the @@dimensions class
     # array, from which it will be accessible as a universal representation of
     # that physical quantity.
     #
-    # Object must include a non-nil @physical_quantity attribute, i.e. a name or
+    # Object must include a non-nil physical_quantity, i.e. a name or
     # description of the physical quantity represented.
     #
     def load
@@ -216,15 +225,15 @@ module Quantify
     end
 
     def has_same_identity_as?(other)
-      @physical_quantity == other.physical_quantity && !@physical_quantity.nil?
+      physical_quantity == other.physical_quantity && !physical_quantity.nil?
     end
 
     # Return a description of what physical quantity self represents. If no
-    # value is found in the @physical_quantity instance variable, the task is
+    # value is found in the physical_quantity, the task is
     # delegated to the #get_description method.
     #
     def describe
-      @physical_quantity or get_description
+      physical_quantity or get_description
     end
 
     # Searches the system of known physical quantities (@@dimensions class
@@ -244,7 +253,7 @@ module Quantify
     #
     def get_description
       similar = @@dimensions.find { |quantity| quantity == self }
-      @physical_quantity = similar.nil? ? nil : similar.physical_quantity
+      self.physical_quantity = similar.nil? ? nil : similar.physical_quantity
     end
 
     # Returns an array containing the known units which represent the physical
@@ -286,13 +295,15 @@ module Quantify
     #
     def si_unit
       return Unit.steridian if describe == 'solid angle'
-      return Unit.radian    if describe == 'plane angle' 
+      return Unit.radian    if describe == 'plane angle'
 
-      return si_base_units.inject(Unit.unity) do |compound,unit|
+      val = si_base_units
+      return nil unless val
+      return val[0] if val.length == 1
+      val = val.inject(Unit.unity) do |compound,unit|
         compound * unit
-      end.or_equivalent
-    # rescue
-    #   return nil
+      end
+      val = val.or_equivalent unless val.acts_as_equivalent_unit
     end
 
     # Returns an array representing the base SI units for the physical quantity
@@ -316,13 +327,15 @@ module Quantify
     #   Dimensions.force.units :symbol        #=> [ "m", "s^-2", "kg"]
     #
     def si_base_units(by=nil)
-      self.to_hash.map do |dimension,index|
+      val = self.to_hash.map do |dimension, index|
 
+        dimension_name = dimension.remove_underscores
         Unit.base_quantity_si_units.select do |unit|
-
-          unit.measures == dimension.remove_underscores
+          unit.measures == dimension_name
         end.first.clone ** index
-      end.map(&by).to_a
+      end
+      val = val.map(&by) if by
+      val.to_a
     end
 
     # Compares the base quantities of two Dimensions objects and returns true if
@@ -341,28 +354,28 @@ module Quantify
 
     # Returns true if self is a dimensionless quantity
     def is_dimensionless?
-      base_quantities.empty?
+      physical_quantity=="dimensionless" || @base_quantity_hash.empty?
     end
 
     # Returns true if self represents one of the base quantities (i.e. length,
     # mass, time, etc.)
     def is_base?
       base_quantities.size == 1 &&
-        self.instance_variable_get(base_quantities.first) == 1 ? true : false
+          @base_quantity_hash[base_quantities.first] == 1 ? true : false
     end
 
     # Method for identifying quantities which are 'specific' quantities, i.e
     # quantities which represent a quantity of something *per unit mass*
     #
     def is_specific_quantity?
-      denominator_quantities == [:@mass]
+      denominator_quantities == [:mass]
     end
 
     # Method for identifying quantities which are 'molar' quantities, i.e
     # quantities which represent a quantity of something *per mole*
     #
     def is_molar_quantity?
-      denominator_quantities == [:@amount_of_substance]
+      denominator_quantities == [:amount_of_substance]
     end
 
 
@@ -373,7 +386,7 @@ module Quantify
     # suitable description.
     #
     def multiply!(other)
-      enumerate_base_quantities(other.to_hash)
+      init_base_quantities(other.to_hash)
       get_description
       return self
     end
@@ -384,6 +397,7 @@ module Quantify
     def multiply(other)
       Dimensions.new(self.to_hash).multiply! other
     end
+
     alias :times :multiply
     alias :* :multiply
 
@@ -391,7 +405,7 @@ module Quantify
     # Dimensions object.
     #
     def divide!(other)
-      enumerate_base_quantities(other.reciprocalize.to_hash)
+      init_base_quantities(other.reciprocalize.to_hash)
       get_description
       return self
     end
@@ -402,6 +416,7 @@ module Quantify
     def divide(other)
       Dimensions.new(self.to_hash).divide! other
     end
+
     alias :/ :divide
 
     # Raises self to the power provided. As with multiply and divide, the
@@ -410,10 +425,12 @@ module Quantify
     #
     def pow!(power)
       make_dimensionless if power == 0
+      return self if power == 1
       if power < 0
         self.reciprocalize!
         power *= -1
       end
+      return self if power == 1 #reciprocalized self
       original_dimensions = self.clone
       (power - 1).times { self.multiply!(original_dimensions) }
       get_description
@@ -434,8 +451,7 @@ module Quantify
     #
     def reciprocalize!
       base_quantities.each do |variable|
-        new_value = self.instance_variable_get(variable) * -1
-        self.instance_variable_set(variable, new_value)
+        @base_quantity_hash[variable] *= -1
       end
       get_description
       return self
@@ -452,28 +468,21 @@ module Quantify
 
     # Returns an array containing the names of the instance variables which
     # represent the base quantities of self. This enables various operations to
-    # be performed on these variables without touching the @physical_quantity
+    # be performed on these variables without touching the physical_quantity
     # variable.
     #
     def base_quantities
-      quantities = self.instance_variables
-      if RUBY_VERSION < "1.9"
-        quantities.delete("@physical_quantity")
-        return quantities.map(&:to_sym)
-      else
-        quantities.delete(:@physical_quantity)
-        return quantities
-      end
+      @base_quantity_hash.keys
     end
 
     # Just the base quantities which have positive indices
     def numerator_quantities
-      base_quantities.select { |quantity| self.instance_variable_get(quantity) > 0 }
+      base_quantities.select { |key| @base_quantity_hash[key] > 0 }
     end
 
     # Just the base quantities which have negative indices
     def denominator_quantities
-      base_quantities.select { |quantity| self.instance_variable_get(quantity) < 0 }
+      base_quantities.select { |key| @base_quantity_hash[key] < 0 }
     end
 
     # Returns a hash representation of the base dimensions of self. This is used
@@ -481,11 +490,7 @@ module Quantify
     # the same base dimensions.
     #
     def to_hash
-      hash = {}
-      base_quantities.each do |variable|
-        hash[variable.to_s.gsub("@","").to_sym] = self.instance_variable_get(variable)
-      end
-      return hash
+      @base_quantity_hash
     end
 
     # Method for initializing the base quantities of self.
@@ -498,30 +503,33 @@ module Quantify
     # This method is therefore used in the multiplication of Dimensions objects,
     # but also in divisions and raising of powers following other operations.
     #
-    def enumerate_base_quantities(options)
-      options.each_pair do |base_quantity,index|
+    def init_base_quantities(options = { })
+      if options.has_key?(:physical_quantity)
+        pq = options.delete(:physical_quantity)
+        self.physical_quantity = pq.remove_underscores.downcase if pq
+      end
+      options.each_pair do |base_quantity, index|
         base_quantity = base_quantity.to_s.downcase.to_sym
         unless index.is_a?(Integer) && BASE_QUANTITIES.include?(base_quantity)
           raise Exceptions::InvalidDimensionError, "An invalid base quantity was specified (#{base_quantity})"
         end
-        variable = "@#{base_quantity}"
-        if self.instance_variable_defined?(variable)
-          new_index = self.instance_variable_get(variable) + index
+        if @base_quantity_hash.has_key?(base_quantity)
+          new_index = @base_quantity_hash[base_quantity] + index
           if new_index == 0
-            remove_instance_variable(variable)
+            @base_quantity_hash.delete(base_quantity)
           else
-            self.instance_variable_set(variable, new_index)
+            @base_quantity_hash[base_quantity] = new_index
           end
         else
-          self.instance_variable_set(variable, index)
+          @base_quantity_hash[base_quantity] = index
         end
       end
     end
 
     # Make object represent a dimensionless quantity.
     def make_dimensionless
-      @physical_quantity = 'dimensionless'
-      base_quantities.each { |var| remove_instance_variable(var) }
+      self.physical_quantity = 'dimensionless'
+      @base_quantity_hash = { }
     end
 
   end

@@ -6,15 +6,22 @@ module Quantify
       attr_accessor :prefixes
 
       @prefixes = []
+      @si_prefixes = []
+      @non_si_prefixes = []
+
 
       def self.load(prefix)
         @prefixes << prefix if prefix.is_a? Quantify::Unit::Prefix::Base
+        @si_prefixes << prefix if prefix.is_si_prefix?
+        @non_si_prefixes << prefix if prefix.is_non_si_prefix?
       end
 
       def self.unload(*unloaded_prefixes)
         [unloaded_prefixes].flatten.each do |unloaded_prefix|
           unloaded_prefix = Prefix.for(unloaded_prefix)
           @prefixes.delete_if { |prefix| prefix.label == unloaded_prefix.label }
+          @si_prefixes.delete_if { |prefix| prefix.label == unloaded_prefix.label }
+          @non_si_prefixes.delete_if { |prefix| prefix.label == unloaded_prefix.label }
         end
       end
 
@@ -42,14 +49,14 @@ module Quantify
       # given importance in Unit #match (and #for) methods regexen
       #
       def self.si_prefixes
-        @prefixes.select {|prefix| prefix.is_si_prefix? }
+        @si_prefixes
       end
 
       # This can be replicated by method missing approach, but explicit method provided
       # given importance in Unit #match (and #for) methods regexen
       #
       def self.non_si_prefixes
-        @prefixes.select {|prefix| prefix.is_non_si_prefix? }
+        @non_si_prefixes
       end
 
       def self.method_missing(method, *args, &block)

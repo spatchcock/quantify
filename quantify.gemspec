@@ -15,41 +15,8 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
     "README.md"
   ]
-  s.files = [
-    "COPYING",
-    "Gemfile",
-    "README.md",
-    "Rakefile",
-    "VERSION",
-    "lib/quantify.rb",
-    "lib/quantify/config.rb",
-    "lib/quantify/core_extensions/numeric.rb",
-    "lib/quantify/core_extensions/range.rb",
-    "lib/quantify/core_extensions/string.rb",
-    "lib/quantify/core_extensions/symbol.rb",
-    "lib/quantify/dimensions.rb",
-    "lib/quantify/exception.rb",
-    "lib/quantify/inflections.rb",
-    "lib/quantify/quantify.rb",
-    "lib/quantify/quantity.rb",
-    "lib/quantify/unit/base_unit.rb",
-    "lib/quantify/unit/compound_base_unit.rb",
-    "lib/quantify/unit/compound_base_unit_list.rb",
-    "lib/quantify/unit/compound_unit.rb",
-    "lib/quantify/unit/non_si_unit.rb",
-    "lib/quantify/unit/prefix/base_prefix.rb",
-    "lib/quantify/unit/prefix/non_si_prefix.rb",
-    "lib/quantify/unit/prefix/prefix.rb",
-    "lib/quantify/unit/prefix/si_prefix.rb",
-    "lib/quantify/unit/si_unit.rb",
-    "lib/quantify/unit/unit.rb",
-    "quantify.gemspec",
-    "spec/compound_unit_spec.rb",
-    "spec/dimension_spec.rb",
-    "spec/quantity_spec.rb",
-    "spec/string_spec.rb",
-    "spec/unit_spec.rb"
-  ]
+  s.files         = `git ls-files`.split($/)
+  s.test_files    = s.files.grep(%r{^(spec|perf)/})
   s.homepage = %q{https://github.com/spatchcock/quantify}
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
