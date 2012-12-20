@@ -390,9 +390,10 @@ module Quantify
       #
       def is_equivalent_to?(other)
         return false if other.nil?
-        [:dimensions,:factor,:scaling].all? do |attr|
-          self.send(attr) == other.send(attr)
-        end
+        return false unless self.factor == other.factor
+        return false unless self.scaling == other.scaling
+        return false unless self.dimensions == other.dimensions
+        true
       end
       alias :== :is_equivalent_to?
 
@@ -501,13 +502,14 @@ module Quantify
       #
       def pow(power)
         return nil if power == 0
-        original_unit = self.clone
+        cloned_unit = self.clone
+        return cloned_unit if power == 1
         if power > 0
           new_unit = self.clone
-          (power - 1).times { new_unit *= original_unit }
+          (power - 1).times { new_unit *= cloned_unit }
         elsif power < 0
           new_unit = reciprocalize
-          ((power.abs) - 1).times { new_unit /= original_unit }
+          ((power.abs) - 1).times { new_unit /= cloned_unit }
         end
         return new_unit
       end
