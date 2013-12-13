@@ -79,7 +79,7 @@ mass = Quantity.parse long_text       #=> [<Quantify::Quantity:0xb7332bbc ... >,
 mass = "100 lb".to_q                  #=> [<Quantify::Quantity:0xb7332bbc ... >]
 ```
 
-Quantity object can be insterrogated for a range of attributes
+Quantity object can be interrogated for a range of attributes
 ```ruby
 mass = 100.pound                      #=> <Quantify::Quantity:0xb7332bbc ... >
 
